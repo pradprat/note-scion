@@ -17,7 +17,7 @@ import {
   BreadcrumbSeparator,
 } from "@/components/ui/breadcrumb";
 import type { NotePage, NotePatch } from "@/lib/types";
-import { getPageAction, updatePageAction } from "../actions";
+import { useBackend } from "./backend";
 import { useNotes } from "./notes-provider";
 import IconPicker from "./icon-picker";
 import NoteEditor from "./editor";
@@ -37,6 +37,7 @@ const newer = (a: string, b: string) => Date.parse(a) > Date.parse(b);
  * is resolved, rather than writing an old copy over the newer one.
  */
 function useAutosave(page: NotePage, applyRemote: (page: NotePage) => void) {
+  const backend = useBackend();
   const [status, setStatus] = useState<SaveStatus>("saved");
   const pending = useRef<NotePatch>({});
   const timer = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -63,7 +64,7 @@ function useAutosave(page: NotePage, applyRemote: (page: NotePage) => void) {
           // ProseMirror builds node attrs with Object.create(null). React's action
           // serializer only sends plain objects as data and turns anything else into an
           // opaque reference the server can't read, so hand it plain JSON.
-          const result = await updatePageAction(
+          const result = await backend.updatePage(
             page.id,
             JSON.parse(JSON.stringify(patch)) as NotePatch,
             overwrite ? null : base.current
@@ -87,7 +88,7 @@ function useAutosave(page: NotePage, applyRemote: (page: NotePage) => void) {
       });
       return chain.current;
     },
-    [page.id]
+    [backend, page.id]
   );
 
   const schedule = useCallback(
@@ -119,7 +120,7 @@ function useAutosave(page: NotePage, applyRemote: (page: NotePage) => void) {
   const loadLatest = useCallback(async () => {
     if (timer.current) clearTimeout(timer.current);
     await chain.current;
-    const latest = await getPageAction(page.id);
+    const latest = await backend.getPage(page.id);
     if (!latest) {
       setStatus("missing");
       return;
@@ -129,7 +130,7 @@ function useAutosave(page: NotePage, applyRemote: (page: NotePage) => void) {
     base.current = latest.updatedAt;
     applyRemote(latest);
     setStatus("saved");
-  }, [page.id, applyRemote]);
+  }, [backend, page.id, applyRemote]);
 
   const keepMine = useCallback(() => flush(true), [flush]);
 
@@ -158,6 +159,7 @@ function useAutosave(page: NotePage, applyRemote: (page: NotePage) => void) {
 export default function PageView({ page }: { page: NotePage }) {
   const { ancestorsOf, patchNode, createPage } = useNotes();
   const router = useRouter();
+  const { href } = useBackend();
   const [title, setTitle] = useState(page.title);
   const [icon, setIcon] = useState(page.icon);
   const [pickerOpen, setPickerOpen] = useState(false);
@@ -228,7 +230,7 @@ export default function PageView({ page }: { page: NotePage }) {
     }
   }, [createPage, page.id]);
   // Leaving saves the new block here first (the autosave flushes on unmount).
-  const openPage = useCallback((id: string) => router.push(`/${id}`), [router]);
+  const openPage = useCallback((id: string) => router.push(href(`/${id}`)), [router, href]);
 
   /** Back up from the page body: the cursor lands at the end of the title. */
   const focusTitleEnd = useCallback(() => {
@@ -304,7 +306,7 @@ export default function PageView({ page }: { page: NotePage }) {
               <Fragment key={node.id}>
                 <BreadcrumbItem className="min-w-0 shrink">
                   <BreadcrumbLink asChild>
-                    <Link href={`/${node.id}`} className="flex min-w-0 items-center gap-1.5 rounded-md px-1 py-0.5">
+                    <Link href={href(`/${node.id}`)} className="flex min-w-0 items-center gap-1.5 rounded-md px-1 py-0.5">
                       {node.icon && <span aria-hidden>{node.icon}</span>}
                       <span className="truncate">{node.title.trim() || "Untitled"}</span>
                     </Link>
@@ -401,6 +403,7 @@ function ConflictBar({
   onLoadLatest: () => void;
   onKeepMine: () => void;
 }) {
+  const { href } = useBackend();
   return (
     <div role="alert" className="sticky top-12 z-10 border-y bg-muted px-6 py-2.5 sm:px-0">
       {/* Same column as the page text below, so the warning reads as part of the page. */}
@@ -430,7 +433,7 @@ function ConflictBar({
               <span className="text-muted-foreground"> Edits here can&apos;t be saved. Copy anything you need first.</span>
             </p>
             <Button asChild variant="outline" size="sm" className={cn("shrink-0", COARSE_BUTTON)}>
-              <Link href="/">Back to notes</Link>
+              <Link href={href("/")}>Back to notes</Link>
             </Button>
           </>
         )}
@@ -444,6 +447,7 @@ const COARSE_BUTTON = "[@media(pointer:coarse)]:h-10";
 
 /** Copies this page's address. The link only opens for someone signed in. */
 function CopyLinkButton({ id }: { id: string }) {
+  const { href } = useBackend();
   const [copied, setCopied] = useState(false);
 
   useEffect(() => {
@@ -454,7 +458,7 @@ function CopyLinkButton({ id }: { id: string }) {
 
   const copy = async () => {
     try {
-      await navigator.clipboard.writeText(`${window.location.origin}/${id}`);
+      await navigator.clipboard.writeText(`${window.location.origin}${href(`/${id}`)}`);
       setCopied(true);
       toast.success("Link copied", { id: "notes-copy-link" });
     } catch {

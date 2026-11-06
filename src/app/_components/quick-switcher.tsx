@@ -12,7 +12,7 @@ import {
   CommandSeparator,
 } from "@/components/ui/command";
 import type { NoteNode } from "@/lib/types";
-import { searchPagesAction } from "../actions";
+import { useBackend } from "./backend";
 import { useNotes } from "./notes-provider";
 
 const SEARCH_DELAY = 180;
@@ -42,6 +42,7 @@ export default function QuickSwitcher({
 
 function SwitcherBody({ onClose }: { onClose: () => void }) {
   const router = useRouter();
+  const { href, searchPages } = useBackend();
   const { tree, ancestorsOf, addPage, activeId } = useNotes();
   const [query, setQuery] = useState("");
   const [textHits, setTextHits] = useState<NoteNode[]>([]);
@@ -67,7 +68,7 @@ function SwitcherBody({ onClose }: { onClose: () => void }) {
       .map((hit) => hit.node);
   }, [tree, q, activeId]);
 
-  // Text inside pages lives on the server.
+  // Text inside pages lives on the server (in the demo, in this browser).
   useEffect(() => {
     if (q.length < 2) {
       setTextHits([]);
@@ -78,7 +79,7 @@ function SwitcherBody({ onClose }: { onClose: () => void }) {
     setSearching(true);
     const timer = setTimeout(async () => {
       try {
-        const hits = await searchPagesAction(q);
+        const hits = await searchPages(q);
         if (live) setTextHits(hits);
       } catch {
         if (live) setTextHits([]);
@@ -90,7 +91,7 @@ function SwitcherBody({ onClose }: { onClose: () => void }) {
       live = false;
       clearTimeout(timer);
     };
-  }, [q]);
+  }, [q, searchPages]);
 
   // Skip pages already listed, and ones hidden by a delete waiting to be undone.
   const bodyHits = useMemo(() => {
@@ -101,7 +102,7 @@ function SwitcherBody({ onClose }: { onClose: () => void }) {
 
   const openPage = (node: NoteNode) => {
     onClose();
-    router.push(`/${node.id}`);
+    router.push(href(`/${node.id}`));
   };
 
   const createPage = async () => {

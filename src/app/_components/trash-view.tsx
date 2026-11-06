@@ -1,19 +1,18 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { useRouter } from "next/navigation";
 import { FileText, RotateCcw, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import type { TrashItem } from "@/lib/types";
 
 /** Taller buttons where the pointer is a finger. */
 const COARSE = "[@media(pointer:coarse)]:h-10";
-import { deleteForeverAction, emptyTrashAction, restorePageAction } from "../actions";
+import { useBackend } from "./backend";
 import { ago } from "./time";
 import TopBar from "./top-bar";
 
 export default function TrashView({ items, days }: { items: TrashItem[]; days: number }) {
-  const router = useRouter();
+  const backend = useBackend();
   const [hidden, setHidden] = useState<Set<string>>(new Set());
   const [confirmEmpty, setConfirmEmpty] = useState(false);
   const [now, setNow] = useState<number | null>(null);
@@ -29,7 +28,7 @@ export default function TrashView({ items, days }: { items: TrashItem[]; days: n
     setHidden((prev) => new Set(prev).add(id));
     try {
       await action();
-      router.refresh();
+      backend.refresh();
     } catch {
       setHidden((prev) => {
         const next = new Set(prev);
@@ -46,8 +45,8 @@ export default function TrashView({ items, days }: { items: TrashItem[]; days: n
     const before = hidden;
     setHidden(new Set(items.map((item) => item.id)));
     try {
-      await emptyTrashAction();
-      router.refresh();
+      await backend.emptyTrash();
+      backend.refresh();
     } catch {
       setHidden(before);
       setError("Couldn't empty the trash. Try again.");
@@ -110,8 +109,8 @@ export default function TrashView({ items, days }: { items: TrashItem[]; days: n
                   key={item.id}
                   item={item}
                   now={now}
-                  onRestore={() => void run(item.id, () => restorePageAction(item.id), `Couldn't restore “${title}”.`)}
-                  onDelete={() => void run(item.id, () => deleteForeverAction(item.id), `Couldn't delete “${title}”.`)}
+                  onRestore={() => void run(item.id, () => backend.restorePage(item.id), `Couldn't restore “${title}”.`)}
+                  onDelete={() => void run(item.id, () => backend.deleteForever(item.id), `Couldn't delete “${title}”.`)}
                 />
               );
             })}

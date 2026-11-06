@@ -3,7 +3,7 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import type { NoteNode } from "@/lib/types";
-import { createPageAction, movePageAction, restorePageAction, trashPageAction } from "../actions";
+import { useBackend } from "./backend";
 
 const EXPANDED_KEY = "notes:expanded";
 /** How long the "Moved to trash · Undo" toast stays up. */
@@ -73,6 +73,8 @@ export function NotesProvider({
   children: React.ReactNode;
 }) {
   const router = useRouter();
+  const backend = useBackend();
+  const { href, refresh: reload } = backend;
   const params = useParams<{ id?: string }>();
   const activeId = params?.id ?? null;
 
@@ -141,7 +143,7 @@ export function NotesProvider({
     const refresh = () => {
       if (document.visibilityState !== "visible" || Date.now() - last < REFRESH_GAP) return;
       last = Date.now();
-      router.refresh();
+      reload();
     };
     window.addEventListener("focus", refresh);
     document.addEventListener("visibilitychange", refresh);
@@ -149,7 +151,7 @@ export function NotesProvider({
       window.removeEventListener("focus", refresh);
       document.removeEventListener("visibilitychange", refresh);
     };
-  }, [router]);
+  }, [reload]);
 
   const patchNode = useCallback<NotesContextValue["patchNode"]>((id, patch) => {
     setTree((prev) => prev.map((node) => (node.id === id ? { ...node, ...patch } : node)));
@@ -157,20 +159,21 @@ export function NotesProvider({
 
   const createPage = useCallback(
     async (parentId: string | null, title?: string) => {
-      const node = await createPageAction(parentId, title);
-      setTree((prev) => [...prev, node]);
+      const node = await backend.createPage(parentId, title);
+      // The new tree may already hold it (the demo store updates the tree as it writes).
+      setTree((prev) => (prev.some((other) => other.id === node.id) ? prev : [...prev, node]));
       if (parentId) setExpandedPersisted((prev) => new Set(prev).add(parentId));
       return node;
     },
-    [setExpandedPersisted]
+    [backend, setExpandedPersisted]
   );
 
   const addPage = useCallback(
     async (parentId: string | null, title?: string) => {
       const node = await createPage(parentId, title);
-      router.push(`/${node.id}`);
+      router.push(href(`/${node.id}`));
     },
-    [router, createPage]
+    [router, href, createPage]
   );
 
   const subtreeOf = useCallback(
@@ -206,17 +209,17 @@ export function NotesProvider({
       if (activeId && doomed.has(activeId)) {
         const fallback =
           node.parentId ?? tree.find((other) => other.parentId === null && !doomed.has(other.id))?.id;
-        router.push(fallback ? `/${fallback}` : "/");
+        router.push(href(fallback ? `/${fallback}` : "/"));
       }
 
-      trashPageAction(id).catch(() => {
+      backend.trashPage(id).catch(() => {
         // Nothing was trashed: put the pages back and drop the toast.
         setTree((prev) => [...prev, ...removed.filter((r) => !prev.some((p) => p.id === r.id))]);
         setPendingDelete(null);
-        router.refresh();
+        reload();
       });
     },
-    [activeId, byId, router, subtreeOf, tree]
+    [activeId, backend, byId, href, reload, router, subtreeOf, tree]
   );
 
   const undoDelete = useCallback(() => {
@@ -225,22 +228,24 @@ export function NotesProvider({
     if (toastTimer.current) clearTimeout(toastTimer.current);
     setPendingDelete(null);
     setTree((prev) => [...prev, ...pending.removed.filter((r) => !prev.some((p) => p.id === r.id))]);
-    restorePageAction(pending.id)
-      .then(() => router.refresh())
-      .catch(() => router.refresh());
-  }, [pendingDelete, router]);
+    backend
+      .restorePage(pending.id)
+      .then(() => reload())
+      .catch(() => reload());
+  }, [backend, pendingDelete, reload]);
 
   const movePage = useCallback(
     (id: string, parentId: string | null, position: number) => {
       setTree((prev) => prev.map((node) => (node.id === id ? { ...node, parentId, position } : node)));
       if (parentId) setExpandedPersisted((prev) => new Set(prev).add(parentId));
-      movePageAction(id, parentId, position)
+      backend
+        .movePage(id, parentId, position)
         .then((result) => {
-          if (!result.ok) router.refresh();
+          if (!result.ok) reload();
         })
-        .catch(() => router.refresh());
+        .catch(() => reload());
     },
-    [router, setExpandedPersisted]
+    [backend, reload, setExpandedPersisted]
   );
 
   const publicPending = useMemo(

@@ -1,6 +1,7 @@
 import { cookies } from "next/headers";
 import { requireSession } from "@/lib/auth";
 import { getTree } from "@/lib/db";
+import { ServerBackendProvider } from "../_components/backend";
 import { NotesProvider } from "../_components/notes-provider";
 import NotesShell from "../_components/notes-shell";
 
@@ -14,8 +15,10 @@ export default async function NotesAppLayout({ children }: { children: React.Rea
   const sidebarOpen = cookieStore.get("sidebar_state")?.value !== "false";
 
   return (
-    <NotesProvider initialTree={tree}>
-      <NotesShell sidebarOpen={sidebarOpen}>{children}</NotesShell>
-    </NotesProvider>
+    <ServerBackendProvider>
+      <NotesProvider initialTree={tree}>
+        <NotesShell sidebarOpen={sidebarOpen}>{children}</NotesShell>
+      </NotesProvider>
+    </ServerBackendProvider>
   );
 }

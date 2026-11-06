@@ -6,6 +6,7 @@ import { NodeViewWrapper, ReactNodeViewRenderer, type ReactNodeViewProps } from 
 import { FileText, FileX } from "lucide-react";
 import { PageLink } from "@/lib/page-link";
 import { useNotes } from "./notes-provider";
+import { useBackend } from "./backend";
 
 declare module "@tiptap/core" {
   interface Commands<ReturnType> {
@@ -25,13 +26,14 @@ interface PageBlockOptions {
 /** The sub-page block as the editor shows it: the page's live icon and title. */
 function PageLinkView({ node }: ReactNodeViewProps) {
   const { tree } = useNotes();
+  const { href } = useBackend();
   const id = node.attrs.id as string | null;
   const page = id ? tree.find((other) => other.id === id) : undefined;
 
   return (
     <NodeViewWrapper className="notes-page-link" data-page-link={id ?? ""}>
       {page ? (
-        <Link href={`/${page.id}`} prefetch={false} className="notes-page-link-row" draggable={false}>
+        <Link href={href(`/${page.id}`)} prefetch={false} className="notes-page-link-row" draggable={false}>
           <span aria-hidden className="notes-page-link-icon">
             {page.icon ?? <FileText size={18} strokeWidth={1.75} />}
           </span>
