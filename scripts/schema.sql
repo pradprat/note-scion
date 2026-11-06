@@ -51,3 +51,10 @@ create table if not exists oauth_tokens (
 );
 
 create index if not exists oauth_tokens_family_idx on oauth_tokens (family_id);
+
+-- When the client's first authorization was approved. Registration is open, so clients
+-- that never got this far are cleared after a day; approved ones are kept.
+alter table oauth_clients add column if not exists authorized_at timestamptz;
+update oauth_clients c set authorized_at = c.created_at
+where c.authorized_at is null
+  and exists (select 1 from oauth_tokens t where t.client_id = c.client_id);

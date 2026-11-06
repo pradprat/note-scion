@@ -2,6 +2,8 @@ import {
   AUTH_METHODS,
   isAllowedRedirectUri,
   json,
+  OAuthError,
+  oauthErrorResponse,
   preflight,
   registerClient,
   type AuthMethod,
@@ -48,11 +50,18 @@ export async function POST(request: Request) {
       ? body.client_name.trim().slice(0, 100)
       : null;
 
-  const { clientId, clientSecret } = await registerClient({
-    redirectUris: redirectUris as string[],
-    clientName,
-    authMethod: method,
-  });
+  let registered: Awaited<ReturnType<typeof registerClient>>;
+  try {
+    registered = await registerClient({
+      redirectUris: redirectUris as string[],
+      clientName,
+      authMethod: method,
+    });
+  } catch (error) {
+    if (error instanceof OAuthError) return oauthErrorResponse(error);
+    throw error;
+  }
+  const { clientId, clientSecret } = registered;
 
   return json(
     {

@@ -13,6 +13,16 @@ const CODE_TTL = 5 * 60;
 const ACCESS_TTL = 60 * 60;
 const REFRESH_TTL = 30 * 24 * 60 * 60;
 
+// The shapes of what this server hands out: randomToken(32) for codes and tokens, and
+// "mcp_" + randomToken(18) for client ids. Anything else is rejected before it costs a
+// database query, so junk requests don't keep the database awake.
+const TOKEN_SHAPE = /^[A-Za-z0-9_-]{43}$/;
+const CLIENT_ID_SHAPE = /^mcp_[A-Za-z0-9_-]{24}$/;
+const isToken = (value: unknown): value is string => typeof value === "string" && TOKEN_SHAPE.test(value);
+
+/** New client registrations allowed per hour, across everyone. Real apps register once. */
+const REGISTRATIONS_PER_HOUR = 20;
+
 export type AuthMethod = "none" | "client_secret_post" | "client_secret_basic";
 export const AUTH_METHODS: AuthMethod[] = ["none", "client_secret_post", "client_secret_basic"];
 
@@ -176,7 +186,7 @@ function toClient(row: Record<string, unknown>): OAuthClient {
 }
 
 export async function getClient(clientId: unknown): Promise<OAuthClient | null> {
-  if (typeof clientId !== "string" || !clientId || clientId.length > 200) return null;
+  if (typeof clientId !== "string" || !CLIENT_ID_SHAPE.test(clientId)) return null;
   const rows = await sql()`select * from oauth_clients where client_id = ${clientId}`;
   return rows[0] ? toClient(rows[0]) : null;
 }
@@ -186,6 +196,18 @@ export async function registerClient(input: {
   clientName: string | null;
   authMethod: AuthMethod;
 }): Promise<{ clientId: string; clientSecret: string | null }> {
+  // Anyone can register, so registrations must not grow the database without bound:
+  // ones never approved are cleared after a day, and new ones are capped per hour.
+  await sql()`
+    delete from oauth_clients c
+    where c.authorized_at is null and c.created_at < now() - interval '1 day'
+      and not exists (select 1 from oauth_tokens t where t.client_id = c.client_id)`;
+  const [{ recent }] = await sql()`
+    select count(*)::int as recent from oauth_clients where created_at > now() - interval '1 hour'`;
+  if ((recent as number) >= REGISTRATIONS_PER_HOUR) {
+    throw new OAuthError("temporarily_unavailable", "Too many client registrations. Try again later.", 429);
+  }
+
   const clientId = `mcp_${randomToken(18)}`;
   const clientSecret = input.authMethod === "none" ? null : randomToken(32);
   await sql()`
@@ -327,6 +349,9 @@ export async function issueCode(req: AuthRequest): Promise<string> {
   const code = randomToken(32);
   await sql()`delete from oauth_codes where expires_at < now()`;
   await sql()`
+    update oauth_clients set authorized_at = now()
+    where client_id = ${req.clientId} and authorized_at is null`;
+  await sql()`
     insert into oauth_codes (code_hash, client_id, redirect_uri, code_challenge, scope, resource, expires_at)
     values (${hashToken(code)}, ${req.clientId}, ${req.redirectUri}, ${req.codeChallenge},
             ${req.scope}, ${req.resource}, now() + make_interval(secs => ${CODE_TTL}))`;
@@ -376,6 +401,7 @@ export async function exchangeCode(
   const code = form.get("code");
   const verifier = form.get("code_verifier");
   if (!code || !verifier) throw new OAuthError("invalid_request", "code and code_verifier are required");
+  if (!isToken(code)) throw new OAuthError("invalid_grant", "Invalid or expired code");
 
   // Single use: the row is gone whether or not the rest succeeds.
   const rows = await sql()`
@@ -403,6 +429,7 @@ export async function exchangeCode(
 export async function refreshTokens(client: OAuthClient, form: URLSearchParams): Promise<TokenResponse> {
   const token = form.get("refresh_token");
   if (!token) throw new OAuthError("invalid_request", "refresh_token is required");
+  if (!isToken(token)) throw new OAuthError("invalid_grant", "Invalid refresh token");
 
   const rows = await sql()`
     select family_id, client_id, scope, resource, revoked, expires_at > now() as live
@@ -422,6 +449,7 @@ export async function refreshTokens(client: OAuthClient, form: URLSearchParams):
 
 /** RFC 7009: revoking a refresh token ends its whole grant. Unknown tokens are not an error. */
 export async function revokeToken(client: OAuthClient, token: string): Promise<void> {
+  if (!isToken(token)) return;
   const rows = await sql()`
     select family_id, kind from oauth_tokens
     where token_hash = ${hashToken(token)} and client_id = ${client.clientId}`;
@@ -476,7 +504,7 @@ export async function disconnectClient(clientId: string): Promise<void> {
 
 /** True when the bearer token is a live access token meant for this MCP endpoint. */
 export async function verifyAccessToken(token: string, resource: string): Promise<boolean> {
-  if (!token || token.length > 200) return false;
+  if (!isToken(token)) return false;
   const rows = await sql()`
     select resource from oauth_tokens
     where token_hash = ${hashToken(token)} and kind = 'access'
