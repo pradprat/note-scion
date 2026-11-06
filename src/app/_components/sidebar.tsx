@@ -2,15 +2,17 @@
 
 import { createContext, useContext, useRef, useState } from "react";
 import Link, { useLinkStatus } from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import {
   ChevronRight,
   FileText,
+  Github,
   Loader2,
   LogOut,
   PanelLeftClose,
   Plug,
   Plus,
+  RotateCcw,
   Search,
   Trash2,
 } from "lucide-react";
@@ -28,6 +30,7 @@ import {
   useSidebar,
 } from "@/components/ui/sidebar";
 import type { NoteNode } from "@/lib/types";
+import { useBackend } from "./backend";
 import { useNotes } from "./notes-provider";
 import { useShell } from "./notes-shell";
 
@@ -163,6 +166,7 @@ export default function NotesSidebar() {
   const { openSwitcher, modKey } = useShell();
   const { toggleSidebar, isMobile, state } = useSidebar();
   const pathname = usePathname();
+  const { href, demo } = useBackend();
   const roots = childrenOf(null);
   // Folded away on desktop: keep its links out of the tab order.
   const folded = !isMobile && state === "collapsed";
@@ -171,8 +175,13 @@ export default function NotesSidebar() {
     <DragProvider>
       <Sidebar inert={folded ? true : undefined}>
         <SidebarHeader className="h-12 flex-row items-center gap-1 py-0 pl-4 pr-2">
-          <Link href="/" className="mr-auto text-sm font-semibold tracking-tight">
+          <Link href={href("/")} className="mr-auto flex items-center gap-2 text-sm font-semibold tracking-tight">
             Notes
+            {demo && (
+              <span className="rounded border border-sidebar-border px-1.5 font-mono text-[0.625rem] font-medium uppercase leading-4 tracking-wide text-sidebar-foreground/70">
+                Demo
+              </span>
+            )}
           </Link>
           <Button
             variant="ghost"
@@ -208,33 +217,101 @@ export default function NotesSidebar() {
         <SidebarFooter className="border-t border-sidebar-border">
           <SidebarMenu>
             <SidebarMenuItem>
-              <SidebarMenuButton asChild isActive={pathname === "/trash"} className={COARSE_ROW}>
-                <Link href="/trash" aria-current={pathname === "/trash" ? "page" : undefined}>
+              <SidebarMenuButton asChild isActive={pathname === href("/trash")} className={COARSE_ROW}>
+                <Link href={href("/trash")} aria-current={pathname === href("/trash") ? "page" : undefined}>
                   <Trash2 />
                   <span>Trash</span>
                 </Link>
               </SidebarMenuButton>
             </SidebarMenuItem>
-            <SidebarMenuItem>
-              <SidebarMenuButton asChild isActive={pathname === "/apps"} className={COARSE_ROW}>
-                <Link href="/apps" aria-current={pathname === "/apps" ? "page" : undefined}>
-                  <Plug />
-                  <span>Connected apps</span>
-                </Link>
-              </SidebarMenuButton>
-            </SidebarMenuItem>
-            <SidebarMenuItem>
-              <form method="post" action="/session/end">
-                <SidebarMenuButton type="submit" className={COARSE_ROW}>
-                  <LogOut />
-                  <span>Log out</span>
-                </SidebarMenuButton>
-              </form>
-            </SidebarMenuItem>
+            {demo ? (
+              <DemoMenu />
+            ) : (
+              <>
+                <SidebarMenuItem>
+                  <SidebarMenuButton asChild isActive={pathname === "/apps"} className={COARSE_ROW}>
+                    <Link href="/apps" aria-current={pathname === "/apps" ? "page" : undefined}>
+                      <Plug />
+                      <span>Connected apps</span>
+                    </Link>
+                  </SidebarMenuButton>
+                </SidebarMenuItem>
+                <SidebarMenuItem>
+                  <form method="post" action="/session/end">
+                    <SidebarMenuButton type="submit" className={COARSE_ROW}>
+                      <LogOut />
+                      <span>Log out</span>
+                    </SidebarMenuButton>
+                  </form>
+                </SidebarMenuItem>
+              </>
+            )}
           </SidebarMenu>
         </SidebarFooter>
       </Sidebar>
     </DragProvider>
+  );
+}
+
+const REPO_URL = "https://github.com/pradprat/note-scion";
+
+/** In place of Connected apps and Log out: where the demo's pages live, and a way out. */
+function DemoMenu() {
+  const router = useRouter();
+  const { reset, href } = useBackend();
+  const [confirming, setConfirming] = useState(false);
+  const [busy, setBusy] = useState(false);
+
+  const startOver = async () => {
+    setBusy(true);
+    try {
+      await reset?.();
+      router.push(href("/"));
+    } finally {
+      setBusy(false);
+      setConfirming(false);
+    }
+  };
+
+  return (
+    <>
+      <SidebarMenuItem>
+        {confirming ? (
+          <div className="flex items-center gap-1 px-2 py-1 text-sm">
+            <span className="mr-auto text-sidebar-foreground/70">Erase your changes?</span>
+            <Button variant="ghost" size="sm" onClick={() => setConfirming(false)} className={cn("h-7 px-2", COARSE_ROW)}>
+              Cancel
+            </Button>
+            <Button
+              variant="destructive"
+              size="sm"
+              autoFocus
+              disabled={busy}
+              onClick={() => void startOver()}
+              className={cn("h-7 px-2", COARSE_ROW)}
+            >
+              Reset
+            </Button>
+          </div>
+        ) : (
+          <SidebarMenuButton onClick={() => setConfirming(true)} className={COARSE_ROW}>
+            <RotateCcw />
+            <span>Reset demo</span>
+          </SidebarMenuButton>
+        )}
+      </SidebarMenuItem>
+      <SidebarMenuItem>
+        <SidebarMenuButton asChild className={COARSE_ROW}>
+          <a href={REPO_URL} target="_blank" rel="noopener noreferrer">
+            <Github />
+            <span>Deploy your own</span>
+          </a>
+        </SidebarMenuButton>
+      </SidebarMenuItem>
+      <p className="px-2 pb-1 pt-2 text-xs leading-relaxed text-sidebar-foreground/60">
+        A demo: pages are saved in this browser only, never sent anywhere.
+      </p>
+    </>
   );
 }
 
@@ -343,6 +420,7 @@ const ACTIONS =
 
 function TreeItem({ node, depth }: { node: NoteNode; depth: number }) {
   const { childrenOf, activeId, isExpanded, toggleExpanded, addPage, removePage } = useNotes();
+  const { href } = useBackend();
   const { dragId, drop, start, over, finish, end } = useDrag();
   const kids = childrenOf(node.id);
   const hasKids = kids.length > 0;
@@ -406,7 +484,7 @@ function TreeItem({ node, depth }: { node: NoteNode; depth: number }) {
           <span className="w-6 shrink-0 [@media(pointer:coarse)]:w-9" aria-hidden />
         )}
         <Link
-          href={`/${node.id}`}
+          href={href(`/${node.id}`)}
           {...PREFETCH_ON_HOVER}
           draggable={false}
           aria-current={active ? "page" : undefined}

@@ -1,0 +1,219 @@
+import { fromMarkdown } from "@/lib/markdown";
+import { toISODate } from "@/lib/dates";
+import type { NotePage } from "@/lib/types";
+
+type Sample = Omit<NotePage, "updatedAt">;
+
+/** A date this many days from today, as the editor's date chip writes it. */
+function day(offset: number): string {
+  const date = new Date();
+  date.setDate(date.getDate() + offset);
+  return `@${toISODate(date)}`;
+}
+
+/**
+ * The workspace a first visit to the demo opens on. Written in Markdown, the same way
+ * Claude writes pages over MCP; sub-page blocks are `[Title](/<id>)` lines.
+ */
+export function samplePages(): Sample[] {
+  const id = {
+    welcome: crypto.randomUUID(),
+    blocks: crypto.randomUUID(),
+    dates: crypto.randomUUID(),
+    claude: crypto.randomUUID(),
+    trip: crypto.randomUUID(),
+    packing: crypto.randomUUID(),
+    reading: crypto.randomUUID(),
+    deploy: crypto.randomUUID(),
+  };
+
+  const page = (
+    key: keyof typeof id,
+    parent: keyof typeof id | null,
+    position: number,
+    icon: string,
+    title: string,
+    markdown: string
+  ): Sample => ({
+    id: id[key],
+    parentId: parent ? id[parent] : null,
+    position,
+    icon,
+    title,
+    content: fromMarkdown(markdown.trim()),
+  });
+
+  return [
+    page(
+      "welcome",
+      null,
+      1,
+      "👋",
+      "Welcome to note-scion",
+      `
+This is a live demo. It runs entirely in your browser: what you write here is saved in this browser only, and nothing is sent anywhere.
+
+note-scion is a calm notes app for one person, with nested pages and a block editor. Your own copy also comes with an MCP server, so Claude can read and write the same pages.
+
+## Try it
+
+- [ ] Click anywhere on this page and start typing. It saves as you go.
+- [ ] On an empty line, type \`/\` for headings, lists, to-dos, quotes and code.
+- [ ] Press Ctrl K (⌘ K on a Mac) to jump to any page or search inside them.
+- [ ] Type \`@\` and then "tomorrow" or "next friday" to drop in a date.
+- [ ] Drag a page in the sidebar onto another one to nest it.
+- [ ] Delete a page, then bring it back from the Trash.
+
+## Inside this page
+
+[Writing in blocks](/${id.blocks})
+
+[Dates that stay true](/${id.dates})
+
+When you're done exploring, **Reset demo** at the bottom of the sidebar puts everything back.
+`
+    ),
+    page(
+      "blocks",
+      "welcome",
+      1,
+      "✍️",
+      "Writing in blocks",
+      `
+Every line is a block. Hover one and drag the handle on its left to move it.
+
+## Markdown shortcuts
+
+Type these at the start of a line:
+
+- \`#\`, \`##\` or \`###\` and a space for a heading
+- \`-\` or \`*\` for a bullet list, \`1.\` for a numbered one
+- \`[]\` for a to-do
+- \`>\` for a quote
+- \`\`\`\` \`\`\` \`\`\`\` for a code block
+- \`---\` for a divider
+
+Inline, wrap text in \`**\` for **bold**, \`*\` for *italic* and backticks for \`code\`. Select text and press Ctrl K to add a [link](https://github.com/pradprat/note-scion).
+
+> A page can hold other pages. Type \`/page\` to start one right here.
+
+\`\`\`ts
+// Code blocks keep their indentation. Tab indents inside them.
+function greet(name: string) {
+  return \`Hello, \${name}\`;
+}
+\`\`\`
+`
+    ),
+    page(
+      "dates",
+      "welcome",
+      2,
+      "📅",
+      "Dates that stay true",
+      `
+Dates read the way you'd say them, and stay right as the days pass. Something written as "tomorrow" today still shows the correct day next week.
+
+- Dentist ${day(1)}
+- Send the draft ${day(3)}
+- Quarterly review ${day(14)}
+- Started this list ${day(-2)}
+
+Type \`@\` followed by **today**, **tomorrow**, **next monday**, **in 3 days** or a date like **march 4**. Dates work in titles too.
+`
+    ),
+    page(
+      "claude",
+      null,
+      2,
+      "🤖",
+      "Working with Claude",
+      `
+In your own copy, Claude connects to note-scion over MCP. Add \`https://<your-site>/api/mcp\` as a custom connector on claude.ai, or in Claude Code, and approve the connection on your site.
+
+## Things to ask
+
+- "What's on my reading list?"
+- "Add today's decisions to the weekly sync page."
+- "Turn these meeting notes into a page under Projects, with to-dos for each owner."
+- "Find everything I wrote about the trip and summarise it."
+
+## What Claude can do
+
+1. List, search and read pages, as Markdown
+2. Create pages, inside other pages too
+3. Change a title, an icon or the body, replacing it or adding to the end
+4. Move pages around the tree
+5. Send pages to the trash, where you can restore them
+
+If Claude changes a page you have open, the editor notices. You choose which version to keep, so nothing is silently overwritten.
+`
+    ),
+    page(
+      "trip",
+      null,
+      3,
+      "🏔️",
+      "Weekend trip",
+      `
+Two nights up north, leaving ${day(10)}.
+
+## Plan
+
+- [x] Book the cabin
+- [ ] Check the trail conditions
+- [ ] Pick up the rental car ${day(9)}
+
+## Ideas
+
+- Sunrise hike on the first morning
+- The bakery everyone mentions, by the lake
+
+[Packing list](/${id.packing})
+`
+    ),
+    page(
+      "packing",
+      "trip",
+      1,
+      "🎒",
+      "Packing list",
+      `
+- [ ] Rain jacket
+- [ ] Headlamp
+- [x] Boots
+- [ ] Charger and power bank
+- [ ] Snacks for the drive
+`
+    ),
+    page(
+      "reading",
+      null,
+      4,
+      "📚",
+      "Reading list",
+      `
+- [ ] The Design of Everyday Things
+- [ ] A Philosophy of Software Design
+- [x] Thinking, Fast and Slow
+- [ ] The Pragmatic Programmer
+`
+    ),
+    page(
+      "deploy",
+      null,
+      5,
+      "🚀",
+      "Deploy your own",
+      `
+note-scion is open source under the MIT license. Your own copy keeps your pages in your own Postgres database, behind your password.
+
+1. Open [the repository](https://github.com/pradprat/note-scion) and click **Deploy with Vercel**. It copies the code and adds a free Neon database.
+2. Choose a password and a session secret when asked.
+3. Open your site, log in, and connect Claude.
+
+The free tiers of Vercel and Neon are plenty for one person.
+`
+    ),
+  ];
+}

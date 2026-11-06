@@ -20,9 +20,10 @@ export async function middleware(request: NextRequest) {
 
 export const config = {
   // Everything except what has to work without a browser session: the login page and
-  // the login/logout endpoints, the MCP endpoint and the OAuth endpoints Claude calls
+  // the login/logout endpoints, the public demo (it runs in the browser and never calls
+  // the server), the MCP endpoint and the OAuth endpoints Claude calls
   // (each checks its own bearer token or client credentials), and static files.
   matcher: [
-    "/((?!login|session|api/mcp|oauth/register|oauth/token|oauth/revoke|\\.well-known|_next/|favicon\\.ico|icon|apple-icon|robots\\.txt).*)",
+    "/((?!login|session|demo|api/mcp|oauth/register|oauth/token|oauth/revoke|\\.well-known|_next/|favicon\\.ico|icon|apple-icon|robots\\.txt).*)",
   ],
 };

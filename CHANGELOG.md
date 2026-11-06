@@ -18,6 +18,8 @@ The first public release.
 - Autosave with conflict detection, so edits from the app and from MCP never silently
   overwrite each other.
 - Trash with 30-day retention and undo.
+- A public demo at `/demo` that runs the whole workspace in the browser, with pages kept
+  in localStorage and no login.
 - Remote MCP server with seven tools, and an OAuth 2.1 authorization server with dynamic
   client registration, PKCE and refresh-token rotation.
 - Server-side page caching and prefetch on hover.

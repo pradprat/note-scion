@@ -14,6 +14,8 @@ A block editor with nested pages for you, and the same pages for Claude over
 [![Next.js 15](https://img.shields.io/badge/Next.js-15-171C22?logo=nextdotjs)](https://nextjs.org)
 [![MCP](https://img.shields.io/badge/MCP-OAuth%202.1-2A333D)](#connect-claude)
 
+**[Try the live demo →](https://notes.pradprat.blue/demo)**
+
 [Features](#features) · [Deploy](#deploy) · [Connect Claude](#connect-claude) · [Development](#development) · [Security](#security)
 
 </div>
@@ -33,6 +35,9 @@ already wrote, draft new pages, and keep lists up to date, from claude.ai, Claud
 any MCP client.
 
 ## Features
+
+Every feature below works in the [demo](https://notes.pradprat.blue/demo), except Claude:
+there, pages live in your browser's storage, so no MCP server can reach them.
 
 **Writing**
 
@@ -167,6 +172,14 @@ bun dev                      # http://localhost:3000
 | `bun run lint` | Lint |
 | `bun run db:migrate` | Create the tables |
 
+### The demo
+
+`/demo` is public and needs no database. It runs the same views as the real workspace
+over a store kept in localStorage ([`src/app/demo/_lib/demo-store.ts`](src/app/demo/_lib/demo-store.ts)),
+behind the same interface the server actions implement
+([`src/app/_components/backend.tsx`](src/app/_components/backend.tsx)). Sample pages are
+written in Markdown in [`seed.ts`](src/app/demo/_lib/seed.ts).
+
 ### How it's built
 
 Next.js 15 (App Router, server actions), React 19, Tailwind CSS with
@@ -179,6 +192,7 @@ Page bodies are stored as Tiptap JSON and converted to and from Markdown for MCP
 src/
 ├── app/
 │   ├── (app)/           the workspace: page view, trash, connected apps
+│   ├── demo/            the public in-browser demo
 │   ├── _components/     editor, sidebar, quick switcher and the rest of the UI
 │   ├── api/mcp/         the MCP server
 │   ├── oauth/           the OAuth authorization server
