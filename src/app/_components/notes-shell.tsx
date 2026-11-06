@@ -4,6 +4,7 @@ import { createContext, useCallback, useContext, useEffect, useState } from "rea
 import { usePathname } from "next/navigation";
 import { SidebarInset, SidebarProvider, useSidebar } from "@/components/ui/sidebar";
 import { Toaster } from "@/components/ui/sonner";
+import { useNotes } from "./notes-provider";
 import Sidebar from "./sidebar";
 import QuickSwitcher from "./quick-switcher";
 import UndoToast from "./undo-toast";
@@ -78,10 +79,11 @@ function ShellBody({
   children: React.ReactNode;
 }) {
   const pathname = usePathname();
+  const { activeId } = useNotes();
   const { setOpenMobile } = useSidebar();
 
-  // Close the mobile sheet once a page is picked.
-  useEffect(() => setOpenMobile(false), [pathname, setOpenMobile]);
+  // Close the mobile sheet once a page is picked (the demo changes the page, not the path).
+  useEffect(() => setOpenMobile(false), [pathname, activeId, setOpenMobile]);
 
   // The switcher takes over from the mobile sheet rather than stacking on it.
   const openSwitcher = useCallback(() => {

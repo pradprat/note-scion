@@ -17,6 +17,12 @@ const nextConfig = {
       // bookmarks) keep working.
       { source: "/notes", destination: "/", permanent: true },
       { source: "/notes/:path*", destination: "/:path*", permanent: true },
+      // Demo pages moved to /demo?page=<id> so the demo is all static files.
+      {
+        source: "/demo/:id([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12})",
+        destination: "/demo?page=:id",
+        permanent: true,
+      },
     ];
   },
   async headers() {

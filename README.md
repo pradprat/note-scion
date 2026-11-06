@@ -178,7 +178,8 @@ bun dev                      # http://localhost:3000
 over a store kept in localStorage ([`src/app/demo/_lib/demo-store.ts`](src/app/demo/_lib/demo-store.ts)),
 behind the same interface the server actions implement
 ([`src/app/_components/backend.tsx`](src/app/_components/backend.tsx)). Sample pages are
-written in Markdown in [`seed.ts`](src/app/demo/_lib/seed.ts).
+written in Markdown in [`seed.ts`](src/app/demo/_lib/seed.ts). A page is `/demo?page=<id>`,
+so every demo route is a static file and visitors never cost a server render.
 
 ### How it's built
 
@@ -209,6 +210,22 @@ Only hashes of OAuth tokens and codes are stored.
 
 Use a long, random password and session secret. To report a vulnerability, please see
 [SECURITY.md](SECURITY.md).
+
+### Staying inside the free tiers
+
+Vercel's Hobby plan and Neon's free plan never bill you; past their limits they pause the
+project instead. note-scion keeps strangers from spending those limits for you:
+
+- Requests that don't carry a well-formed token or client id are refused before they
+  reach the database, so junk traffic doesn't keep the database awake.
+- Open client registration is capped at 20 an hour, and registrations nobody approved
+  are cleared after a day, so the database can't be filled from outside.
+
+On a public deployment, two [Vercel Firewall](https://vercel.com/docs/vercel-firewall)
+rules (both free on Hobby) take care of the rest: a rate limit of about 120 requests a
+minute per IP on `/api/`, `/oauth/`, `/session`, `/login` and `/.well-known/`, and a
+rule denying scanner paths such as `/wp-`, `/.env` and `*.php`. Requests the firewall
+blocks don't count toward your usage.
 
 ## Contributing
 

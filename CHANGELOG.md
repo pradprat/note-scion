@@ -19,7 +19,9 @@ The first public release.
   overwrite each other.
 - Trash with 30-day retention and undo.
 - A public demo at `/demo` that runs the whole workspace in the browser, with pages kept
-  in localStorage and no login.
+  in localStorage and no login. All its routes are static files.
+- Guards that keep strangers from using up free-tier limits: token and client id shape
+  checks before any database query, and a capped, self-cleaning client registration.
 - Remote MCP server with seven tools, and an OAuth 2.1 authorization server with dynamic
   client registration, PKCE and refresh-token rotation.
 - Server-side page caching and prefetch on hover.

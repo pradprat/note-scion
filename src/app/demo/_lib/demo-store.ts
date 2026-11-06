@@ -13,6 +13,16 @@ import type { NotesBackend } from "../../_components/backend";
 
 const KEY = "note-scion:demo:v1";
 export const DEMO_BASE = "/demo";
+
+/**
+ * Demo URLs. A page is `/demo?page=<id>` rather than `/demo/<id>`: every demo route is then
+ * a static file, so visitors never cost a server render.
+ */
+export function demoHref(path: string): string {
+  if (path === "/") return DEMO_BASE;
+  const id = /^\/([0-9a-f-]{36})$/i.exec(path)?.[1];
+  return id ? `${DEMO_BASE}?page=${id}` : `${DEMO_BASE}${path}`;
+}
 const TRASH_DAYS = 30;
 const SEARCH_LIMIT = 12;
 
@@ -229,7 +239,7 @@ const MAX_TITLE = 500;
 export function createDemoBackend(): NotesBackend {
   return {
     demo: true,
-    href: (path) => (path === "/" ? DEMO_BASE : `${DEMO_BASE}${path}`),
+    href: demoHref,
     // The views subscribe to the store, so changes (from other tabs too) arrive on their own.
     refresh: () => {},
     reset: reseed,

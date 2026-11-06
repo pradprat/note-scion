@@ -67,16 +67,19 @@ type Pending = PendingDelete & { removed: NoteNode[] };
 
 export function NotesProvider({
   initialTree,
+  activeId: openId,
   children,
 }: {
   initialTree: NoteNode[];
+  /** The open page. Taken from the route's [id] when not given (the demo passes it). */
+  activeId?: string | null;
   children: React.ReactNode;
 }) {
   const router = useRouter();
   const backend = useBackend();
   const { href, refresh: reload } = backend;
   const params = useParams<{ id?: string }>();
-  const activeId = params?.id ?? null;
+  const activeId = openId !== undefined ? openId : (params?.id ?? null);
 
   // The client copy is authoritative between server renders; take a fresh server tree
   // whenever the layout re-renders with one.
