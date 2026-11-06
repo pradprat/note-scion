@@ -1,16 +1,38 @@
 {
   "name": "note-scion",
-  "version": "0.1.0",
+  "version": "1.0.0",
   "private": true,
-  "description": "A single-user, Notion-style notes app that Claude can read and write over MCP.",
+  "description": "A private, Notion-style notes app that Claude can read and write over MCP.",
+  "keywords": [
+    "notes",
+    "notion",
+    "mcp",
+    "model-context-protocol",
+    "claude",
+    "nextjs",
+    "tiptap",
+    "self-hosted"
+  ],
+  "homepage": "https://github.com/pradprat/note-scion#readme",
+  "bugs": {
+    "url": "https://github.com/pradprat/note-scion/issues"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/pradprat/note-scion.git"
+  },
   "license": "MIT",
+  "author": "Pradika Fitra Pratama",
+  "engines": {
+    "node": ">=20"
+  },
   "scripts": {
     "dev": "next dev",
-    "build": "next build",
+    "build": "node scripts/migrate.mjs --if-configured && next build",
     "start": "next start",
     "lint": "next lint",
     "typecheck": "tsc --noEmit",
-    "db:migrate": "bun scripts/migrate.ts"
+    "db:migrate": "bun scripts/migrate.mjs"
   },
   "dependencies": {
     "@floating-ui/dom": "^1.8.0",

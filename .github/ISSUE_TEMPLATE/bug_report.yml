@@ -1,0 +1,45 @@
+name: Bug report
+description: Something doesn't work the way it should.
+labels: ["bug"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for reporting this. For a security problem, please don't use this form: see SECURITY.md instead.
+  - type: textarea
+    id: what-happened
+    attributes:
+      label: What happened?
+      description: What did you see, and what did you expect to see?
+    validations:
+      required: true
+  - type: textarea
+    id: steps
+    attributes:
+      label: Steps to reproduce
+      placeholder: |
+        1. Open a page
+        2. Type ...
+        3. See ...
+    validations:
+      required: true
+  - type: dropdown
+    id: where
+    attributes:
+      label: Where does it happen?
+      options:
+        - In the app (browser)
+        - Over MCP (claude.ai, Claude Code or another client)
+        - Deploying or setting up
+    validations:
+      required: true
+  - type: input
+    id: environment
+    attributes:
+      label: Browser, OS or MCP client
+      placeholder: Chrome 131 on macOS, Claude Code 2.x, ...
+  - type: textarea
+    id: logs
+    attributes:
+      label: Logs or screenshots
+      description: Console errors, server logs or screenshots, if you have them. Remove anything private first.
