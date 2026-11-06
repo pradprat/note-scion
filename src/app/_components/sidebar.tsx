@@ -6,12 +6,12 @@ import { usePathname, useRouter } from "next/navigation";
 import {
   ChevronRight,
   FileText,
-  Github,
   Loader2,
   LogOut,
   PanelLeftClose,
   Plug,
   Plus,
+  Rocket,
   RotateCcw,
   Search,
   Trash2,
@@ -303,7 +303,7 @@ function DemoMenu() {
       <SidebarMenuItem>
         <SidebarMenuButton asChild className={COARSE_ROW}>
           <a href={REPO_URL} target="_blank" rel="noopener noreferrer">
-            <Github />
+            <Rocket />
             <span>Deploy your own</span>
           </a>
         </SidebarMenuButton>
