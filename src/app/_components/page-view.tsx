@@ -304,7 +304,7 @@ export default function PageView({ page }: { page: NotePage }) {
           <BreadcrumbList className="flex-nowrap gap-1 sm:gap-1">
             {ancestors.map((node) => (
               <Fragment key={node.id}>
-                <BreadcrumbItem className="min-w-0 shrink">
+                <BreadcrumbItem className="min-w-0 shrink-[2]">
                   <BreadcrumbLink asChild>
                     <Link href={href(`/${node.id}`)} className="flex min-w-0 items-center gap-1.5 rounded-md px-1 py-0.5">
                       {node.icon && <span aria-hidden>{node.icon}</span>}
@@ -315,7 +315,9 @@ export default function PageView({ page }: { page: NotePage }) {
                 <BreadcrumbSeparator />
               </Fragment>
             ))}
-            <BreadcrumbItem className="min-w-0 shrink-[0.5]">
+            {/* Ancestors give way first. Factors stay at 1 or more: below that, a page with
+                no ancestors would take only part of the squeeze and spill into the status. */}
+            <BreadcrumbItem className="min-w-0 shrink">
               <BreadcrumbPage className="flex min-w-0 items-center gap-1.5 px-1">
                 {icon && <span aria-hidden>{icon}</span>}
                 <span className="truncate">{title.trim() || "Untitled"}</span>
