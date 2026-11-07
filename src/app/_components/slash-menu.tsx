@@ -173,7 +173,7 @@ const SlashMenu = forwardRef<SlashMenuHandle, SuggestionProps<SlashItem, SlashIt
         ref={listRef}
         role="listbox"
         aria-label="Insert block"
-        className="max-h-80 w-64 overflow-y-auto rounded-md border bg-popover p-1 text-popover-foreground shadow-md"
+        className="max-h-[min(20rem,var(--menu-max-h,20rem))] w-64 overflow-y-auto overscroll-contain rounded-md border bg-popover p-1 text-popover-foreground shadow-md"
       >
         <p className="px-2 py-1.5 text-xs font-medium text-muted-foreground">Blocks</p>
         {items.map((item, index) => {

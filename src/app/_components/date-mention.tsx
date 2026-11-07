@@ -1,6 +1,6 @@
 "use client";
 
-import { forwardRef, useEffect, useImperativeHandle, useState } from "react";
+import { forwardRef, useEffect, useImperativeHandle, useRef, useState } from "react";
 import { Extension } from "@tiptap/core";
 import { ReactRenderer } from "@tiptap/react";
 import Suggestion, { type SuggestionProps } from "@tiptap/suggestion";
@@ -8,7 +8,7 @@ import { PluginKey } from "@tiptap/pm/state";
 import { DateMention } from "@/lib/date-mention";
 import { dateLabel, fullDate, shortDate, suggestDates, type DateSuggestion } from "@/lib/dates";
 import { cn } from "@/lib/utils";
-import { placeMenu } from "./slash-command";
+import { floatMenu } from "./slash-command";
 
 /* ---------- The chip ---------- */
 
@@ -90,8 +90,14 @@ export const DateMenu = forwardRef<DateMenuHandle, Pick<Props, "items" | "comman
   ref
 ) {
   const [selected, setSelected] = useState(0);
+  const listRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => setSelected(0), [items]);
+
+  // The list scrolls when there is little room around the caret (a phone keyboard).
+  useEffect(() => {
+    listRef.current?.querySelector<HTMLElement>(`[data-index="${selected}"]`)?.scrollIntoView({ block: "nearest" });
+  }, [selected]);
 
   useImperativeHandle(
     ref,
@@ -122,9 +128,10 @@ export const DateMenu = forwardRef<DateMenuHandle, Pick<Props, "items" | "comman
 
   return (
     <div
+      ref={listRef}
       role="listbox"
       aria-label="Insert date"
-      className="w-72 rounded-md border bg-popover p-1 text-popover-foreground shadow-md"
+      className="max-h-[var(--menu-max-h,none)] w-72 overflow-y-auto overscroll-contain rounded-md border bg-popover p-1 text-popover-foreground shadow-md"
     >
       <p className="px-2 py-1.5 text-xs font-medium text-muted-foreground">Date</p>
       {items.map((item, index) => {
@@ -135,6 +142,7 @@ export const DateMenu = forwardRef<DateMenuHandle, Pick<Props, "items" | "comman
             type="button"
             role="option"
             aria-selected={index === selected}
+            data-index={index}
             onMouseEnter={() => setSelected(index)}
             onMouseDown={(event) => event.preventDefault()}
             onClick={() => command(item)}
@@ -178,9 +186,12 @@ export const DateCommand = Extension.create({
         },
         render: () => {
           let renderer: ReactRenderer<DateMenuHandle, Props> | null = null;
+          let menu: ReturnType<typeof floatMenu> | null = null;
           let open = false;
 
           const close = () => {
+            menu?.destroy();
+            menu = null;
             renderer?.element.remove();
             renderer?.destroy();
             renderer = null;
@@ -194,13 +205,14 @@ export const DateCommand = Extension.create({
               element.style.position = "fixed";
               element.style.zIndex = "50";
               document.body.appendChild(element);
-              placeMenu(element, props);
+              menu = floatMenu(element, props.editor.view.dom);
+              menu.update(props.clientRect);
             },
             onUpdate: (props) => {
               if (!renderer) return;
               open = props.items.length > 0;
               renderer.updateProps(props);
-              placeMenu(renderer.element as HTMLElement, props);
+              menu?.update(props.clientRect);
             },
             onKeyDown: ({ event }) => {
               if (!open) return false;
