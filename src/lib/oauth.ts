@@ -502,14 +502,46 @@ export async function disconnectClient(clientId: string): Promise<void> {
   await sql()`update oauth_tokens set revoked = true where client_id = ${clientId} and not revoked`;
 }
 
-/** True when the bearer token is a live access token meant for this MCP endpoint. */
-export async function verifyAccessToken(token: string, resource: string): Promise<boolean> {
-  if (!isToken(token)) return false;
+/**
+ * The client a bearer token belongs to, when it is a live access token meant for this
+ * MCP endpoint; null otherwise. `clientName` is what the app registered as, tidied for
+ * showing to the owner, or null if it gave none.
+ */
+export async function verifyAccessToken(
+  token: string,
+  resource: string
+): Promise<{ clientName: string | null } | null> {
+  if (!isToken(token)) return null;
   const rows = await sql()`
-    select resource from oauth_tokens
-    where token_hash = ${hashToken(token)} and kind = 'access'
-      and not revoked and expires_at > now()`;
+    select t.resource, c.client_name from oauth_tokens t
+    join oauth_clients c on c.client_id = t.client_id
+    where t.token_hash = ${hashToken(token)} and t.kind = 'access'
+      and not t.revoked and t.expires_at > now()`;
   const row = rows[0];
-  if (!row) return false;
-  return !row.resource || sameResource(row.resource as string, resource);
+  if (!row) return null;
+  if (row.resource && !sameResource(row.resource as string, resource)) return null;
+  return { clientName: displayName(row.client_name) };
+}
+
+/** A registered client name fit to show: one line, no control characters, 64 at most. */
+function displayName(raw: unknown): string | null {
+  if (typeof raw !== "string") return null;
+  // Control characters, and the invisible ones that reorder or hide text, become spaces.
+  const clean = Array.from(raw, (ch) => (invisible(ch.codePointAt(0) ?? 0) ? " " : ch))
+    .join("")
+    .replace(/\s+/g, " ")
+    .trim();
+  return clean ? Array.from(clean).slice(0, 64).join("") : null;
+}
+
+function invisible(code: number): boolean {
+  return (
+    code < 0x20 ||
+    (code >= 0x7f && code <= 0x9f) ||
+    code === 0xad ||
+    (code >= 0x200b && code <= 0x200f) ||
+    (code >= 0x2028 && code <= 0x202e) ||
+    (code >= 0x2060 && code <= 0x2069) ||
+    code === 0xfeff
+  );
 }

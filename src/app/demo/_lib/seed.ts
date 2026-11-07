@@ -2,7 +2,7 @@ import { fromMarkdown } from "@/lib/markdown";
 import { toISODate } from "@/lib/dates";
 import type { NotePage } from "@/lib/types";
 
-type Sample = Omit<NotePage, "updatedAt">;
+type Sample = Omit<NotePage, "updatedAt" | "mcpEdit">;
 
 /** A date this many days from today, as the editor's date chip writes it. */
 function day(offset: number): string {

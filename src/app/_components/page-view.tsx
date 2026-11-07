@@ -16,7 +16,8 @@ import {
   BreadcrumbPage,
   BreadcrumbSeparator,
 } from "@/components/ui/breadcrumb";
-import type { NotePage, NotePatch } from "@/lib/types";
+import { exactTime, timeAgo } from "@/lib/dates";
+import type { McpEdit, NotePage, NotePatch } from "@/lib/types";
 import { useBackend } from "./backend";
 import { useNotes } from "./notes-provider";
 import IconPicker from "./icon-picker";
@@ -39,6 +40,8 @@ const newer = (a: string, b: string) => Date.parse(a) > Date.parse(b);
 function useAutosave(page: NotePage, applyRemote: (page: NotePage) => void) {
   const backend = useBackend();
   const [status, setStatus] = useState<SaveStatus>("saved");
+  // The last edit, if an MCP client made it. Our own save makes us the last editor.
+  const [mcpEdit, setMcpEdit] = useState(page.mcpEdit);
   const pending = useRef<NotePatch>({});
   const timer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const chain = useRef<Promise<void>>(Promise.resolve());
@@ -72,6 +75,7 @@ function useAutosave(page: NotePage, applyRemote: (page: NotePage) => void) {
           if (result.status === "saved") {
             base.current = result.updatedAt;
             blocked.current = false;
+            setMcpEdit(null);
             setStatus(hasPending() ? "unsaved" : "saved");
           } else {
             // Keep what didn't land, under anything typed since.
@@ -113,6 +117,7 @@ function useAutosave(page: NotePage, applyRemote: (page: NotePage) => void) {
       return;
     }
     base.current = page.updatedAt;
+    setMcpEdit(page.mcpEdit);
     applyRemote(page);
   }, [page, applyRemote]);
 
@@ -128,6 +133,7 @@ function useAutosave(page: NotePage, applyRemote: (page: NotePage) => void) {
     pending.current = {};
     blocked.current = false;
     base.current = latest.updatedAt;
+    setMcpEdit(latest.mcpEdit);
     applyRemote(latest);
     setStatus("saved");
   }, [backend, page.id, applyRemote]);
@@ -153,7 +159,7 @@ function useAutosave(page: NotePage, applyRemote: (page: NotePage) => void) {
     };
   }, [flush]);
 
-  return { status, schedule, flush, loadLatest, keepMine };
+  return { status, mcpEdit, schedule, flush, loadLatest, keepMine };
 }
 
 export default function PageView({ page }: { page: NotePage }) {
@@ -176,7 +182,7 @@ export default function PageView({ page }: { page: NotePage }) {
     [patchNode]
   );
 
-  const { status, schedule, flush, loadLatest, keepMine } = useAutosave(page, applyRemote);
+  const { status, mcpEdit, schedule, flush, loadLatest, keepMine } = useAutosave(page, applyRemote);
 
   const ancestors = ancestorsOf(page.id);
 
@@ -295,7 +301,7 @@ export default function PageView({ page }: { page: NotePage }) {
       <TopBar
         end={
           <>
-            <SaveIndicator status={status} onRetry={() => void flush()} />
+            <SaveIndicator status={status} mcpEdit={mcpEdit} onRetry={() => void flush()} />
             <CopyLinkButton id={page.id} />
           </>
         }
@@ -482,7 +488,21 @@ function CopyLinkButton({ id }: { id: string }) {
   );
 }
 
-function SaveIndicator({ status, onRetry }: { status: SaveStatus; onRetry: () => void }) {
+/**
+ * Where the page stands: "Saved", "Saving…", "Editing", or, when an MCP client made the
+ * last edit, who and when ("Claude Code edited 4m ago"), in words and in the same quiet
+ * style. Only the words sit in the live region, which stays mounted, so a screen reader
+ * hears "Claude Code edited" once as the edit arrives, not again as the time counts up.
+ */
+function SaveIndicator({
+  status,
+  mcpEdit,
+  onRetry,
+}: {
+  status: SaveStatus;
+  mcpEdit: McpEdit | null;
+  onRetry: () => void;
+}) {
   if (status === "error") {
     return (
       <Button variant="link" size="sm" onClick={onRetry} className="h-auto shrink-0 p-0 text-xs text-destructive">
@@ -490,8 +510,12 @@ function SaveIndicator({ status, onRetry }: { status: SaveStatus; onRetry: () =>
       </Button>
     );
   }
-  const text =
-    status === "saved"
+  const edit = status === "saved" ? mcpEdit : null;
+  const text = edit
+    ? edit.client
+      ? `${edit.client} edited`
+      : "Edited over MCP"
+    : status === "saved"
       ? "Saved"
       : status === "saving"
         ? "Saving…"
@@ -501,12 +525,37 @@ function SaveIndicator({ status, onRetry }: { status: SaveStatus; onRetry: () =>
   return (
     <span
       className={cn(
-        "text-xs text-muted-foreground",
+        "flex min-w-0 items-baseline gap-1 text-xs text-muted-foreground",
         (status === "conflict" || status === "missing") && "text-destructive"
       )}
-      aria-live="polite"
     >
-      {text}
+      {/* A long client name gives way before the time does. */}
+      <span aria-live="polite" className="min-w-0 max-w-[8rem] truncate sm:max-w-[14rem]">
+        {text}
+      </span>
+      {/* A real space, so the two read as words, not "edited4m ago". */}
+      {edit && " "}
+      {edit && <EditedAgo at={edit.at} />}
     </span>
+  );
+}
+
+/** "4m ago", kept current while it's on screen; the exact time on hover. */
+function EditedAgo({ at }: { at: string }) {
+  const [now, setNow] = useState(() => new Date());
+  useEffect(() => {
+    const tick = () => setNow(new Date());
+    const timer = setInterval(tick, 30_000);
+    // A laptop waking from sleep shows the right time at once.
+    document.addEventListener("visibilitychange", tick);
+    return () => {
+      clearInterval(timer);
+      document.removeEventListener("visibilitychange", tick);
+    };
+  }, []);
+  return (
+    <time dateTime={at} title={exactTime(at)} className="shrink-0 whitespace-nowrap" suppressHydrationWarning>
+      {timeAgo(at, now)}
+    </time>
   );
 }

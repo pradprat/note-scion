@@ -12,6 +12,14 @@ export interface NoteNode {
 export interface NotePage extends NoteNode {
   content: JSONContent | null;
   updatedAt: string;
+  /** Set when the last edit to the title, icon or body came over MCP, not from the owner. */
+  mcpEdit: McpEdit | null;
+}
+
+export interface McpEdit {
+  /** The client's registered name ("Claude", "Claude Code"); null for the static token. */
+  client: string | null;
+  at: string;
 }
 
 export interface NotePatch {

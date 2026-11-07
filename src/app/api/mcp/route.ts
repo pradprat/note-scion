@@ -14,6 +14,7 @@ import {
   trashPage,
   TRASH_DAYS,
   updatePage,
+  type Writer,
 } from "@/lib/db";
 import { appendContent, fromMarkdown, toMarkdown } from "@/lib/markdown";
 import {
@@ -39,19 +40,22 @@ const MAX_MARKDOWN = 500_000;
 
 /**
  * Accepts either an OAuth access token issued for this endpoint (claude.ai and other
- * OAuth clients) or the static NOTES_MCP_TOKEN (Claude Code configured by hand).
+ * OAuth clients) or the static NOTES_MCP_TOKEN (Claude Code configured by hand), and
+ * says who is writing: the OAuth client by its registered name, or no name for the
+ * static token. Null when the request isn't allowed in.
  */
-async function authorized(request: Request): Promise<boolean> {
+async function authorized(request: Request): Promise<Writer | null> {
   const header = request.headers.get("authorization") ?? "";
   const token = header.startsWith("Bearer ") ? header.slice(7).trim() : "";
-  if (!token) return false;
+  if (!token) return null;
 
   const staticToken = process.env.NOTES_MCP_TOKEN;
   if (staticToken && staticToken.length >= 32) {
     const hash = (value: string) => createHash("sha256").update(value).digest();
-    if (timingSafeEqual(hash(token), hash(staticToken))) return true;
+    if (timingSafeEqual(hash(token), hash(staticToken))) return { mcpClient: null };
   }
-  return verifyAccessToken(token, resourceFor(request));
+  const grant = await verifyAccessToken(token, resourceFor(request));
+  return grant && { mcpClient: grant.clientName };
 }
 
 const label = (node: Pick<NoteNode, "title" | "icon">) =>
@@ -104,8 +108,11 @@ const markdownInput = (what: string) =>
       `${what} as Markdown. Supported: # to ### headings, paragraphs, **bold**, *italic*, ~~strike~~, \`code\`, [links](url), - bullets, 1. numbered lists, - [ ] / - [x] to-dos (nestable), > quotes, \`\`\` code blocks and --- dividers.`
     );
 
-/** `origin` is this site as the request saw it, for the page links in tool replies. */
-function buildServer(origin: string): McpServer {
+/**
+ * `origin` is this site as the request saw it, for the page links in tool replies;
+ * `writer` is the client calling, recorded on the pages it edits.
+ */
+function buildServer(origin: string, writer: Writer): McpServer {
   const pageUrl = (id: string) => `${origin}/${id}`;
   const server = new McpServer({ name: "note-scion", version: "1.0.0" });
 
@@ -182,7 +189,7 @@ function buildServer(origin: string): McpServer {
       const patch: NotePatch = { title };
       if (icon) patch.icon = icon;
       if (markdown) patch.content = fromMarkdown(markdown);
-      await updatePage(node.id, patch);
+      await updatePage(node.id, patch, writer);
       return text(`Created "${title || "Untitled"}" (id: ${node.id})\n${pageUrl(node.id)}`);
     }
   );
@@ -221,7 +228,7 @@ function buildServer(origin: string): McpServer {
         patch.content = mode === "append" ? appendContent(page.content, body) : body;
       }
       if (!Object.keys(patch).length) return fail("Nothing to change: pass title, icon or markdown.");
-      await updatePage(id, patch);
+      await updatePage(id, patch, writer);
       return text(`Updated "${(title ?? page.title) || "Untitled"}" (${Object.keys(patch).join(", ")}).`);
     }
   );
@@ -269,7 +276,8 @@ function buildServer(origin: string): McpServer {
 }
 
 async function handle(request: Request): Promise<Response> {
-  if (!(await authorized(request))) {
+  const writer = await authorized(request);
+  if (!writer) {
     // Points OAuth clients at the discovery document (RFC 9728 / MCP auth spec).
     const metadata = `${issuerFor(request)}/.well-known/oauth-protected-resource${MCP_PATH}`;
     return json({ error: "invalid_token", error_description: "Missing or invalid access token" }, 401, {
@@ -277,7 +285,7 @@ async function handle(request: Request): Promise<Response> {
     });
   }
   // Stateless: a fresh server and transport per request, no session ids.
-  const server = buildServer(issuerFor(request));
+  const server = buildServer(issuerFor(request), writer);
   const transport = new WebStandardStreamableHTTPServerTransport({
     sessionIdGenerator: undefined,
     enableJsonResponse: true,

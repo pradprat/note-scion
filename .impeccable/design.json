@@ -1,6 +1,6 @@
 {
   "schemaVersion": 2,
-  "generatedAt": "2026-11-07T03:54:12.098Z",
+  "generatedAt": "2026-11-07T13:16:29.605Z",
   "title": "Design System: note-scion",
   "extensions": {
     "colorMeta": {
@@ -338,13 +338,13 @@
   ],
   "narrative": {
     "northStar": "The Shared Desk",
-    "overview": "note-scion is one calm desk that two authors work at: the owner, and Claude over MCP.\nEverything on it stays where it was left. When the other author changes something,\nnothing flashes, sparkles or announces itself. The page simply shows the newer text, and\nif both of you edited it, you're asked which version to keep. The visual system serves\nthat trust. It's quiet, predictable, and the same for both authors.\n\nThe desk is drawn in one cool slate scale of five steps, from Night Ink to Frost Paper,\non white paper in light mode and on the scale's darkest step in dark mode. There's no\nbrand accent color today. Hierarchy comes from the slate steps, from type weight, and\nfrom space. The only color that arrives on its own is the emoji the owner picks as each\npage's icon, and Signal Red when something is destructive or has gone wrong. The density\nis that of a writing tool: a 256px page tree on the left, a 48px top bar, and a single\n768px column of prose with generous air above it.\n\nThe components are precise and plain. They're the shadcn/ui and Notion patterns people\nalready know, at exact sizes, with nothing custom unless it earns its place. The custom\nwork all sits in the editor's details: a drag grip that lines up with the first line of\nany block, `@` dates set as quiet grey words, and sub-page links one text line tall.",
+    "overview": "note-scion is one calm desk that two authors work at: the owner, and Claude over MCP.\nEverything on it stays where it was left. When the other author changes something,\nnothing flashes, sparkles or pops up. The page simply shows the newer text, the save\nstatus says in a few plain words who made the edit and when, and if both of you edited\nit, you're asked which version to keep. The visual system serves that trust. It's\nquiet, predictable, and the same for both authors.\n\nThe desk is drawn in one cool slate scale of five steps, from Night Ink to Frost Paper,\non white paper in light mode and on the scale's darkest step in dark mode. There's no\nbrand accent color today. Hierarchy comes from the slate steps, from type weight, and\nfrom space. The only color that arrives on its own is the emoji the owner picks as each\npage's icon, and Signal Red when something is destructive or has gone wrong. The density\nis that of a writing tool: a 256px page tree on the left, a 48px top bar, and a single\n768px column of prose with generous air above it.\n\nThe components are precise and plain. They're the shadcn/ui and Notion patterns people\nalready know, at exact sizes, with nothing custom unless it earns its place. The custom\nwork all sits in the editor's details: a drag grip that lines up with the first line of\nany block, `@` dates set as quiet grey words, and sub-page links one text line tall.",
     "keyCharacteristics": [
       "One cool slate scale (hue 210–217), inverted between light and dark modes, following the system setting.",
       "Instrument Sans for everything, with DM Mono only for code and key hints.",
       "Flat resting surfaces. Only things that float get a shadow.",
       "Gently rounded corners (4–8px). Nothing is pill-shaped except the spinner.",
-      "Claude's edits look exactly like the owner's.",
+      "Claude's edits look exactly like the owner's. Only the save status says who made the last edit, in words.",
       "Keyboard hints are shown wherever there's a pointer to read them, and hidden on touch."
     ],
     "rules": [
@@ -372,6 +372,11 @@
         "name": "The One Column Rule",
         "body": "Content lives in a single 768px column. No side panels, no\nmulti-column page layouts.",
         "section": "layout"
+      },
+      {
+        "name": "The Authorship in Words Rule",
+        "body": "Who changed a page is said in plain words where the\nsave status lives: never as a badge, color, avatar, icon or AI styling, and never as a\nnotification.",
+        "section": "components"
       }
     ],
     "dos": [
@@ -384,7 +389,7 @@
       "**Do** use the standard shadcn and Radix patterns for dialogs, popovers, menus and toasts. Build something custom only when the editor needs it."
     ],
     "donts": [
-      "**Don't** style anything Claude does with sparkles, gradients, glows, \"magic\" purples or AI badges. Claude's edits, pages and status look exactly like the owner's.",
+      "**Don't** style anything Claude does with sparkles, gradients, glows, \"magic\" purples or AI badges. Claude's edits and pages look exactly like the owner's. Who made the last edit is said in words in the save status (the Authorship in Words Rule).",
       "**Don't** add heavy chrome around the page: no cards inside cards, banners, thick borders or floating toolbars. Chrome stays in the sidebar and the 48px top bar, and the page stays bare.",
       "**Don't** put shadows on resting surfaces (page, sidebar, top bar, list rows) without a reason. Shadows mean \"this floats\".",
       "**Don't** set `@` dates, page links or tags as colored pills. Inline references stay words in the line.",

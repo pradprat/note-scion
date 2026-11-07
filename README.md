@@ -61,6 +61,9 @@ there, pages live in your browser's storage, so no MCP server can reach them.
 
 - **MCP server** with seven tools: list, search, read, create, update, move and delete
   pages. Page bodies go in and out as Markdown.
+- **You can see who edited a page last**: after Claude changes a page, its save status
+  reads "Claude edited 4m ago" (or "Claude Code", or whichever app it was) until you
+  edit it again.
 - **OAuth 2.1** with dynamic client registration, PKCE and rotating refresh tokens, so
   claude.ai connects with nothing but a URL. **Connected apps** lists and revokes access.
 

@@ -81,7 +81,7 @@ export async function getPage(id: string): Promise<NotePage | null> {
 export async function loadPage(id: string): Promise<NotePage | null> {
   if (!isPageId(id)) return null;
   const rows = await sql()`
-    select id, parent_id, title, icon, position, content, updated_at
+    select id, parent_id, title, icon, position, content, updated_at, mcp_editor, mcp_edited_at
     from notes_pages where id = ${id} and deleted_at is null`;
   const row = rows[0];
   if (!row) return null;
@@ -89,8 +89,18 @@ export async function loadPage(id: string): Promise<NotePage | null> {
     ...toNode(row),
     content: (row.content as JSONContent | null) ?? null,
     updatedAt: iso(row.updated_at),
+    mcpEdit: row.mcp_edited_at
+      ? { client: (row.mcp_editor as string | null) ?? null, at: iso(row.mcp_edited_at) }
+      : null,
   };
 }
+
+/**
+ * Who a write comes from: the owner in the app, or an MCP client, by the name it
+ * registered with (null for the static token). An MCP write is remembered on the page
+ * until the owner next saves it.
+ */
+export type Writer = "owner" | { mcpClient: string | null };
 
 export class PageNotFoundError extends Error {}
 
@@ -123,8 +133,10 @@ export type UpdateResult =
 export async function updatePage(
   id: string,
   patch: NotePatch,
+  writer: Writer,
   expectedUpdatedAt: string | null = null
 ): Promise<UpdateResult> {
+  const mcp = writer === "owner" ? null : writer;
   const hasTitle = patch.title !== undefined;
   const hasIcon = patch.icon !== undefined;
   const hasContent = patch.content !== undefined;
@@ -139,6 +151,8 @@ export async function updatePage(
       icon = case when ${hasIcon}::boolean then ${patch.icon ?? null}::text else icon end,
       content = case when ${hasContent}::boolean
         then ${hasContent ? JSON.stringify(patch.content) : null}::jsonb else content end,
+      mcp_editor = ${mcp?.mcpClient ?? null}::text,
+      mcp_edited_at = case when ${mcp !== null}::boolean then now() else null end,
       updated_at = now()
     where id = ${id}
       and deleted_at is null

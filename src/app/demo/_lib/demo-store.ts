@@ -123,7 +123,7 @@ export async function reseed(): Promise<void> {
   const { samplePages } = await import("./seed");
   const now = stamp();
   commit({
-    pages: samplePages().map((page) => ({ ...page, updatedAt: now, deletedAt: null })),
+    pages: samplePages().map((page) => ({ ...page, updatedAt: now, mcpEdit: null, deletedAt: null })),
   });
 }
 
@@ -142,7 +142,8 @@ const toNode = ({ id, parentId, title, icon, position }: StoredPage): NoteNode =
   icon,
   position,
 });
-const toPage = ({ deletedAt: _deleted, ...page }: StoredPage): NotePage => page;
+// Pages saved before `mcpEdit` existed have none: read that as the owner's edit.
+const toPage = ({ deletedAt: _deleted, ...page }: StoredPage): NotePage => ({ ...page, mcpEdit: page.mcpEdit ?? null });
 
 /** The sidebar tree. The same array comes back until a title, icon or place changes. */
 export function getTree(): NoteNode[] {
@@ -257,6 +258,7 @@ export function createDemoBackend(): NotesBackend {
         position: nextPosition(pages, parentId),
         content: null,
         updatedAt: stamp(),
+        mcpEdit: null,
         deletedAt: null,
       };
       commit({ pages: [...pages, page] });
@@ -280,6 +282,8 @@ export function createDemoBackend(): NotesBackend {
         ...(patch.icon !== undefined && { icon: patch.icon }),
         ...(patch.content !== undefined && { content: patch.content }),
         updatedAt: stamp(),
+        // Every write here is the visitor's own, as the owner's are in the real app.
+        mcpEdit: null,
       };
       commit({ pages: pages.map((p) => (p.id === id ? next : p)) });
       return { status: "saved", updatedAt: next.updatedAt };

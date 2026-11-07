@@ -73,6 +73,27 @@ export function dateLabel(iso: string, now = new Date()): string {
   });
 }
 
+/** How long ago a moment was: "just now", "4m ago", "2h ago", "yesterday", then "Nov 3". */
+export function timeAgo(at: string, now = new Date()): string {
+  const then = new Date(at);
+  const minutes = Math.floor((now.getTime() - then.getTime()) / 60_000);
+  if (minutes < 1) return "just now";
+  if (minutes < 60) return `${minutes}m ago`;
+  const days = daysBetween(then, now);
+  if (days === 0) return `${Math.floor(minutes / 60)}h ago`;
+  if (days === 1) return "yesterday";
+  return then.toLocaleDateString("en-US", {
+    month: "short",
+    day: "numeric",
+    year: then.getFullYear() === now.getFullYear() ? undefined : "numeric",
+  });
+}
+
+/** "November 3, 2026 at 4:12 PM": the moment behind a `timeAgo`. */
+export function exactTime(at: string): string {
+  return new Date(at).toLocaleString("en-US", { dateStyle: "long", timeStyle: "short" });
+}
+
 /** "Thursday, November 12, 2026": for tooltips and copied text. */
 export function fullDate(iso: string): string {
   const date = parseISODate(iso);

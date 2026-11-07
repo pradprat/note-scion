@@ -17,6 +17,12 @@ create index if not exists notes_pages_parent_idx on notes_pages (parent_id, pos
 alter table notes_pages add column if not exists deleted_at timestamptz;
 create index if not exists notes_pages_deleted_idx on notes_pages (deleted_at) where deleted_at is not null;
 
+-- Who made the last edit to a page's title, icon or body, when it came over MCP: the
+-- client's registered name (null for the static token) and when. Cleared when the
+-- owner saves the page, so both null means the owner was last.
+alter table notes_pages add column if not exists mcp_editor text;
+alter table notes_pages add column if not exists mcp_edited_at timestamptz;
+
 -- OAuth 2.1 for the notes MCP endpoint. Secrets, codes and tokens are stored as
 -- SHA-256 hashes only.
 create table if not exists oauth_clients (

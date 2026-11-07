@@ -4,6 +4,21 @@ All notable changes to note-scion are listed here. The format follows
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and versions follow
 [Semantic Versioning](https://semver.org/).
 
+## [Unreleased]
+
+### Added
+
+- After an MCP client edits a page, its save status says which app made the change and
+  how long ago ("Claude Code edited 4m ago"), until you edit the page again. Stored in
+  two new columns, `notes_pages.mcp_editor` and `mcp_edited_at`, which the build adds.
+
+### Fixed
+
+- The `/` and `@` menus no longer cover the line being typed or run off the bottom of the
+  screen. They open above the line when there's more room there, including above a
+  phone's keyboard.
+- A long save status no longer overlaps the breadcrumb of a top-level page on phones.
+
 ## [1.0.0] - 2026-11-06
 
 The first public release.
@@ -28,4 +43,5 @@ The first public release.
 - Light and dark themes.
 - One-click deploy to Vercel with Neon; the build creates the tables.
 
+[Unreleased]: https://github.com/pradprat/note-scion/compare/v1.0.0...HEAD
 [1.0.0]: https://github.com/pradprat/note-scion/releases/tag/v1.0.0

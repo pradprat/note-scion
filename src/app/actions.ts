@@ -36,7 +36,7 @@ export async function createPageAction(
   const node = await createPage(parentId);
   const clean = typeof title === "string" ? title.replace(/\n/g, " ").trim().slice(0, MAX_TITLE) : "";
   if (!clean) return node;
-  await updatePage(node.id, { title: clean });
+  await updatePage(node.id, { title: clean }, "owner");
   return { ...node, title: clean };
 }
 
@@ -86,7 +86,7 @@ export async function updatePageAction(
     }
     clean.content = patch.content;
   }
-  return updatePage(id, clean, baseUpdatedAt);
+  return updatePage(id, clean, "owner", baseUpdatedAt);
 }
 
 /** Sends a page and its sub-pages to the trash. */

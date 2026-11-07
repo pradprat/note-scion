@@ -170,9 +170,10 @@ components:
 
 note-scion is one calm desk that two authors work at: the owner, and Claude over MCP.
 Everything on it stays where it was left. When the other author changes something,
-nothing flashes, sparkles or announces itself. The page simply shows the newer text, and
-if both of you edited it, you're asked which version to keep. The visual system serves
-that trust. It's quiet, predictable, and the same for both authors.
+nothing flashes, sparkles or pops up. The page simply shows the newer text, the save
+status says in a few plain words who made the edit and when, and if both of you edited
+it, you're asked which version to keep. The visual system serves that trust. It's
+quiet, predictable, and the same for both authors.
 
 The desk is drawn in one cool slate scale of five steps, from Night Ink to Frost Paper,
 on white paper in light mode and on the scale's darkest step in dark mode. There's no
@@ -193,7 +194,8 @@ any block, `@` dates set as quiet grey words, and sub-page links one text line t
 - Instrument Sans for everything, with DM Mono only for code and key hints.
 - Flat resting surfaces. Only things that float get a shadow.
 - Gently rounded corners (4–8px). Nothing is pill-shaped except the spinner.
-- Claude's edits look exactly like the owner's.
+- Claude's edits look exactly like the owner's. Only the save status says who made the
+  last edit, in words.
 - Keyboard hints are shown wherever there's a pointer to read them, and hidden on touch.
 
 ## Colors
@@ -352,15 +354,30 @@ Precise and plain: shadcn's button at exact sizes, with no custom shapes.
   in dark mode), and the selected row also turns weight 500. Trash, Connected apps and
   Log out sit at the bottom, above a hairline.
 - **Top bar:** 48px, on the page color, with no border. On the left is a breadcrumb of
-  emoji and title per ancestor, truncating from the middle. On the right are the save
-  status ("Saved", "Saving…", "Editing", turning Signal Red for a conflict) and the
-  page's actions.
+  emoji and title per page, where ancestors shrink before the current page does. On
+  the right are the save status and the page's actions.
+- **Save status:** 12px muted text: "Saved", "Saving…", "Editing", turning Signal Red for
+  a conflict. When an MCP client made the last edit it reads "Claude Code edited 4m ago"
+  (the client's own registered name, or "Edited over MCP" for the static token), with
+  the exact time on hover, until the owner edits again. A long client name truncates
+  before the time does. Only the words are in the live region, so a screen reader
+  hears them once when the edit arrives, not every minute as the time counts up.
 - **Mobile:** the sidebar becomes a 288px sheet opened from the top bar.
+
+### Named Rules
+**The Authorship in Words Rule.** Who changed a page is said in plain words where the
+save status lives: never as a badge, color, avatar, icon or AI styling, and never as a
+notification.
 
 ### Menus (slash menu, quick switcher)
 - **Slash menu:** a 256px Float panel with 4px padding and a 320px maximum height. Each
   item has a 32px icon tile (a bordered square on the page color), a 14px name and a
   12px muted description. The highlighted item fills with Frost Paper.
+- **Placement (slash and `@` date menus):** 6px below the line being typed, or above it
+  when the list doesn't fit below and there is more room above. Never over the line.
+  The menu keeps its side while it still fits, and its height is capped at the room on
+  that side, measured in the visual viewport so a phone keyboard counts. The list
+  scrolls and keeps the highlighted item in view.
 - **Quick switcher:** a centred Overlay dialog with a 48px search field and rows of
   emoji and title, with the page's path after the title in 12px muted text. Selected
   rows fill with Frost Paper on a 4px radius. On coarse pointers its text is 16px.
@@ -409,7 +426,8 @@ The page is the product, and its details are the system's distinctive work.
 
 ### Don't:
 - **Don't** style anything Claude does with sparkles, gradients, glows, "magic" purples
-  or AI badges. Claude's edits, pages and status look exactly like the owner's.
+  or AI badges. Claude's edits and pages look exactly like the owner's. Who made the last
+  edit is said in words in the save status (the Authorship in Words Rule).
 - **Don't** add heavy chrome around the page: no cards inside cards, banners, thick
   borders or floating toolbars. Chrome stays in the sidebar and the 48px top bar, and the
   page stays bare.
