@@ -18,3 +18,7 @@ next-env.d.ts
 .DS_Store
 *.pem
 npm-debug.log*
+
+# impeccable: local design-review snapshots and the design hook's cache
+/.impeccable/critique/
+/.impeccable/hook.cache.json
