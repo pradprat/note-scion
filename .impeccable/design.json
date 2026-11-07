@@ -1,0 +1,395 @@
+{
+  "schemaVersion": 2,
+  "generatedAt": "2026-11-07T03:54:12.098Z",
+  "title": "Design System: note-scion",
+  "extensions": {
+    "colorMeta": {
+      "night-ink": {
+        "role": "neutral",
+        "displayName": "Night Ink",
+        "canonical": "hsl(216 18.5% 5.3%)",
+        "tonalRamp": [
+          "#22262A",
+          "#373F49",
+          "#4C5B6B",
+          "#627A93",
+          "#8498AE",
+          "#ABB7C4",
+          "#D0D6DC",
+          "#F1F2F4"
+        ]
+      },
+      "deep-slate": {
+        "role": "primary",
+        "displayName": "Deep Slate",
+        "canonical": "hsl(212.7 19.3% 11.2%)",
+        "tonalRamp": [
+          "#22262A",
+          "#373F49",
+          "#4C5B6B",
+          "#627A93",
+          "#8498AE",
+          "#ABB7C4",
+          "#D0D6DC",
+          "#F1F2F4"
+        ]
+      },
+      "graphite": {
+        "role": "neutral",
+        "displayName": "Graphite",
+        "canonical": "hsl(211.6 18.4% 20.2%)",
+        "tonalRamp": [
+          "#22262A",
+          "#373F49",
+          "#4C5B6B",
+          "#627A93",
+          "#8498AE",
+          "#ABB7C4",
+          "#D0D6DC",
+          "#F1F2F4"
+        ]
+      },
+      "slate-pencil": {
+        "role": "neutral",
+        "displayName": "Slate Pencil",
+        "canonical": "hsl(210.8 16.6% 43.7%)",
+        "tonalRamp": [
+          "#22262A",
+          "#373F49",
+          "#4C5B6B",
+          "#627A93",
+          "#8498AE",
+          "#ABB7C4",
+          "#D0D6DC",
+          "#F1F2F4"
+        ]
+      },
+      "frost-paper": {
+        "role": "neutral",
+        "displayName": "Frost Paper",
+        "canonical": "hsl(210 41.2% 93.3%)",
+        "tonalRamp": [
+          "#22262A",
+          "#373F49",
+          "#4C5B6B",
+          "#627A93",
+          "#8498AE",
+          "#ABB7C4",
+          "#D0D6DC",
+          "#F1F2F4"
+        ]
+      },
+      "paper-white": {
+        "role": "neutral",
+        "displayName": "Paper White",
+        "canonical": "hsl(0 0% 100%)",
+        "tonalRamp": [
+          "#22262A",
+          "#373F49",
+          "#4C5B6B",
+          "#627A93",
+          "#8498AE",
+          "#ABB7C4",
+          "#D0D6DC",
+          "#F1F2F4"
+        ]
+      },
+      "pale-rule": {
+        "role": "neutral",
+        "displayName": "Pale Rule",
+        "canonical": "hsl(210 28% 87%)",
+        "tonalRamp": [
+          "#22262A",
+          "#373F49",
+          "#4C5B6B",
+          "#627A93",
+          "#8498AE",
+          "#ABB7C4",
+          "#D0D6DC",
+          "#F1F2F4"
+        ]
+      },
+      "lifted-pencil": {
+        "role": "neutral",
+        "displayName": "Lifted Pencil",
+        "canonical": "hsl(211 17% 62%)",
+        "tonalRamp": [
+          "#22262A",
+          "#373F49",
+          "#4C5B6B",
+          "#627A93",
+          "#8498AE",
+          "#ABB7C4",
+          "#D0D6DC",
+          "#F1F2F4"
+        ]
+      },
+      "signal-red": {
+        "role": "status",
+        "displayName": "Signal Red",
+        "canonical": "hsl(0 84.2% 60.2%)",
+        "tonalRamp": [
+          "#361616",
+          "#611E1E",
+          "#972121",
+          "#D81D1D",
+          "#E94949",
+          "#E78888",
+          "#ECC0C0",
+          "#F8EDED"
+        ]
+      }
+    },
+    "darkModeMap": {
+      "--background": "night-ink",
+      "--foreground": "frost-paper",
+      "--popover": "deep-slate",
+      "--primary": "frost-paper",
+      "--primary-foreground": "night-ink",
+      "--secondary": "graphite",
+      "--muted": "deep-slate",
+      "--muted-foreground": "lifted-pencil",
+      "--accent": "graphite",
+      "--border": "graphite",
+      "--input": "graphite",
+      "--ring": "slate-pencil",
+      "--sidebar-background": "deep-slate",
+      "--sidebar-accent": "graphite",
+      "--destructive": "signal-red"
+    },
+    "typographyMeta": {
+      "display": {
+        "displayName": "Display",
+        "purpose": "The page title and the Trash heading. One per screen."
+      },
+      "headline": {
+        "displayName": "Headline",
+        "purpose": "Heading 1 in the editor."
+      },
+      "title": {
+        "displayName": "Title",
+        "purpose": "Heading 2 in the editor."
+      },
+      "subtitle": {
+        "displayName": "Subtitle",
+        "purpose": "Heading 3 in the editor."
+      },
+      "body": {
+        "displayName": "Body",
+        "purpose": "Editor prose in a column no wider than 768px."
+      },
+      "ui": {
+        "displayName": "UI",
+        "purpose": "Sidebar rows, menus, breadcrumbs and the save status."
+      },
+      "ui-strong": {
+        "displayName": "UI Strong",
+        "purpose": "Buttons, the selected sidebar row and emphasised UI text."
+      },
+      "label": {
+        "displayName": "Label",
+        "purpose": "Menu group headings, item descriptions, timestamps and help text, in muted color."
+      },
+      "code": {
+        "displayName": "Code",
+        "purpose": "Code blocks and inline code in the editor."
+      },
+      "kbd": {
+        "displayName": "Kbd",
+        "purpose": "Keyboard hints such as Ctrl K, uppercase. Hidden on touch."
+      }
+    },
+    "shadows": [
+      {
+        "name": "float",
+        "value": "0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1)",
+        "purpose": "Menus that open from the text: slash menu, date picker, popovers."
+      },
+      {
+        "name": "overlay",
+        "value": "0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1)",
+        "purpose": "Modal layers: quick switcher, dialogs, toasts."
+      },
+      {
+        "name": "block-halo",
+        "value": "0 0 0 4px hsl(var(--foreground) / 0.05)",
+        "purpose": "With a 5% foreground fill, shows which block the drag grip will move."
+      }
+    ],
+    "motion": [
+      {
+        "name": "hover-color",
+        "value": "120ms ease-out",
+        "purpose": "Background and color changes on hover in the editor (grip, sub-page link, block halo)."
+      },
+      {
+        "name": "ui-color",
+        "value": "150ms cubic-bezier(0.4, 0, 0.2, 1)",
+        "purpose": "Tailwind transition-colors on buttons and rows."
+      },
+      {
+        "name": "overlay-enter",
+        "value": "200ms fade + zoom from 95%",
+        "purpose": "Radix dialogs and popovers opening and closing."
+      },
+      {
+        "name": "sidebar-collapse",
+        "value": "200ms linear",
+        "purpose": "The sidebar rail collapsing and expanding."
+      },
+      {
+        "name": "reduced-motion",
+        "value": "motion-reduce:animate-none",
+        "purpose": "Spinners stop when the system asks for reduced motion."
+      }
+    ],
+    "breakpoints": [
+      {
+        "name": "sm",
+        "value": "640px",
+        "purpose": "Page padding widens from 24px to 64px and the top margin from 40px to 64px."
+      },
+      {
+        "name": "md",
+        "value": "768px",
+        "purpose": "Below this the sidebar becomes a 288px sheet; inputs use 16px text below it and 14px above."
+      },
+      {
+        "name": "coarse",
+        "value": "(pointer: coarse)",
+        "purpose": "Sidebar rows and icon buttons grow to 40px."
+      },
+      {
+        "name": "no-hover",
+        "value": "(hover: none)",
+        "purpose": "Hides the drag grip and keyboard hints."
+      }
+    ],
+    "focus": {
+      "ring": "2px hsl(var(--ring)) with a 2px offset on shadcn components",
+      "fallback": "2px solid hsl(var(--foreground)) outline with a 2px offset on everything else"
+    }
+  },
+  "components": [
+    {
+      "name": "Primary Button",
+      "kind": "button",
+      "refersTo": "button-primary",
+      "description": "The single main action in a dialog or empty state, such as New page.",
+      "html": "<button class=\"ds-btn-primary\"><svg width=\"16\" height=\"16\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\"><path d=\"M5 12h14\"/><path d=\"M12 5v14\"/></svg>New page</button>",
+      "css": ".ds-btn-primary{display:inline-flex;align-items:center;gap:8px;height:40px;padding:0 16px;border:0;border-radius:6px;background:hsl(var(--primary));color:hsl(var(--primary-foreground));font:500 14px/1.25 var(--font-instrument-sans),system-ui,sans-serif;cursor:pointer;transition:background-color 150ms cubic-bezier(0.4,0,0.2,1)}.ds-btn-primary:hover{background:hsl(var(--primary)/0.9)}.ds-btn-primary:focus-visible{outline:none;box-shadow:0 0 0 2px hsl(var(--background)),0 0 0 4px hsl(var(--ring))}"
+    },
+    {
+      "name": "Outline Button",
+      "kind": "button",
+      "refersTo": "button-outline",
+      "description": "A secondary action next to a primary one.",
+      "html": "<button class=\"ds-btn-outline\">Cancel</button>",
+      "css": ".ds-btn-outline{display:inline-flex;align-items:center;gap:8px;height:40px;padding:0 16px;border:1px solid hsl(var(--input));border-radius:6px;background:hsl(var(--background));color:hsl(var(--foreground));font:500 14px/1.25 var(--font-instrument-sans),system-ui,sans-serif;cursor:pointer;transition:background-color 150ms cubic-bezier(0.4,0,0.2,1)}.ds-btn-outline:hover{background:hsl(var(--accent));color:hsl(var(--accent-foreground))}.ds-btn-outline:focus-visible{outline:none;box-shadow:0 0 0 2px hsl(var(--background)),0 0 0 4px hsl(var(--ring))}"
+    },
+    {
+      "name": "Ghost Icon Button",
+      "kind": "button",
+      "refersTo": "button-icon",
+      "description": "Row and toolbar actions: no fill until hover, 40px on coarse pointers.",
+      "html": "<button class=\"ds-btn-icon\" aria-label=\"Copy link\"><svg width=\"16\" height=\"16\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><path d=\"M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71\"/><path d=\"M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71\"/></svg></button>",
+      "css": ".ds-btn-icon{display:inline-flex;align-items:center;justify-content:center;width:28px;height:28px;padding:0;border:0;border-radius:6px;background:transparent;color:hsl(var(--muted-foreground));cursor:pointer;transition:background-color 150ms,color 150ms}.ds-btn-icon:hover{background:hsl(var(--accent));color:hsl(var(--accent-foreground))}.ds-btn-icon:focus-visible{outline:none;box-shadow:0 0 0 2px hsl(var(--ring))}@media (pointer:coarse){.ds-btn-icon{width:40px;height:40px}}"
+    },
+    {
+      "name": "Input",
+      "kind": "input",
+      "refersTo": "input",
+      "description": "Single-line field, such as the login password.",
+      "html": "<input class=\"ds-input\" type=\"password\" placeholder=\"Password\">",
+      "css": ".ds-input{height:40px;width:100%;max-width:320px;padding:8px 12px;border:1px solid hsl(var(--input));border-radius:6px;background:hsl(var(--background));color:hsl(var(--foreground));font:400 16px/1.25 var(--font-instrument-sans),system-ui,sans-serif}.ds-input::placeholder{color:hsl(var(--muted-foreground))}.ds-input:focus-visible{outline:none;box-shadow:0 0 0 2px hsl(var(--background)),0 0 0 4px hsl(var(--ring))}@media (min-width:768px){.ds-input{font-size:14px}}"
+    },
+    {
+      "name": "Sidebar Page Tree",
+      "kind": "nav",
+      "refersTo": "sidebar-row",
+      "description": "The page tree: emoji and title per row, nested rows indented, the selected page filled with Pale Rule.",
+      "html": "<nav class=\"ds-sidebar\"><a class=\"ds-row\" href=\"#\"><span class=\"ds-row-ic\">👋</span>Welcome</a><a class=\"ds-row ds-row-active\" href=\"#\" aria-current=\"page\"><span class=\"ds-row-ic\">🚀</span>Product roadmap</a><a class=\"ds-row ds-row-nested\" href=\"#\"><span class=\"ds-row-ic\">📣</span>Launch plan</a><a class=\"ds-row ds-row-muted\" href=\"#\"><span class=\"ds-row-ic\"><svg width=\"16\" height=\"16\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\"><path d=\"M5 12h14\"/><path d=\"M12 5v14\"/></svg></span>New page</a></nav>",
+      "css": ".ds-sidebar{display:flex;flex-direction:column;width:256px;padding:8px;background:hsl(var(--sidebar-background));color:hsl(var(--sidebar-foreground))}.ds-row{display:flex;align-items:center;gap:8px;height:32px;padding:0 8px;border-radius:6px;color:inherit;text-decoration:none;font:400 14px/1.25 var(--font-instrument-sans),system-ui,sans-serif;transition:background-color 150ms}.ds-row:hover{background:hsl(var(--sidebar-accent));color:hsl(var(--sidebar-accent-foreground))}.ds-row:focus-visible{outline:none;box-shadow:0 0 0 2px hsl(var(--sidebar-ring))}.ds-row-active{background:hsl(var(--sidebar-accent));color:hsl(var(--sidebar-accent-foreground));font-weight:500}.ds-row-nested{padding-left:22px}.ds-row-muted{color:hsl(var(--sidebar-foreground)/0.7)}.ds-row-ic{display:flex;width:16px;justify-content:center;line-height:1}@media (pointer:coarse){.ds-row{height:40px}}"
+    },
+    {
+      "name": "Slash Menu",
+      "kind": "custom",
+      "refersTo": "menu",
+      "description": "The / block menu: bordered icon tiles, a name and a muted description, selection in Frost Paper.",
+      "html": "<div class=\"ds-menu\" role=\"listbox\" aria-label=\"Blocks\"><div class=\"ds-menu-h\">Blocks</div><div class=\"ds-menu-i ds-sel\" role=\"option\" aria-selected=\"true\"><span class=\"ds-menu-tile\">T</span><span><span class=\"ds-menu-n\">Text</span><span class=\"ds-menu-d\">Plain paragraph</span></span></div><div class=\"ds-menu-i\" role=\"option\" aria-selected=\"false\"><span class=\"ds-menu-tile\">H1</span><span><span class=\"ds-menu-n\">Heading 1</span><span class=\"ds-menu-d\">Big section heading</span></span></div></div>",
+      "css": ".ds-menu{width:256px;padding:4px;border:1px solid hsl(var(--border));border-radius:6px;background:hsl(var(--popover));color:hsl(var(--popover-foreground));box-shadow:0 4px 6px -1px rgb(0 0 0/.1),0 2px 4px -2px rgb(0 0 0/.1);font-family:var(--font-instrument-sans),system-ui,sans-serif}.ds-menu-h{padding:6px 8px;font-size:12px;font-weight:500;color:hsl(var(--muted-foreground))}.ds-menu-i{display:flex;align-items:center;gap:12px;padding:6px 8px;border-radius:4px;cursor:pointer}.ds-menu-i:hover,.ds-sel{background:hsl(var(--accent));color:hsl(var(--accent-foreground))}.ds-menu-tile{display:flex;width:32px;height:32px;flex-shrink:0;align-items:center;justify-content:center;border:1px solid hsl(var(--border));border-radius:6px;background:hsl(var(--background));font-size:12px;font-weight:600}.ds-menu-n{display:block;font-size:14px}.ds-menu-d{display:block;font-size:12px;color:hsl(var(--muted-foreground))}"
+    },
+    {
+      "name": "Kbd Hint",
+      "kind": "chip",
+      "refersTo": "kbd-hint",
+      "description": "Key labels such as Ctrl K, hidden on devices without hover.",
+      "html": "<kbd class=\"ds-kbd\">Ctrl K</kbd>",
+      "css": ".ds-kbd{display:inline-block;padding:0 6px;border:1px solid hsl(var(--border));border-radius:4px;background:hsl(var(--background));color:hsl(var(--muted-foreground));font:500 10px/16px var(--font-dm-mono),ui-monospace,monospace;letter-spacing:0.025em;text-transform:uppercase}@media (hover:none){.ds-kbd{display:none}}"
+    },
+    {
+      "name": "Editor Inline Details",
+      "kind": "custom",
+      "refersTo": "code-block",
+      "description": "Body prose with an @ date as a quiet word, inline code, and a sub-page link one line tall.",
+      "html": "<div class=\"ds-prose\"><p>Write the launch post, due <span class=\"ds-date\"><span class=\"ds-at\">@</span>Tomorrow</span>, and keep <code class=\"ds-code\">notes_pages</code> small.</p><a class=\"ds-pagelink\" href=\"#\"><span class=\"ds-pl-ic\">🔍</span><span class=\"ds-pl-t\">User research</span></a></div>",
+      "css": ".ds-prose{max-width:48rem;font:400 16px/1.65 var(--font-instrument-sans),system-ui,sans-serif;color:hsl(var(--foreground))}.ds-prose p{margin:0 0 .35em}.ds-date{color:hsl(var(--muted-foreground));white-space:nowrap}.ds-at{opacity:.7;margin-right:.05em}.ds-code{font-family:var(--font-dm-mono),ui-monospace,monospace;font-size:.875em;background:hsl(var(--muted));border:1px solid hsl(var(--border));border-radius:4px;padding:.1em .3em}.ds-pagelink{display:flex;align-items:center;gap:8px;margin-left:-4px;padding:0 4px;border-radius:4px;color:inherit;text-decoration:none;transition:background-color 120ms ease-out}.ds-pagelink:hover{background:hsl(var(--muted))}.ds-pl-ic{display:flex;width:20px;justify-content:center;font-size:1.1rem}.ds-pl-t{font-weight:500;text-decoration:underline;text-decoration-color:hsl(var(--input));text-underline-offset:3px}"
+    }
+  ],
+  "narrative": {
+    "northStar": "The Shared Desk",
+    "overview": "note-scion is one calm desk that two authors work at: the owner, and Claude over MCP.\nEverything on it stays where it was left. When the other author changes something,\nnothing flashes, sparkles or announces itself. The page simply shows the newer text, and\nif both of you edited it, you're asked which version to keep. The visual system serves\nthat trust. It's quiet, predictable, and the same for both authors.\n\nThe desk is drawn in one cool slate scale of five steps, from Night Ink to Frost Paper,\non white paper in light mode and on the scale's darkest step in dark mode. There's no\nbrand accent color today. Hierarchy comes from the slate steps, from type weight, and\nfrom space. The only color that arrives on its own is the emoji the owner picks as each\npage's icon, and Signal Red when something is destructive or has gone wrong. The density\nis that of a writing tool: a 256px page tree on the left, a 48px top bar, and a single\n768px column of prose with generous air above it.\n\nThe components are precise and plain. They're the shadcn/ui and Notion patterns people\nalready know, at exact sizes, with nothing custom unless it earns its place. The custom\nwork all sits in the editor's details: a drag grip that lines up with the first line of\nany block, `@` dates set as quiet grey words, and sub-page links one text line tall.",
+    "keyCharacteristics": [
+      "One cool slate scale (hue 210–217), inverted between light and dark modes, following the system setting.",
+      "Instrument Sans for everything, with DM Mono only for code and key hints.",
+      "Flat resting surfaces. Only things that float get a shadow.",
+      "Gently rounded corners (4–8px). Nothing is pill-shaped except the spinner.",
+      "Claude's edits look exactly like the owner's.",
+      "Keyboard hints are shown wherever there's a pointer to read them, and hidden on touch."
+    ],
+    "rules": [
+      {
+        "name": "The Dark-Mode Inversion Rule",
+        "body": "Dark mode is not a separate palette. It's the same five\nsteps the other way round. Night Ink becomes the page, Deep Slate the sidebar and\npopovers, Graphite the borders and hover rows, and Frost Paper the text. A new color\nneeds a role in both directions before it ships.",
+        "section": "colors"
+      },
+      {
+        "name": "The Tinted-Selection Rule",
+        "body": "Text selection, the drag outline and the drop cursor are\nthe foreground color at low alpha (16%, 5% and 40%), never a hue. Selection is a state of\nthe ink, not a new color.",
+        "section": "colors"
+      },
+      {
+        "name": "The 650 Rule",
+        "body": "Headings and bold text in the editor use weight 650, not 700. Only the\npage title uses 700. Bold inside prose should feel like emphasis, not a shout.",
+        "section": "typography"
+      },
+      {
+        "name": "The Mono-Means-Literal Rule",
+        "body": "DM Mono is for text the reader would type or a machine\nwould read: code, key names, ids. Never use it as decoration or as a label style.",
+        "section": "typography"
+      },
+      {
+        "name": "The One Column Rule",
+        "body": "Content lives in a single 768px column. No side panels, no\nmulti-column page layouts.",
+        "section": "layout"
+      }
+    ],
+    "dos": [
+      "**Do** take every color from the five slate steps plus Paper White, Pale Rule, Lifted Pencil and Signal Red, through the shadcn CSS variables in `src/app/globals.css`.",
+      "**Do** give every new color a role in both light and dark mode before shipping it (the Dark-Mode Inversion Rule).",
+      "**Do** use Lifted Pencil (#8E9EAF), not Slate Pencil, for secondary text in dark mode.",
+      "**Do** show hover state with a Frost Paper fill (Graphite in dark mode) and a 120ms ease-out color transition.",
+      "**Do** raise touch targets to 40px under `pointer: coarse`, and hide hover-only affordances (drag grip, kbd hints) under `hover: none`.",
+      "**Do** keep the page in its single 768px column with 24px padding on phones and 64px from 640px up.",
+      "**Do** use the standard shadcn and Radix patterns for dialogs, popovers, menus and toasts. Build something custom only when the editor needs it."
+    ],
+    "donts": [
+      "**Don't** style anything Claude does with sparkles, gradients, glows, \"magic\" purples or AI badges. Claude's edits, pages and status look exactly like the owner's.",
+      "**Don't** add heavy chrome around the page: no cards inside cards, banners, thick borders or floating toolbars. Chrome stays in the sidebar and the 48px top bar, and the page stays bare.",
+      "**Don't** put shadows on resting surfaces (page, sidebar, top bar, list rows) without a reason. Shadows mean \"this floats\".",
+      "**Don't** set `@` dates, page links or tags as colored pills. Inline references stay words in the line.",
+      "**Don't** use DM Mono for headings, labels or decoration.",
+      "**Don't** use weight 700 inside the editor. Headings and bold text use 650."
+    ]
+  }
+}
