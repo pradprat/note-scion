@@ -31,10 +31,11 @@ import {
   useSidebar,
 } from "@/components/ui/sidebar";
 import type { NoteNode } from "@/lib/types";
+import { titleText } from "@/lib/title-dates";
 import { useBackend } from "./backend";
 import { useNotes } from "./notes-provider";
 import { useShell } from "./notes-shell";
-import { useTitle } from "./title-text";
+import { useNow, useTitle } from "./title-text";
 import { useReturnFocus } from "./use-return-focus";
 
 /** Touch screens get finger-sized rows and buttons; a mouse keeps the dense tree. */
@@ -328,14 +329,30 @@ const TreeNavContext = createContext<{ tabId: string | null; onFocusRow: (id: st
   onFocusRow: () => {},
 });
 
+type MoveKey = "ArrowUp" | "ArrowDown" | "ArrowLeft" | "ArrowRight";
+const MOVE_KEYS = new Set<string>(["ArrowUp", "ArrowDown", "ArrowLeft", "ArrowRight"]);
+const MOVE_SHORTCUTS = "Alt+Shift+ArrowUp Alt+Shift+ArrowDown Alt+Shift+ArrowRight Alt+Shift+ArrowLeft";
+
 /**
  * Down/Up: next and previous visible page. Right: open a closed page, or step into an
  * open one. Left: close an open page, or step out to its parent. Home/End: first, last.
+ * Alt+Shift with an arrow moves the page itself (see `useKeyboardMove`); plain Alt+Left
+ * is the browser's Back.
  */
-function moveInTree(event: React.KeyboardEvent<HTMLElement>, toggle: (id: string) => void) {
+function moveInTree(
+  event: React.KeyboardEvent<HTMLElement>,
+  toggle: (id: string) => void,
+  movePage: (id: string, key: MoveKey) => void
+) {
   const row = event.target as HTMLElement;
   const id = row.dataset.treeId;
-  if (!id || event.altKey || event.ctrlKey || event.metaKey || event.shiftKey) return;
+  if (!id) return;
+  if (event.altKey && event.shiftKey && !event.ctrlKey && !event.metaKey && MOVE_KEYS.has(event.key)) {
+    event.preventDefault();
+    movePage(id, event.key as MoveKey);
+    return;
+  }
+  if (event.altKey || event.ctrlKey || event.metaKey || event.shiftKey) return;
   // Rows still folding away (inert) are already gone as far as the keys go.
   const rows = Array.from(event.currentTarget.querySelectorAll<HTMLElement>("[data-tree-id]")).filter(
     (other) => !other.closest(".sidebar-sub-pages[inert]")
@@ -373,10 +390,83 @@ function moveInTree(event: React.KeyboardEvent<HTMLElement>, toggle: (id: string
   }
 }
 
+/**
+ * Moving a page from the keyboard, the same moves as dragging: Up and Down past its
+ * neighbour, Right into the page above it (as its last sub-page), Left out of its parent
+ * to just after it. Focus stays on the page, and a screen reader hears where it went.
+ */
+function useKeyboardMove(navRef: React.RefObject<HTMLElement | null>) {
+  const { tree, childrenOf, movePage, isExpanded, toggleExpanded } = useNotes();
+  const today = useNow();
+  const [said, setSaid] = useState("");
+
+  const move = (id: string, key: MoveKey) => {
+    const node = tree.find((other) => other.id === id);
+    if (!node) return;
+    const name = (target: NoteNode | undefined) => (target ? titleText(target.title, today) || "Untitled" : "");
+    const siblings = childrenOf(node.parentId);
+    const at = siblings.findIndex((other) => other.id === id);
+    const parent = tree.find((other) => other.id === node.parentId);
+    let to: { parentId: string | null; position: number; words: string } | null = null;
+
+    if (key === "ArrowUp" && at > 0) {
+      const prev = siblings[at - 1];
+      const before = siblings[at - 2];
+      to = {
+        parentId: node.parentId,
+        position: before ? (before.position + prev.position) / 2 : prev.position - 1,
+        words: `above ${name(prev)}`,
+      };
+    } else if (key === "ArrowDown" && at >= 0 && at < siblings.length - 1) {
+      const next = siblings[at + 1];
+      const after = siblings[at + 2];
+      to = {
+        parentId: node.parentId,
+        position: after ? (next.position + after.position) / 2 : next.position + 1,
+        words: `below ${name(next)}`,
+      };
+    } else if (key === "ArrowRight" && at > 0) {
+      const host = siblings[at - 1];
+      const kids = childrenOf(host.id);
+      to = {
+        parentId: host.id,
+        position: kids.length ? kids[kids.length - 1].position + 1 : 1,
+        words: `inside ${name(host)}`,
+      };
+      if (!isExpanded(host.id)) toggleExpanded(host.id);
+    } else if (key === "ArrowLeft" && parent) {
+      const outer = childrenOf(parent.parentId);
+      const next = outer[outer.findIndex((other) => other.id === parent.id) + 1];
+      to = {
+        parentId: parent.parentId,
+        position: next ? (parent.position + next.position) / 2 : parent.position + 1,
+        words: `out of ${name(parent)}`,
+      };
+    }
+
+    if (!to) {
+      setSaid(`${name(node)} can't move that way`);
+      return;
+    }
+    movePage(id, to.parentId, to.position);
+    setSaid(`Moved ${name(node)} ${to.words}`);
+    // The row may be drawn anew under its new parent: put focus back on it once it is.
+    requestAnimationFrame(() =>
+      requestAnimationFrame(() =>
+        navRef.current?.querySelector<HTMLElement>(`[data-tree-id="${CSS.escape(id)}"]`)?.focus()
+      )
+    );
+  };
+
+  return { move, said };
+}
+
 function PageList({ roots, onAdd }: { roots: NoteNode[]; onAdd: () => void }) {
   const { dragId, drop, overRoot, finish } = useDrag();
   const { childrenOf, isExpanded, toggleExpanded, activeId } = useNotes();
   const [focusId, setFocusId] = useState<string | null>(null);
+  const navRef = useRef<HTMLElement>(null);
+  const { move, said } = useKeyboardMove(navRef);
   const rootTarget = drop?.zone === "root";
 
   // The row that takes Tab: the last one focused, else the open page, else the first,
@@ -394,7 +484,10 @@ function PageList({ roots, onAdd }: { roots: NoteNode[]; onAdd: () => void }) {
 
   return (
     <SidebarContent className="gap-0 px-2 pb-4">
-      <nav aria-label="Pages" onKeyDown={(event) => moveInTree(event, toggleExpanded)}>
+      <nav ref={navRef} aria-label="Pages" onKeyDown={(event) => moveInTree(event, toggleExpanded, move)}>
+        <p aria-live="polite" className="sr-only">
+          {said}
+        </p>
         {roots.length > 0 && (
           <TreeNavContext.Provider value={{ tabId, onFocusRow: setFocusId }}>
             <SidebarMenu className="gap-0">
@@ -684,6 +777,7 @@ function TreeItem({ node, depth }: { node: NoteNode; depth: number }) {
           tabIndex={tab}
           data-tree-id={node.id}
           data-level={depth + 1}
+          aria-keyshortcuts={MOVE_SHORTCUTS}
           onFocus={() => onFocusRow(node.id)}
           className={cn(
             "flex h-8 min-w-0 flex-1 items-center gap-2 rounded-md outline-none ring-sidebar-ring focus-visible:ring-2",
