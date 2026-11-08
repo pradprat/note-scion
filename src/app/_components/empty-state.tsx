@@ -1,19 +1,30 @@
 "use client";
 
 import { useState } from "react";
-import { Plus } from "lucide-react";
+import { Plus, RotateCcw } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { useBackend } from "./backend";
 import { useNotes } from "./notes-provider";
 import { useShell } from "./notes-shell";
 import TopBar from "./top-bar";
 
 const KBD =
-  "pointer-events-none inline-flex h-5 select-none items-center rounded border bg-muted px-1.5 font-mono text-[0.6875rem] font-medium text-foreground";
+  "pointer-events-none inline-flex h-5 select-none items-center rounded border bg-muted px-1.5 font-mono text-[0.625rem] font-medium text-foreground";
 
 export default function EmptyState() {
   const { addPage } = useNotes();
   const { modKey } = useShell();
-  const [busy, setBusy] = useState(false);
+  const { demo, reset } = useBackend();
+  const [busy, setBusy] = useState<"new" | "samples" | null>(null);
+
+  const run = async (which: "new" | "samples", action: () => Promise<unknown>) => {
+    setBusy(which);
+    try {
+      await action();
+    } finally {
+      setBusy(null);
+    }
+  };
 
   return (
     <>
@@ -30,19 +41,17 @@ export default function EmptyState() {
           )}
           .
         </p>
-        <Button
-          disabled={busy}
-          onClick={async () => {
-            setBusy(true);
-            try {
-              await addPage(null);
-            } finally {
-              setBusy(false);
-            }
-          }}
-        >
-          <Plus /> {busy ? "Creating…" : "New page"}
-        </Button>
+        <div className="flex flex-wrap items-center gap-2">
+          <Button disabled={busy !== null} onClick={() => void run("new", () => addPage(null))}>
+            <Plus /> {busy === "new" ? "Creating…" : "New page"}
+          </Button>
+          {/* In the demo, the way back to the tour after deleting everything. */}
+          {demo && reset && (
+            <Button variant="ghost" disabled={busy !== null} onClick={() => void run("samples", reset)}>
+              <RotateCcw /> {busy === "samples" ? "Bringing them back…" : "Bring back the sample pages"}
+            </Button>
+          )}
+        </div>
       </div>
     </>
   );

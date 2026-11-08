@@ -258,6 +258,8 @@ export default function NotesSidebar() {
 /** In place of Connected apps and Log out: where the demo's pages live, and starting over. */
 function DemoMenu() {
   const router = useRouter();
+  const pathname = usePathname();
+  const { activeId } = useNotes();
   const { reset, href } = useBackend();
   const [confirming, setConfirming] = useState(false);
   const [busy, setBusy] = useState(false);
@@ -268,7 +270,9 @@ function DemoMenu() {
     setBusy(true);
     try {
       await reset?.();
-      router.push(href("/"));
+      // Already on the demo's home (the empty state): it opens the first sample itself.
+      // Pushing the same URL there would cancel that and leave the pane blank.
+      if (pathname !== href("/") || activeId) router.push(href("/"));
     } finally {
       setBusy(false);
       setConfirming(false);
@@ -397,14 +401,17 @@ function PageList({ roots, onAdd }: { roots: NoteNode[]; onAdd: () => void }) {
           </TreeNavContext.Provider>
         )}
       </nav>
-      <SidebarMenu className="mt-0.5">
-        <SidebarMenuItem>
-          <SidebarMenuButton onClick={onAdd} className={cn("text-sidebar-foreground/70", COARSE_ROW)}>
-            <Plus />
-            <span>New page</span>
-          </SidebarMenuButton>
-        </SidebarMenuItem>
-      </SidebarMenu>
+      {/* With no pages yet, the empty state's own button is the one to press. */}
+      {roots.length > 0 && (
+        <SidebarMenu className="mt-0.5">
+          <SidebarMenuItem>
+            <SidebarMenuButton onClick={onAdd} className={cn("text-sidebar-foreground/70", COARSE_ROW)}>
+              <Plus />
+              <span>New page</span>
+            </SidebarMenuButton>
+          </SidebarMenuItem>
+        </SidebarMenu>
+      )}
       {/* The empty space under the tree takes a page back to the top level. */}
       <div
         className={cn(
