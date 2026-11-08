@@ -378,7 +378,8 @@ Precise and plain: shadcn's button at exact sizes, with no custom shapes.
   a conflict. When an MCP client made the last edit it reads "Claude Code edited 4m ago"
   (the client's own registered name, or "Edited over MCP" for the static token), with
   the exact time on hover, until the owner edits again. A long client name truncates
-  before the time does. Only the words are in the live region, so a screen reader
+  before the time does. Below 640px the time is left out ("Claude Code edited"), so the
+  page name keeps its room. Only the words are in the live region, so a screen reader
   hears them once when the edit arrives, not every minute as the time counts up.
 - **Mobile:** the sidebar becomes a 288px sheet opened from the top bar.
 

@@ -615,9 +615,15 @@ function SaveIndicator({
       <span aria-live="polite" className="min-w-0 max-w-[8rem] truncate sm:max-w-[14rem]">
         {text}
       </span>
-      {/* A real space, so the two read as words, not "edited4m ago". */}
-      {edit && " "}
-      {edit && <EditedAgo at={edit.at} />}
+      {/* On a phone the top bar is too narrow for both, and the page name needs the room
+          more than the time does: there it reads "Claude edited". A real space inside, so
+          the two read as words, not "edited4m ago". */}
+      {edit && (
+        <span className="hidden shrink-0 sm:inline">
+          {" "}
+          <EditedAgo at={edit.at} />
+        </span>
+      )}
     </span>
   );
 }
