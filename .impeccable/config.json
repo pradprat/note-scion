@@ -1,0 +1,23 @@
+{
+  "detector": {
+    "ignoreRules": [],
+    "ignoreFiles": [],
+    "ignoreValues": [
+      {
+        "rule": "side-tab",
+        "value": "*",
+        "files": [
+          "src/app/globals.css"
+        ],
+        "createdAt": "2026-11-08T07:43:46.614Z",
+        "reason": "Claude triage: the only match is the .notes-editor blockquote border-left, the standard block-quote marker, not a card accent"
+      },
+      {
+        "rule": "design-system-font-size",
+        "value": "1.1rem",
+        "createdAt": "2026-11-08T08:11:32.595Z",
+        "reason": "User confirmed: 1.1rem is the emoji glyph size in sub-page links, kept as is"
+      }
+    ]
+  }
+}
