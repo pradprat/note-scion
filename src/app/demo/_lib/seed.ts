@@ -15,8 +15,11 @@ function day(offset: number): string {
 /**
  * The workspace a first visit to the demo opens on. Written in Markdown, the same way
  * Claude writes pages over MCP; sub-page blocks are `[Title](/<id>)` lines.
+ *
+ * `touch` writes the instructions for a phone or tablet, which has no hover, drag
+ * handles or Ctrl K: tap, the Search row and the + buttons instead.
  */
-export function samplePages(): { pages: Sample[]; claudePageId: string } {
+export function samplePages(touch = false): { pages: Sample[]; claudePageId: string } {
   const id = {
     welcome: crypto.randomUUID(),
     blocks: crypto.randomUUID(),
@@ -58,12 +61,12 @@ note-scion is a calm notes app for one person, with nested pages and a block edi
 
 ## Try it
 
-- [ ] Click anywhere on this page and start typing. It saves as you go.
+- [ ] ${touch ? "Tap" : "Click"} anywhere on this page and start typing. It saves as you go.
 - [ ] Open **Working with Claude** and simulate an edit from Claude.
 - [ ] On an empty line, type \`/\` for headings, lists, to-dos, quotes and code.
-- [ ] Press Ctrl K (⌘ K on a Mac) to jump to any page or search inside them.
+- [ ] ${touch ? "Tap **Search** in the sidebar" : "Press Ctrl K (⌘ K on a Mac)"} to jump to any page or search inside them.
 - [ ] Type \`@\` and then "tomorrow" or "next friday" to drop in a date.
-- [ ] Drag a page in the sidebar onto another one to nest it.
+- [ ] ${touch ? "Tap + next to a page in the sidebar to add a page inside it." : "Drag a page in the sidebar onto another one to nest it."}
 - [ ] Delete a page, then bring it back from the Trash.
 
 ## Inside this page
@@ -88,7 +91,7 @@ Pages here stay in this browser. Your own copy keeps them in your own database, 
       "✍️",
       "Writing in blocks",
       `
-Every line is a block. Hover one and drag the handle on its left to move it.
+${touch ? "Every line is a block. On a computer, you can drag one to a new place by the handle on its left." : "Every line is a block. Hover one and drag the handle on its left to move it."}
 
 ## Markdown shortcuts
 
@@ -101,7 +104,7 @@ Type these at the start of a line:
 - \`\`\`\` \`\`\` \`\`\`\` for a code block
 - \`---\` for a divider
 
-Inline, wrap text in \`**\` for **bold**, \`*\` for *italic* and backticks for \`code\`. Select text and press Ctrl K to add a [link](https://github.com/pradprat/note-scion).
+Inline, wrap text in \`**\` for **bold**, \`*\` for *italic* and backticks for \`code\`. Select text and ${touch ? "tap **Link**" : "press Ctrl K"} to add a [link](https://github.com/pradprat/note-scion).
 
 > A page can hold other pages. Type \`/page\` to start one right here.
 

@@ -22,6 +22,11 @@ All notable changes to note-scion are listed here. The format follows
 
 - The demo is called note-scion in its sidebar and browser tab, and its Demo badge is
   larger. The footer's "Deploy your own" and the Copy link button are gone from the demo.
+- The demo's copy only says what's true there: its trash doesn't mention Claude, and
+  says Reset demo clears it. On phones and tablets, the sample pages say tap, Search and +
+  instead of Ctrl K, hover and drag.
+- The conflict bar says the page changed "in another tab or by Claude" rather than
+  "probably by Claude".
 
 ### Fixed
 

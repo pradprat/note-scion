@@ -129,7 +129,8 @@ export function loadDemo(): Promise<void> {
 export async function reseed(): Promise<void> {
   const { samplePages } = await import("./seed");
   const now = stamp();
-  const { pages, claudePageId } = samplePages();
+  // Phones and tablets get instructions for touch (no hover, no Ctrl K).
+  const { pages, claudePageId } = samplePages(window.matchMedia("(hover: none)").matches);
   commit({
     pages: pages.map((page) => ({ ...page, updatedAt: now, mcpEdit: null, deletedAt: null })),
     claudePageId,

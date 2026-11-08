@@ -424,7 +424,7 @@ function ConflictBar({
               <span className="font-medium">This page changed somewhere else</span>
               <span className="text-muted-foreground">
                 {" "}
-                since you opened it, probably by Claude. Your recent edits aren&apos;t saved yet.
+                since you opened it, in another tab or by Claude. Your recent edits aren&apos;t saved yet.
               </span>
             </p>
             <div className="flex shrink-0 gap-2">

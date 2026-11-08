@@ -65,8 +65,11 @@ export default function TrashView({ items, days }: { items: TrashItem[]; days: n
         <div className="mb-8 flex flex-wrap items-end justify-between gap-4">
           <div>
             <h1 className="mb-2 text-4xl font-bold tracking-tight">Trash</h1>
-            <p className="text-muted-foreground">
-              Deleted pages wait here for {days} days, then they&apos;re gone for good.
+            {/* "pretty" keeps the last word from wrapping onto a line of its own. */}
+            <p className="text-muted-foreground [text-wrap:pretty]">
+              {backend.demo
+                ? `Deleted pages wait here for ${days} days, or until you reset the demo.`
+                : `Deleted pages wait here for ${days} days, then they're gone for good.`}
             </p>
           </div>
           {visible.length > 0 &&
@@ -96,8 +99,10 @@ export default function TrashView({ items, days }: { items: TrashItem[]; days: n
         {visible.length === 0 ? (
           <div className="rounded-lg border border-dashed px-6 py-12 text-center">
             <p className="font-medium">The trash is empty</p>
-            <p className="mt-1 text-sm text-muted-foreground">
-              Pages you delete from the sidebar, and pages Claude deletes, land here first.
+            <p className="mt-1 text-sm text-muted-foreground [text-wrap:balance]">
+              {backend.demo
+                ? "Pages you delete from the sidebar land here first."
+                : "Pages you delete from the sidebar, and pages Claude deletes, land here first."}
             </p>
           </div>
         ) : (
