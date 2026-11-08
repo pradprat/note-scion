@@ -26,6 +26,9 @@ All notable changes to note-scion are listed here. The format follows
   move it past its neighbours, Alt+Shift+Right nests it inside the page above, and
   Alt+Shift+Left moves it out of its parent.
 - After a restore, the trash shows "Restored "…". Open it", with a link to the page.
+- Click an `@` date, in a page or its title, to change it from a calendar. Enter on a
+  selected date opens it too; arrow keys move by day and week, Page Up and Page Down by
+  month. The new day is stored, so Claude reads it over MCP.
 
 ### Changed
 

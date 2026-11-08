@@ -6,7 +6,7 @@ import { EditorContent, useEditor } from "@tiptap/react";
 import StarterKit from "@tiptap/starter-kit";
 import { Placeholder } from "@tiptap/extensions";
 import { Fragment, Slice, type Node as PMNode } from "@tiptap/pm/model";
-import { Plugin } from "@tiptap/pm/state";
+import { NodeSelection, Plugin } from "@tiptap/pm/state";
 import { titleParts, titleText } from "@/lib/title-dates";
 import { DateChip, DateCommand, dateKey } from "./date-mention";
 import { applyRemoteContent } from "./remote-content";
@@ -125,6 +125,15 @@ const TitleEditor = forwardRef<
         if (event.isComposing || event.altKey || event.metaKey || event.ctrlKey) return false;
         // The "@" menu has Enter and the arrows while it's open.
         if (dateKey.getState(view.state)?.active) return false;
+        // Enter on a selected date opens its calendar (DateChip), rather than leaving.
+        const { selection } = view.state;
+        if (
+          event.key === "Enter" &&
+          selection instanceof NodeSelection &&
+          selection.node.type.name === "dateMention"
+        ) {
+          return false;
+        }
         if (event.key === "Enter") {
           event.preventDefault();
           const { $from, $to } = view.state.selection;

@@ -4,10 +4,11 @@ import { forwardRef, useEffect, useImperativeHandle, useRef, useState } from "re
 import { Extension } from "@tiptap/core";
 import { ReactRenderer } from "@tiptap/react";
 import Suggestion, { type SuggestionProps } from "@tiptap/suggestion";
-import { PluginKey } from "@tiptap/pm/state";
+import { NodeSelection, PluginKey } from "@tiptap/pm/state";
 import { DateMention } from "@/lib/date-mention";
 import { dateLabel, fullDate, shortDate, suggestDates, type DateSuggestion } from "@/lib/dates";
 import { cn } from "@/lib/utils";
+import { openDatePicker } from "./date-picker";
 import { floatMenu } from "./slash-command";
 
 /* ---------- The chip ---------- */
@@ -38,10 +39,13 @@ if (typeof document !== "undefined") {
   });
 }
 
-/** The shared date node, drawn as "@Today" and kept current. */
+/** Each date on screen, to its "open the picker" action, so Enter can reach it too. */
+const openers = new WeakMap<Element, () => void>();
+
+/** The shared date node, drawn as "@Today" and kept current. Click it to change the day. */
 export const DateChip = DateMention.extend({
   addNodeView() {
-    return ({ node }) => {
+    return ({ node, editor, getPos }) => {
       let date = node.attrs.date as string;
       const dom = document.createElement("span");
       dom.className = "notes-date";
@@ -54,12 +58,45 @@ export const DateChip = DateMention.extend({
 
       const render = () => {
         dom.dataset.date = date;
-        dom.title = fullDate(date);
+        dom.title = editor.isEditable ? `${fullDate(date)}. Click to change.` : fullDate(date);
         label.textContent = dateLabel(date);
       };
       render();
       chips.add(render);
       scheduleMidnight();
+
+      // A new day goes into the stored date (so Claude reads it too), and the cursor
+      // lands after it. Closing without a pick leaves the date selected, as it was.
+      const open = () => {
+        if (!editor.isEditable) return;
+        openDatePicker({
+          anchor: dom,
+          value: date,
+          onPick: (iso) => {
+            const pos = getPos();
+            if (typeof pos !== "number") return;
+            editor
+              .chain()
+              .focus()
+              .command(({ tr }) => {
+                tr.setNodeMarkup(pos, undefined, { ...tr.doc.nodeAt(pos)?.attrs, date: iso });
+                return true;
+              })
+              .setTextSelection(pos + 1)
+              .run();
+          },
+          onDismiss: () => {
+            const pos = getPos();
+            if (typeof pos === "number") editor.chain().focus().setNodeSelection(pos).run();
+          },
+        });
+      };
+      openers.set(dom, open);
+      dom.addEventListener("click", (event) => {
+        if (!editor.isEditable) return;
+        event.preventDefault();
+        open();
+      });
 
       return {
         dom,
@@ -69,11 +106,28 @@ export const DateChip = DateMention.extend({
           render();
           return true;
         },
+        // The picker handles its own clicks; the editor needn't see them as edits.
+        stopEvent: (event) => event.type === "click",
         destroy: () => {
           chips.delete(render);
+          openers.delete(dom);
         },
       };
     };
+  },
+
+  addKeyboardShortcuts() {
+    // A date selected from the keyboard (arrow onto it) opens with Enter, as a click would.
+    const openSelected = () => {
+      const { selection } = this.editor.state;
+      if (!(selection instanceof NodeSelection) || selection.node.type.name !== this.name) return false;
+      const dom = this.editor.view.nodeDOM(selection.from);
+      const open = dom instanceof Element ? openers.get(dom) : undefined;
+      if (!open) return false;
+      open();
+      return true;
+    };
+    return { Enter: openSelected };
   },
 });
 

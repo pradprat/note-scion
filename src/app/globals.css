@@ -321,6 +321,18 @@ body {
   margin-right: 0.05em;
   color: hsl(var(--muted-foreground));
 }
+
+/* Where the page can be edited, a date opens a calendar: say so with the pointer and
+   the usual hover fill, in the body and in the title alike. */
+.notes-editor[contenteditable="true"] .notes-date,
+.notes-title[contenteditable="true"] .notes-date {
+  cursor: pointer;
+  transition: background-color 120ms ease-out;
+}
+.notes-editor[contenteditable="true"] .notes-date:hover,
+.notes-title[contenteditable="true"] .notes-date:hover {
+  background-color: hsl(var(--accent));
+}
 .notes-title .is-empty::before {
   content: attr(data-placeholder);
   float: left;

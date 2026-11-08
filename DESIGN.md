@@ -420,6 +420,13 @@ The page is the product, and its details are the system's distinctive work.
 - **`@` date:** a quiet word in muted text with a 70%-opacity `@`, not a pill, so the
   prose around it still reads. Within a day of now it says "@Yesterday", "@Today" or
   "@Tomorrow"; any other day reads in full, "@November 10, 2026".
+- **Date picker:** clicking a date where the page can be edited (it takes the pointer and
+  the Frost Paper hover fill), or Enter on a selected one, opens a month below it in a
+  Float popover with 12px padding: 32px days (40px for a finger), the date's day filled
+  like a primary button, today outlined in a hairline, other months' days muted, and a
+  Today button under a hairline. Arrows move by day and week, Page Up and Page Down by
+  month. A pick rewrites the stored `@YYYY-MM-DD` and puts the cursor after the date;
+  Escape leaves the date selected.
 - **Sub-page link:** one text line tall, with the page's emoji in a 20px column and the
   title in weight 500, underlined in Pale Rule with a 3px offset. Hover fills the row
   with Frost Paper. A missing page goes muted and loses its underline.
