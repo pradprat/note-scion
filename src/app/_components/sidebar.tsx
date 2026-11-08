@@ -11,7 +11,6 @@ import {
   PanelLeftClose,
   Plug,
   Plus,
-  Rocket,
   RotateCcw,
   Search,
   Trash2,
@@ -176,9 +175,9 @@ export default function NotesSidebar() {
       <Sidebar inert={folded ? true : undefined}>
         <SidebarHeader className="h-12 flex-row items-center gap-1 py-0 pl-4 pr-2">
           <Link href={href("/")} className="mr-auto flex items-center gap-2 text-sm font-semibold tracking-tight">
-            Notes
+            {demo ? "note-scion" : "Notes"}
             {demo && (
-              <span className="rounded border border-sidebar-border px-1.5 font-mono text-[0.625rem] font-medium uppercase leading-4 tracking-wide text-sidebar-foreground/70">
+              <span className="rounded border border-sidebar-border px-1.5 text-xs font-medium leading-5 text-sidebar-foreground/70">
                 Demo
               </span>
             )}
@@ -253,9 +252,7 @@ export default function NotesSidebar() {
   );
 }
 
-const REPO_URL = "https://github.com/pradprat/note-scion";
-
-/** In place of Connected apps and Log out: where the demo's pages live, and a way out. */
+/** In place of Connected apps and Log out: where the demo's pages live, and starting over. */
 function DemoMenu() {
   const router = useRouter();
   const { reset, href } = useBackend();
@@ -299,14 +296,6 @@ function DemoMenu() {
             <span>Reset demo</span>
           </SidebarMenuButton>
         )}
-      </SidebarMenuItem>
-      <SidebarMenuItem>
-        <SidebarMenuButton asChild className={COARSE_ROW}>
-          <a href={REPO_URL} target="_blank" rel="noopener noreferrer">
-            <Rocket />
-            <span>Deploy your own</span>
-          </a>
-        </SidebarMenuButton>
       </SidebarMenuItem>
       <p className="px-2 pb-1 pt-2 text-xs leading-relaxed text-sidebar-foreground/60">
         A demo: pages are saved in this browser only, never sent anywhere.

@@ -1,5 +1,6 @@
 import { fromMarkdown } from "@/lib/markdown";
 import { toISODate } from "@/lib/dates";
+import { DEPLOY_URL } from "@/lib/links";
 import type { NotePage } from "@/lib/types";
 
 type Sample = Omit<NotePage, "updatedAt" | "mcpEdit">;
@@ -215,7 +216,7 @@ Two nights up north, leaving ${day(10)}.
       `
 note-scion is open source under the MIT license. Your own copy keeps your pages in your own Postgres database, behind your password.
 
-1. Open [the repository](https://github.com/pradprat/note-scion) and click **Deploy with Vercel**. It copies the code and adds a free Neon database.
+1. Open [the deploy steps](${DEPLOY_URL}) on GitHub and click **Deploy with Vercel**. It copies the code and adds a free Neon database.
 2. Choose a password and a session secret when asked.
 3. Open your site, log in, and connect Claude.
 

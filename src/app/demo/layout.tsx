@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import DemoApp from "./_lib/demo-app";
 
 export const metadata: Metadata = {
-  title: "Demo",
+  title: { absolute: "note-scion demo" },
   description: "Try note-scion in your browser. Pages are saved on this device only.",
 };
 

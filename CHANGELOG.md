@@ -15,6 +15,13 @@ All notable changes to note-scion are listed here. The format follows
   countdown, a to-do lands on the page as an MCP edit would, with the save status naming
   Claude, or the conflict bar if you're still typing. The welcome page points to it and
   now ends on deploying your own copy.
+- The demo has a "Deploy your own" link in its top bar, on phones too. It and the sample
+  page both go to the README's Deploy section.
+
+### Changed
+
+- The demo is called note-scion in its sidebar and browser tab, and its Demo badge is
+  larger. The footer's "Deploy your own" and the Copy link button are gone from the demo.
 
 ### Fixed
 
@@ -22,6 +29,9 @@ All notable changes to note-scion are listed here. The format follows
   screen. They open above the line when there's more room there, including above a
   phone's keyboard.
 - A long save status no longer overlaps the breadcrumb of a top-level page on phones.
+- The MCP tools now say that a page created inside another isn't linked from the parent's
+  body, and that an `@` date never links to a page, so Claude adds a real sub-page link
+  instead of a date.
 
 ## [1.0.0] - 2026-11-06
 

@@ -457,7 +457,7 @@ const COARSE_BUTTON = "[@media(pointer:coarse)]:h-10";
 
 /** Copies this page's address. The link only opens for someone signed in. */
 function CopyLinkButton({ id }: { id: string }) {
-  const { href } = useBackend();
+  const { href, demo } = useBackend();
   const [copied, setCopied] = useState(false);
 
   useEffect(() => {
@@ -465,6 +465,9 @@ function CopyLinkButton({ id }: { id: string }) {
     const timer = setTimeout(() => setCopied(false), 2000);
     return () => clearTimeout(timer);
   }, [copied]);
+
+  // A demo link only opens in the browser that wrote the page.
+  if (demo) return null;
 
   const copy = async () => {
     try {
