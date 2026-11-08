@@ -11,6 +11,19 @@ const config = {
       mono: ["var(--font-dm-mono)", ...fontFamily.mono],
     },
     extend: {
+      transitionTimingFunction: {
+        // Arrives fast and settles: the page tree opening, the chevron turning.
+        "out-expo": "cubic-bezier(0.16, 1, 0.3, 1)",
+        // A softer settle for the sidebar's longer slide, so it reads as one move.
+        drawer: "cubic-bezier(0.32, 0.72, 0, 1)",
+      },
+      // Named, because tailwindcss-animate also claims duration-*, which leaves arbitrary
+      // values like duration-[260ms] ambiguous and Tailwind quietly drops them.
+      transitionDuration: {
+        120: "120ms",
+        180: "180ms",
+        260: "260ms",
+      },
       colors: {
         border: "hsl(var(--border))",
         input: "hsl(var(--input))",

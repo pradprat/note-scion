@@ -1,6 +1,6 @@
 "use client";
 
-import { createContext, useContext, useRef, useState } from "react";
+import { createContext, useContext, useEffect, useRef, useState } from "react";
 import Link, { useLinkStatus } from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import {
@@ -336,7 +336,10 @@ function moveInTree(event: React.KeyboardEvent<HTMLElement>, toggle: (id: string
   const row = event.target as HTMLElement;
   const id = row.dataset.treeId;
   if (!id || event.altKey || event.ctrlKey || event.metaKey || event.shiftKey) return;
-  const rows = Array.from(event.currentTarget.querySelectorAll<HTMLElement>("[data-tree-id]"));
+  // Rows still folding away (inert) are already gone as far as the keys go.
+  const rows = Array.from(event.currentTarget.querySelectorAll<HTMLElement>("[data-tree-id]")).filter(
+    (other) => !other.closest(".sidebar-sub-pages[inert]")
+  );
   const at = rows.indexOf(row);
   const level = Number(row.dataset.level);
   const expanded = row.getAttribute("aria-expanded");
@@ -556,6 +559,51 @@ function RowMenu({
   );
 }
 
+/** Matches the `.sidebar-sub-pages` transitions in globals.css, with a frame to spare. */
+const SUB_PAGES_OPEN_MS = 260;
+const SUB_PAGES_CLOSE_MS = 200;
+
+/**
+ * A page's sub-pages, which grow out of the row when it opens and fold back into it when
+ * it closes, so it's clear where they went. They stay mounted until the fold finishes.
+ * Pages already open when the tree first shows don't animate.
+ */
+function SubPages({ open, children }: { open: boolean; children: React.ReactNode }) {
+  const [shown, setShown] = useState(open);
+  const [moving, setMoving] = useState(false);
+  const [was, setWas] = useState(open);
+  if (open !== was) {
+    setWas(open);
+    setMoving(true);
+    if (open) setShown(true);
+  }
+
+  useEffect(() => {
+    if (!moving) return;
+    const timer = setTimeout(
+      () => {
+        setMoving(false);
+        if (!open) setShown(false);
+      },
+      open ? SUB_PAGES_OPEN_MS : SUB_PAGES_CLOSE_MS
+    );
+    return () => clearTimeout(timer);
+  }, [moving, open]);
+
+  if (!shown) return null;
+  return (
+    <div
+      className="sidebar-sub-pages"
+      data-state={open ? "open" : "closed"}
+      data-moving={moving || undefined}
+      // On their way out, the rows are out of reach of Tab and the arrow keys.
+      inert={open ? undefined : true}
+    >
+      <div>{children}</div>
+    </div>
+  );
+}
+
 function TreeItem({ node, depth }: { node: NoteNode; depth: number }) {
   const { childrenOf, activeId, isExpanded, toggleExpanded, addPage, removePage } = useNotes();
   const { href } = useBackend();
@@ -593,7 +641,7 @@ function TreeItem({ node, depth }: { node: NoteNode; depth: number }) {
         onDragEnd={end}
         data-active={active}
         className={cn(
-          "group/row relative flex items-center gap-0.5 rounded-md pr-1 text-sm text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground [&:has(:focus-visible)]:bg-sidebar-accent",
+          "group/row relative flex items-center gap-0.5 rounded-md pr-1 text-sm text-sidebar-foreground transition-colors duration-120 ease-out hover:bg-sidebar-accent hover:text-sidebar-accent-foreground [&:has(:focus-visible)]:bg-sidebar-accent",
           "data-[active=true]:bg-sidebar-accent data-[active=true]:font-medium data-[active=true]:text-sidebar-accent-foreground",
           dragging && "opacity-40",
           zone === "inside" && "bg-sidebar-accent ring-1 ring-inset ring-sidebar-ring"
@@ -621,7 +669,7 @@ function TreeItem({ node, depth }: { node: NoteNode; depth: number }) {
             onClick={() => toggleExpanded(node.id)}
             className={ROW_ICON}
           >
-            <ChevronRight className={cn("transition-transform duration-150", open && "rotate-90")} />
+            <ChevronRight className={cn("transition-transform duration-200 ease-out-expo", open && "rotate-90")} />
           </Button>
         ) : (
           <span className="w-6 shrink-0 [@media(pointer:coarse)]:w-10" aria-hidden />
@@ -662,12 +710,14 @@ function TreeItem({ node, depth }: { node: NoteNode; depth: number }) {
         <RowMenu title={title} tabIndex={tab} onAdd={() => addPage(node.id)} onTrash={() => removePage(node.id)} />
       </div>
 
-      {open && (
-        <SidebarMenu className="gap-0">
-          {kids.map((child) => (
-            <TreeItem key={child.id} node={child} depth={depth + 1} />
-          ))}
-        </SidebarMenu>
+      {hasKids && (
+        <SubPages open={open}>
+          <SidebarMenu className="gap-0">
+            {kids.map((child) => (
+              <TreeItem key={child.id} node={child} depth={depth + 1} />
+            ))}
+          </SidebarMenu>
+        </SubPages>
       )}
     </SidebarMenuItem>
   );

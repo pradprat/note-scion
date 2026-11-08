@@ -20,6 +20,12 @@ All notable changes to note-scion are listed here. The format follows
 
 ### Changed
 
+- The sidebar moves with more care. Hiding and showing it slides and settles (260ms in,
+  180ms out) instead of a linear 200ms, and its contents fade as it goes. Opening a page
+  in the tree grows its sub-pages out of the row, and closing it folds them back. Rows
+  change color on hover over 120ms, and the sidebar on phones opens in 300ms rather than
+  500ms. With reduced motion, nothing slides or grows; the phone sidebar and sub-pages
+  fade instead.
 - The demo is called note-scion in its sidebar and browser tab, and its Demo badge is
   larger. The footer's "Deploy your own" and the Copy link button are gone from the demo.
 - The demo's copy only says what's true there: its trash doesn't mention Claude, and
