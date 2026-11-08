@@ -355,6 +355,10 @@ Precise and plain: shadcn's button at exact sizes, with no custom shapes.
   and a chevron to expand nested pages. Hover and selection fill with Pale Rule (Graphite
   in dark mode), and the selected row also turns weight 500. Trash, Connected apps and
   Log out sit at the bottom, above a hairline.
+- **Row actions:** with a mouse, a row's trash and + lie over the end of its title on
+  the hover fill, only while the row is hovered or one of them has keyboard focus, so a
+  title at rest has the whole row. On touch they fold into one 40px "⋯" that opens a
+  two-item menu (Add a page inside, Move to trash), with 40px items.
 - **Page tree from the keyboard:** one stop in the tab order, like a file tree. Up and
   Down move between visible pages, Right opens a page or steps into it, Left closes it or
   steps out to its parent, Home and End jump to the ends. Each row's link says whether
@@ -364,7 +368,8 @@ Precise and plain: shadcn's button at exact sizes, with no custom shapes.
   top left, and lands in the page title.
 - **Top bar:** 48px, on the page color, with no border. On the left is a breadcrumb of
   emoji and title per page, where ancestors shrink before the current page does. On
-  the right are the save status and the page's actions.
+  the right are the save status and the page's actions. The breadcrumb keeps at least
+  96px; past that, a long save status gives way first.
 - **Save status:** 12px muted text: "Saved", "Saving…", "Editing", turning Signal Red for
   a conflict. When an MCP client made the last edit it reads "Claude Code edited 4m ago"
   (the client's own registered name, or "Edited over MCP" for the static token), with

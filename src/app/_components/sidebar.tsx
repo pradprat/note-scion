@@ -5,6 +5,7 @@ import Link, { useLinkStatus } from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import {
   ChevronRight,
+  Ellipsis,
   FileText,
   Loader2,
   LogOut,
@@ -17,6 +18,7 @@ import {
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import {
   Sidebar,
   SidebarContent,
@@ -277,21 +279,24 @@ function DemoMenu() {
     <>
       <SidebarMenuItem>
         {confirming ? (
-          <div className="flex items-center gap-1 px-2 py-1 text-sm">
-            <span className="mr-auto text-sidebar-foreground/70">Erase your changes?</span>
-            <Button variant="ghost" size="sm" onClick={() => setConfirming(false)} className={cn("h-7 px-2", COARSE_ROW)}>
-              Cancel
-            </Button>
-            <Button
-              variant="destructive"
-              size="sm"
-              autoFocus
-              disabled={busy}
-              onClick={() => void startOver()}
-              className={cn("h-7 px-2", COARSE_ROW)}
-            >
-              Reset
-            </Button>
+          // The question gets its own line: beside two buttons it wrapped in the 256px rail.
+          <div className="px-2 py-1 text-sm">
+            <p className="mb-1.5 text-sidebar-foreground/70">Erase your changes?</p>
+            <div className="flex justify-end gap-1">
+              <Button variant="ghost" size="sm" onClick={() => setConfirming(false)} className={cn("h-7 px-2", COARSE_ROW)}>
+                Cancel
+              </Button>
+              <Button
+                variant="destructive"
+                size="sm"
+                autoFocus
+                disabled={busy}
+                onClick={() => void startOver()}
+                className={cn("h-7 px-2", COARSE_ROW)}
+              >
+                Reset
+              </Button>
+            </div>
           </div>
         ) : (
           <SidebarMenuButton ref={resetRef} onClick={() => setConfirming(true)} className={COARSE_ROW}>
@@ -478,10 +483,70 @@ function TreeIcon({ icon }: { icon: string | null }) {
 // pages-router Link and leave it out, hence the spread.
 const PREFETCH_ON_HOVER = { unstable_dynamicOnHover: true } as Record<string, unknown>;
 
-// Row actions show on hover and keyboard focus; where there is no hover (touch), always.
+// With a mouse, the row's buttons lie over the end of the title only while the row is
+// hovered or one of them has focus, so at rest the title has the whole row. They sit on
+// the hover fill. Touch screens get one "⋯" button instead (RowMenu).
 // A named group: the shadcn <Sidebar> is itself a plain `group`.
 const ACTIONS =
-  "flex shrink-0 items-center opacity-0 transition-opacity focus-within:opacity-100 group-hover/row:opacity-100 [@media(hover:none)]:opacity-100 [@media(pointer:coarse)]:gap-2";
+  "pointer-events-none absolute inset-y-0 right-1 flex items-center gap-0.5 rounded-r-md bg-sidebar-accent pl-1 opacity-0 transition-opacity focus-within:pointer-events-auto focus-within:opacity-100 group-hover/row:pointer-events-auto group-hover/row:opacity-100 [@media(hover:none)]:hidden";
+
+const MENU_ITEM =
+  "flex h-10 w-full items-center gap-2 rounded-sm px-2 text-left text-sm outline-none hover:bg-accent focus-visible:bg-accent [&_svg]:size-4 [&_svg]:text-muted-foreground";
+
+/**
+ * A page's actions on a touch screen: one finger-sized "⋯" in place of a trash and a +
+ * side by side, which took a third of the row and sat a slip apart.
+ */
+function RowMenu({
+  title,
+  tabIndex,
+  onAdd,
+  onTrash,
+}: {
+  title: string;
+  tabIndex: number;
+  onAdd: () => Promise<unknown>;
+  onTrash: () => void;
+}) {
+  const [open, setOpen] = useState(false);
+  return (
+    <Popover open={open} onOpenChange={setOpen}>
+      <PopoverTrigger asChild>
+        <Button
+          variant="ghost"
+          size="icon"
+          aria-label={`Actions for ${title}`}
+          tabIndex={tabIndex}
+          className={cn(ROW_ICON, "hidden [@media(hover:none)]:inline-flex")}
+        >
+          <Ellipsis />
+        </Button>
+      </PopoverTrigger>
+      <PopoverContent align="end" className="w-56 p-1">
+        <button
+          type="button"
+          className={MENU_ITEM}
+          onClick={() => {
+            setOpen(false);
+            void onAdd();
+          }}
+        >
+          <Plus /> Add a page inside
+        </button>
+        <button
+          type="button"
+          className={MENU_ITEM}
+          onClick={() => {
+            setOpen(false);
+            onTrash();
+          }}
+        >
+          <Trash2 /> Move to trash
+        </button>
+      </PopoverContent>
+    </Popover>
+  );
+}
 
 function TreeItem({ node, depth }: { node: NoteNode; depth: number }) {
   const { childrenOf, activeId, isExpanded, toggleExpanded, addPage, removePage } = useNotes();
@@ -520,7 +585,7 @@ function TreeItem({ node, depth }: { node: NoteNode; depth: number }) {
         onDragEnd={end}
         data-active={active}
         className={cn(
-          "group/row relative flex items-center gap-0.5 rounded-md pr-1 text-sm text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground",
+          "group/row relative flex items-center gap-0.5 rounded-md pr-1 text-sm text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground [&:has(:focus-visible)]:bg-sidebar-accent",
           "data-[active=true]:bg-sidebar-accent data-[active=true]:font-medium data-[active=true]:text-sidebar-accent-foreground",
           dragging && "opacity-40",
           zone === "inside" && "bg-sidebar-accent ring-1 ring-inset ring-sidebar-ring"
@@ -586,6 +651,7 @@ function TreeItem({ node, depth }: { node: NoteNode; depth: number }) {
           </Button>
           <AddButton label={`Add a page inside ${title}`} onAdd={() => addPage(node.id)} tabIndex={tab} />
         </div>
+        <RowMenu title={title} tabIndex={tab} onAdd={() => addPage(node.id)} onTrash={() => removePage(node.id)} />
       </div>
 
       {open && (
