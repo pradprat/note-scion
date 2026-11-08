@@ -35,7 +35,10 @@ All notable changes to note-scion are listed here. The format follows
   returns focus to the button that opened it.
 - The red of destructive buttons and error text is darker in light mode (#DC2626), and
   red buttons in dark mode use dark text, so both read at 4.5:1 or more.
-- Sidebar row buttons are 40px on touch screens, with more room between trash and +.
+- Sidebar titles use the whole row. With a mouse, a page's trash and + appear over the
+  end of its title on hover; on touch screens they're one 40px "⋯" menu.
+- On phones, the top bar keeps room for the page's name; a long save status shortens
+  first.
 - Screen readers read an `@` date as "Tomorrow", not "at Tomorrow".
 - An `@` date more than a day away shows its full date, "November 8, 2026", instead of
   "Nov 8". Yesterday, today and tomorrow still read as words.

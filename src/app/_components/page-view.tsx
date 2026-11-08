@@ -486,7 +486,7 @@ function CopyLinkButton({ id }: { id: string }) {
       onClick={() => void copy()}
       aria-label="Copy link to this page"
       title="Copy link"
-      className="h-8 w-8 text-muted-foreground [@media(pointer:coarse)]:h-10 [@media(pointer:coarse)]:w-10"
+      className="h-8 w-8 shrink-0 text-muted-foreground [@media(pointer:coarse)]:h-10 [@media(pointer:coarse)]:w-10"
     >
       {copied ? <Check /> : <LinkIcon />}
     </Button>

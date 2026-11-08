@@ -30,8 +30,10 @@ export default function TopBar({ children, end }: { children?: React.ReactNode; 
           state === "expanded" && "md:hidden"
         )}
       />
-      <div className="min-w-0 flex-1">{children}</div>
-      {end && <div className="flex shrink-0 items-center gap-2">{end}</div>}
+      {/* The breadcrumb keeps room for a few words of the page's name; a long save
+          status gives way first, truncating the app's name. */}
+      <div className="min-w-24 flex-1">{children}</div>
+      {end && <div className="flex min-w-0 items-center gap-2">{end}</div>}
       {demo && (
         <Button
           asChild
