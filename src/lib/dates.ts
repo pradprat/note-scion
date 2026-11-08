@@ -58,7 +58,11 @@ function daysBetween(from: Date, to: Date): number {
   return Math.round((startOfDay(to).getTime() - startOfDay(from).getTime()) / DAY_MS);
 }
 
-/** "Today", "Yesterday" or "Tomorrow" near now; otherwise "Nov 12", with the year if it isn't this one. */
+/**
+ * "Today", "Yesterday" or "Tomorrow" within a day of now; any other day in full,
+ * "November 12, 2026". A date typed as @today reads "Today", then "Yesterday", then
+ * its full date from the day after.
+ */
 export function dateLabel(iso: string, now = new Date()): string {
   const date = parseISODate(iso);
   if (!date) return iso;
@@ -66,11 +70,7 @@ export function dateLabel(iso: string, now = new Date()): string {
   if (diff === 0) return "Today";
   if (diff === -1) return "Yesterday";
   if (diff === 1) return "Tomorrow";
-  return date.toLocaleDateString("en-US", {
-    month: "short",
-    day: "numeric",
-    year: date.getFullYear() === now.getFullYear() ? undefined : "numeric",
-  });
+  return longDate(iso);
 }
 
 /** How long ago a moment was: "just now", "4m ago", "2h ago", "yesterday", then "Nov 3". */

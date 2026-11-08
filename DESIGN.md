@@ -396,7 +396,8 @@ The page is the product, and its details are the system's distinctive work.
   block's first line (each heading level has its own height). It fills with Frost Paper
   and the text color on hover, and the Block halo appears under the block it will move.
 - **`@` date:** a quiet word in muted text with a 70%-opacity `@`, not a pill, so the
-  prose around it still reads ("@Tomorrow", "@Nov 10").
+  prose around it still reads. Within a day of now it says "@Yesterday", "@Today" or
+  "@Tomorrow"; any other day reads in full, "@November 10, 2026".
 - **Sub-page link:** one text line tall, with the page's emoji in a 20px column and the
   title in weight 500, underlined in Pale Rule with a 3px offset. Hover fills the row
   with Frost Paper. A missing page goes muted and loses its underline.

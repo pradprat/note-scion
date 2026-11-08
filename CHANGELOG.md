@@ -27,6 +27,8 @@ All notable changes to note-scion are listed here. The format follows
   instead of Ctrl K, hover and drag.
 - The conflict bar says the page changed "in another tab or by Claude" rather than
   "probably by Claude".
+- An `@` date more than a day away shows its full date, "November 8, 2026", instead of
+  "Nov 8". Yesterday, today and tomorrow still read as words.
 
 ### Fixed
 
