@@ -15,8 +15,17 @@ All notable changes to note-scion are listed here. The format follows
   countdown, a to-do lands on the page as an MCP edit would, with the save status naming
   Claude, or the conflict bar if you're still typing. The welcome page points to it and
   now ends on deploying your own copy.
-- The demo has a "Deploy your own" link in its top bar, on phones too. It and the sample
-  page both go to the README's Deploy section.
+- The demo has a "Deploy your own" link in its top bar, on phones too. It and the "Your
+  own copy" sample page both go to the README's Deploy section.
+- Tables. Type `/table` for a 3×3 table with a header row; a toolbar above it adds and
+  removes rows and columns, and the whole table moves by its grip. Tables read and write
+  as GitHub-flavoured Markdown tables over MCP.
+- In a conflict, "Show the newer version" opens the stored copy as Markdown, so you can
+  see what you'd keep or replace before choosing.
+- Pages move in the sidebar from the keyboard: with a page focused, Alt+Shift+Up and Down
+  move it past its neighbours, Alt+Shift+Right nests it inside the page above, and
+  Alt+Shift+Left moves it out of its parent.
+- After a restore, the trash shows "Restored "…". Open it", with a link to the page.
 
 ### Changed
 
@@ -55,6 +64,19 @@ All notable changes to note-scion are listed here. The format follows
 - Screen readers read an `@` date as "Tomorrow", not "at Tomorrow".
 - An `@` date more than a day away shows its full date, "November 8, 2026", instead of
   "Nov 8". Yesterday, today and tomorrow still read as words.
+- The conflict bar's choices are "Keep my version" and "Keep the newer version", neither
+  styled as the default, and it says the version you keep replaces the other.
+- The demo's welcome page leads with what note-scion does and links straight to Working
+  with Claude. The Claude page is shorter, so its simulate button is in view on a laptop,
+  and the sample deploy page is called "Your own copy".
+- Links in a page's text are underlined in the secondary ink instead of the hairline
+  color, so they can be seen.
+- Below 640px the save status reads "Claude edited" without the time, so the page name
+  keeps its room.
+- The page column keeps its scrollbar's room on short pages, so it no longer shifts
+  sideways between pages, and toasts centre on the page column, not the window.
+- The empty state reads "Your workspace is empty". To-do checkboxes are named by their
+  text for screen readers.
 
 ### Fixed
 
@@ -70,6 +92,16 @@ All notable changes to note-scion are listed here. The format follows
 - The MCP tools now say that a page created inside another isn't linked from the parent's
   body, and that an `@` date never links to a page, so Claude adds a real sub-page link
   instead of a date.
+- When Claude's edit lands on a page you have open, your cursor stays where it was.
+  Before, it jumped to the end of the new text, so what you typed next went into
+  Claude's words.
+- Opening a page that ends in a list no longer counts as an edit. It cost a needless
+  save, and if Claude's edit arrived then it showed as a conflict nobody caused.
+- In the demo, typing anything during the simulated edit's countdown makes a conflict;
+  before, only typing in its last moment did. Repeated simulated edits add different
+  to-dos.
+- Enter in the quick switcher opens a page found by its text instead of making a new
+  page named after the search.
 
 ## [1.0.0] - 2026-11-06
 
