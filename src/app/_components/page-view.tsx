@@ -1,6 +1,6 @@
 "use client";
 
-import { Fragment, useCallback, useEffect, useRef, useState } from "react";
+import { createContext, Fragment, useCallback, useContext, useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import type { Editor, JSONContent } from "@tiptap/react";
@@ -25,12 +25,36 @@ import NoteEditor from "./editor";
 import TopBar from "./top-bar";
 import TitleEditor, { type TitleEditorHandle } from "./title-editor";
 import TitleText from "./title-text";
+import { applyRemoteContent } from "./remote-content";
 
 type SaveStatus = "saved" | "unsaved" | "saving" | "error" | "conflict" | "missing";
 
 const SAVE_DELAY = 800;
 
 const newer = (a: string, b: string) => Date.parse(a) > Date.parse(b);
+
+/**
+ * A page body as it compares for saving: without the empty line the editor keeps at the
+ * end. A page stored ending in a list or a heading gets that line added by the editor at
+ * its first transaction, which is tidying, not an edit.
+ */
+function comparable(content: JSONContent | null | undefined): string {
+  const blocks = [...(content?.content ?? [])];
+  while (blocks.length) {
+    const last = blocks[blocks.length - 1];
+    if (last.type !== "paragraph" || last.content?.length) break;
+    blocks.pop();
+  }
+  return JSON.stringify(blocks);
+}
+
+/**
+ * Lets something under the page hold its autosave for a while: the demo's stand-in for
+ * Claude holds it through the countdown, so typing then is still unsaved when the edit
+ * lands, which is what makes a real conflict. Edits still save when you leave the page.
+ */
+const HoldSavesContext = createContext<(held: boolean) => void>(() => {});
+export const useHoldSaves = () => useContext(HoldSavesContext);
 
 /**
  * Batches edits into one debounced, strictly ordered save per pause in typing. Every save
@@ -49,6 +73,9 @@ function useAutosave(page: NotePage, applyRemote: (page: NotePage) => void) {
   const base = useRef(page.updatedAt);
   const inFlight = useRef(false);
   const blocked = useRef(false);
+  const held = useRef(false);
+  // The body as stored now, to tell an edit from the editor tidying what it loaded.
+  const stored = useRef(comparable(page.content));
 
   const hasPending = () => Object.keys(pending.current).length > 0;
 
@@ -75,6 +102,7 @@ function useAutosave(page: NotePage, applyRemote: (page: NotePage) => void) {
           );
           if (result.status === "saved") {
             base.current = result.updatedAt;
+            if (patch.content !== undefined) stored.current = comparable(patch.content);
             blocked.current = false;
             setMcpEdit(null);
             setStatus(hasPending() ? "unsaved" : "saved");
@@ -98,13 +126,33 @@ function useAutosave(page: NotePage, applyRemote: (page: NotePage) => void) {
 
   const schedule = useCallback(
     (patch: NotePatch) => {
+      // Not an edit: the editor only tidied the stored page. Saving it would cost a write
+      // for nothing, and if Claude's edit arrived meanwhile it would pass for a conflict.
+      const keys = Object.keys(patch);
+      if (
+        keys.length === 1 &&
+        keys[0] === "content" &&
+        !hasPending() &&
+        comparable(patch.content) === stored.current
+      ) {
+        return;
+      }
       Object.assign(pending.current, patch);
       if (blocked.current) return;
       setStatus("unsaved");
       if (timer.current) clearTimeout(timer.current);
-      timer.current = setTimeout(() => void flush(), SAVE_DELAY);
+      timer.current = held.current ? null : setTimeout(() => void flush(), SAVE_DELAY);
     },
     [flush]
+  );
+
+  const hold = useCallback(
+    (on: boolean) => {
+      held.current = on;
+      // Released: what was typed meanwhile saves as usual, unless it's now a conflict.
+      if (!on && hasPending() && !blocked.current) schedule({});
+    },
+    [schedule]
   );
 
   // A fresher copy from the server (refresh on focus). Nothing unsaved here: take it.
@@ -118,6 +166,7 @@ function useAutosave(page: NotePage, applyRemote: (page: NotePage) => void) {
       return;
     }
     base.current = page.updatedAt;
+    stored.current = comparable(page.content);
     setMcpEdit(page.mcpEdit);
     applyRemote(page);
   }, [page, applyRemote]);
@@ -134,6 +183,7 @@ function useAutosave(page: NotePage, applyRemote: (page: NotePage) => void) {
     pending.current = {};
     blocked.current = false;
     base.current = latest.updatedAt;
+    stored.current = comparable(latest.content);
     setMcpEdit(latest.mcpEdit);
     applyRemote(latest);
     setStatus("saved");
@@ -160,7 +210,7 @@ function useAutosave(page: NotePage, applyRemote: (page: NotePage) => void) {
     };
   }, [flush]);
 
-  return { status, mcpEdit, schedule, flush, loadLatest, keepMine };
+  return { status, mcpEdit, schedule, flush, loadLatest, keepMine, hold };
 }
 
 /** `after` sits in the page column under the last block, outside the editable text. */
@@ -180,12 +230,12 @@ export default function PageView({ page, after }: { page: NotePage; after?: Reac
       titleRef.current?.setTitle(latest.title);
       setIcon(latest.icon);
       patchNode(latest.id, { title: latest.title, icon: latest.icon });
-      editorRef.current?.commands.setContent(latest.content ?? "", { emitUpdate: false });
+      if (editorRef.current) applyRemoteContent(editorRef.current, latest.content);
     },
     [patchNode]
   );
 
-  const { status, mcpEdit, schedule, flush, loadLatest, keepMine } = useAutosave(page, applyRemote);
+  const { status, mcpEdit, schedule, flush, loadLatest, keepMine, hold } = useAutosave(page, applyRemote);
 
   const ancestors = ancestorsOf(page.id);
 
@@ -347,7 +397,7 @@ export default function PageView({ page, after }: { page: NotePage; after?: Reac
           onCreateChild={createChild}
           onOpenPage={openPage}
         />
-        {after}
+        <HoldSavesContext.Provider value={hold}>{after}</HoldSavesContext.Provider>
         {/* Mouse-only shortcut; from the keyboard the end of the page is Mod+End. */}
         <div aria-hidden className="h-[max(10rem,35vh)] cursor-text" onMouseDown={writeAtEnd} />
       </article>

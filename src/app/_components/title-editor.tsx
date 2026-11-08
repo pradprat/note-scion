@@ -9,6 +9,7 @@ import { Fragment, Slice, type Node as PMNode } from "@tiptap/pm/model";
 import { Plugin } from "@tiptap/pm/state";
 import { titleParts, titleText } from "@/lib/title-dates";
 import { DateChip, DateCommand, dateKey } from "./date-mention";
+import { applyRemoteContent } from "./remote-content";
 
 const MAX_TITLE = 500;
 
@@ -171,7 +172,7 @@ const TitleEditor = forwardRef<
       setTitle: (next) => {
         const current = editorRef.current;
         if (!current || serialize(current.state.doc) === next) return;
-        current.commands.setContent(toDoc(next), { emitUpdate: false });
+        applyRemoteContent(current, toDoc(next));
       },
     }),
     []

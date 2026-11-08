@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
+import { useHoldSaves } from "@/app/_components/page-view";
 import { simulateClaudeEdit } from "./demo-store";
 
 /** Long enough to click into the page and start typing, for a real conflict. */
@@ -12,23 +13,30 @@ const COUNTDOWN = 4;
  * demo that lives in the browser. After a short countdown it writes to the page through
  * the store, and the page takes it as it would a real MCP edit: the text appears, the
  * save status names Claude, and unsaved typing turns it into a conflict.
+ *
+ * The page holds its autosave through the countdown. Otherwise anything typed would save
+ * in under a second and only typing in the very last moment would ever conflict.
  */
 export default function SimulateClaude({ pageId }: { pageId: string }) {
   const [left, setLeft] = useState<number | null>(null);
   const timer = useRef<ReturnType<typeof setInterval> | null>(null);
+  const holdSaves = useHoldSaves();
 
   // Leaving the page (or resetting the demo) calls the edit off.
   useEffect(
     () => () => {
-      if (timer.current) clearInterval(timer.current);
+      if (!timer.current) return;
+      clearInterval(timer.current);
+      holdSaves(false);
     },
-    []
+    [holdSaves]
   );
 
   const start = () => {
     if (timer.current) return;
     let count = COUNTDOWN;
     setLeft(count);
+    holdSaves(true);
     timer.current = setInterval(() => {
       count -= 1;
       if (count > 0) {
@@ -38,7 +46,7 @@ export default function SimulateClaude({ pageId }: { pageId: string }) {
       if (timer.current) clearInterval(timer.current);
       timer.current = null;
       setLeft(null);
-      void simulateClaudeEdit(pageId);
+      void simulateClaudeEdit(pageId).finally(() => holdSaves(false));
     }, 1000);
   };
 
@@ -46,9 +54,9 @@ export default function SimulateClaude({ pageId }: { pageId: string }) {
 
   return (
     <aside aria-label="Demo" className="mt-10 border-t pt-6 text-sm">
-      <p className="mb-4 text-muted-foreground [text-wrap:pretty]">
+      <p className="mb-4 max-w-[65ch] text-muted-foreground [text-wrap:pretty]">
         This demo can&apos;t reach Claude, so this button plays its part. It adds a to-do to the end of this page,
-        as Claude would over MCP. To see a conflict, keep typing on the page while it counts down.
+        as Claude would over MCP. To see a conflict, type something on the page while it counts down.
       </p>
       <div className="flex flex-wrap items-center gap-x-3 gap-y-2">
         {/* aria-disabled rather than disabled, so focus stays on the button while it waits. */}
