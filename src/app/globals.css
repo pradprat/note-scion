@@ -24,8 +24,9 @@
   --muted-foreground: 210.8 16.6% 43.7%;
   --accent: 210 41.2% 93.3%;
   --accent-foreground: 212.7 19.3% 11.2%;
-  --destructive: 0 84.2% 60.2%;
-  --destructive-foreground: 210 41.2% 93.3%;
+  /* #DC2626: 4.8:1 as text on white, and white on it as a button fill. */
+  --destructive: 0 72.2% 50.6%;
+  --destructive-foreground: 0 0% 100%;
   /* Between #E7EEF5 and #5D6F82, so lines still show against the #E7EEF5 sidebar. */
   --border: 210 28% 87%;
   --input: 210 28% 87%;
@@ -63,9 +64,10 @@
     --accent: 211.6 18.4% 20.2%;
     --accent-foreground: 210 41.2% 93.3%;
     /* Stock shadcn uses 0 62.8% 30.6% here: fine as a button fill, but error text in it
-       reads at ~2:1 on this background. This red reads at ~5:1. */
+       reads at ~2:1 on this background. This red reads at ~5:1. As a fill it takes the
+       page's ink (~5.2:1), as the primary button does in dark mode. */
     --destructive: 0 84.2% 60.2%;
-    --destructive-foreground: 210 41.2% 93.3%;
+    --destructive-foreground: 216 18.5% 5.3%;
     --border: 211.6 18.4% 20.2%;
     --input: 211.6 18.4% 20.2%;
     --ring: 210.8 16.6% 43.7%;
