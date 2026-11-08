@@ -27,6 +27,12 @@ export default function QuickSwitcher({
   open: boolean;
   onOpenChange: (open: boolean) => void;
 }) {
+  // The highlighted row, held here so results that arrive late can take it (see below).
+  const [selected, setSelected] = useState("");
+  useEffect(() => {
+    if (open) setSelected("");
+  }, [open]);
+
   return (
     <CommandDialog
       open={open}
@@ -34,15 +40,23 @@ export default function QuickSwitcher({
       title="Go to a page"
       description="Search pages by title or text, or type a title to start a new page."
       // Results are ranked here and partly come from the server: cmdk must not re-filter.
-      commandProps={{ shouldFilter: false, loop: true }}
+      commandProps={{ shouldFilter: false, loop: true, value: selected, onValueChange: setSelected }}
     >
       {/* The dialog unmounts its content when closed, so every open starts fresh. */}
-      <SwitcherBody onClose={() => onOpenChange(false)} />
+      <SwitcherBody onClose={() => onOpenChange(false)} selected={selected} onSelect={setSelected} />
     </CommandDialog>
   );
 }
 
-function SwitcherBody({ onClose }: { onClose: () => void }) {
+function SwitcherBody({
+  onClose,
+  selected,
+  onSelect,
+}: {
+  onClose: () => void;
+  selected: string;
+  onSelect: (value: string) => void;
+}) {
   const router = useRouter();
   const { href, searchPages } = useBackend();
   const { tree, ancestorsOf, addPage, activeId } = useNotes();
@@ -105,6 +119,20 @@ function SwitcherBody({ onClose }: { onClose: () => void }) {
     const known = new Set(tree.map((node) => node.id));
     return textHits.filter((node) => !seen.has(node.id) && known.has(node.id));
   }, [titleHits, textHits, tree]);
+
+  // Text matches arrive after the query, when "New page" may already hold the highlight.
+  // Enter should open what was found, not make a page: hand the highlight to the first
+  // result whenever the highlighted row is "New page" or is no longer listed.
+  const values = useMemo(
+    () => [...titleHits.map((node) => `pages-${node.id}`), ...bodyHits.map((node) => `text-${node.id}`)],
+    [titleHits, bodyHits]
+  );
+  useEffect(() => {
+    if (values.length === 0) return;
+    if (selected === "create" || !values.includes(selected)) onSelect(values[0]);
+    // Only a change in results moves the highlight; arrowing to "New page" stays put.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [values]);
 
   const openPage = (node: NoteNode) => {
     onClose();
