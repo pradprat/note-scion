@@ -347,7 +347,7 @@ export default function PageView({ page, after }: { page: NotePage; after?: Reac
       </TopBar>
 
       {(status === "conflict" || status === "missing") && (
-        <ConflictBar status={status} onLoadLatest={() => void loadLatest()} onKeepMine={() => void keepMine()} />
+        <ConflictBar pageId={page.id} status={status} onLoadLatest={() => void loadLatest()} onKeepMine={() => void keepMine()} />
       )}
 
       <article className="mx-auto w-full max-w-3xl px-6 pt-10 sm:px-16 sm:pt-16">
@@ -406,49 +406,125 @@ export default function PageView({ page, after }: { page: NotePage; after?: Reac
 }
 
 function ConflictBar({
+  pageId,
   status,
   onLoadLatest,
   onKeepMine,
 }: {
+  pageId: string;
   status: "conflict" | "missing";
   onLoadLatest: () => void;
   onKeepMine: () => void;
 }) {
   const { href } = useBackend();
+  const [showNewer, setShowNewer] = useState(false);
   return (
-    <div role="alert" className="sticky top-12 z-10 border-y bg-muted px-6 py-2.5 sm:px-0">
+    <div className="sticky top-12 z-10 border-y bg-muted px-6 py-2.5 sm:px-0">
       {/* Same column as the page text below, so the warning reads as part of the page. */}
-      <div className="mx-auto flex max-w-3xl flex-wrap items-center gap-x-4 gap-y-2 text-sm sm:px-16">
-        {status === "conflict" ? (
-          <>
-            <p className="min-w-0 flex-1 basis-64">
-              <span className="font-medium">This page changed somewhere else</span>
-              <span className="text-muted-foreground">
-                {" "}
-                since you opened it, in another tab or by Claude. Your recent edits aren&apos;t saved yet.
-              </span>
-            </p>
-            <div className="flex shrink-0 gap-2">
-              <Button variant="outline" size="sm" onClick={onKeepMine} className={COARSE_BUTTON}>
-                Keep my version
+      <div className="mx-auto max-w-3xl text-sm sm:px-16">
+        <div className="flex flex-wrap items-center gap-x-4 gap-y-2">
+          {status === "conflict" ? (
+            <>
+              {/* Only the message is the alert, so opening the newer version isn't read out again. */}
+              <p role="alert" className="min-w-0 flex-1 basis-64">
+                <span className="font-medium">This page changed somewhere else</span>
+                <span className="text-muted-foreground">
+                  {" "}
+                  since you opened it, in another tab or by Claude. Your recent edits aren&apos;t saved yet. The
+                  version you keep replaces the other one.
+                </span>
+              </p>
+              {/* Neither choice is the obvious one, so neither looks like the default. */}
+              {/* The two choices stay side by side; on a phone the look-first button sits above them. */}
+              <div className="flex min-w-0 flex-wrap items-center gap-2">
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  aria-expanded={showNewer}
+                  aria-controls="notes-newer-version"
+                  onClick={() => setShowNewer((open) => !open)}
+                  // The bar is already the muted fill a ghost hover uses: the page color shows instead.
+                  className={cn("-ml-3 hover:bg-background", COARSE_BUTTON)}
+                >
+                  {showNewer ? "Hide the newer version" : "Show the newer version"}
+                </Button>
+                <div className="flex gap-2">
+                  <Button variant="outline" size="sm" onClick={onKeepMine} className={COARSE_BUTTON}>
+                    Keep my version
+                  </Button>
+                  <Button variant="outline" size="sm" onClick={onLoadLatest} className={COARSE_BUTTON}>
+                    Keep the newer version
+                  </Button>
+                </div>
+              </div>
+            </>
+          ) : (
+            <>
+              <p role="alert" className="min-w-0 flex-1 basis-64">
+                <span className="font-medium">This page was deleted somewhere else.</span>
+                <span className="text-muted-foreground"> Edits here can&apos;t be saved. Copy anything you need first.</span>
+              </p>
+              <Button asChild variant="outline" size="sm" className={cn("shrink-0", COARSE_BUTTON)}>
+                <Link href={href("/")}>Back to notes</Link>
               </Button>
-              <Button size="sm" onClick={onLoadLatest} className={COARSE_BUTTON}>
-                Load latest
-              </Button>
-            </div>
-          </>
-        ) : (
-          <>
-            <p className="min-w-0 flex-1 basis-64">
-              <span className="font-medium">This page was deleted somewhere else.</span>
-              <span className="text-muted-foreground"> Edits here can&apos;t be saved. Copy anything you need first.</span>
-            </p>
-            <Button asChild variant="outline" size="sm" className={cn("shrink-0", COARSE_BUTTON)}>
-              <Link href={href("/")}>Back to notes</Link>
-            </Button>
-          </>
-        )}
+            </>
+          )}
+        </div>
+        {status === "conflict" && showNewer && <NewerVersion id="notes-newer-version" pageId={pageId} />}
       </div>
+    </div>
+  );
+}
+
+/**
+ * The stored copy that a conflict is about, read-only and as Markdown (the form Claude
+ * reads and writes), so the choice between versions isn't made blind.
+ */
+function NewerVersion({ id, pageId }: { id: string; pageId: string }) {
+  const backend = useBackend();
+  const { tree } = useNotes();
+  const [view, setView] = useState<{ title: string; body: string } | "loading" | "error" | "missing">("loading");
+
+  useEffect(() => {
+    let live = true;
+    (async () => {
+      try {
+        const [latest, { toMarkdown }] = await Promise.all([backend.getPage(pageId), import("@/lib/markdown")]);
+        if (!live) return;
+        if (!latest) return setView("missing");
+        const titleOf = (target: string) => tree.find((node) => node.id === target)?.title;
+        setView({ title: latest.title, body: toMarkdown(latest.content, titleOf) });
+      } catch {
+        if (live) setView("error");
+      }
+    })();
+    return () => {
+      live = false;
+    };
+  }, [backend, pageId, tree]);
+
+  return (
+    <div id={id} className="mt-2.5 mb-1 max-h-[40vh] overflow-auto rounded-md border bg-background px-4 py-3">
+      {view === "loading" ? (
+        <p className="text-muted-foreground">Loading the newer version…</p>
+      ) : view === "error" ? (
+        <p className="text-muted-foreground">Couldn&apos;t load the newer version. Check your connection and try again.</p>
+      ) : view === "missing" ? (
+        <p className="text-muted-foreground">The newer version is gone: this page was deleted somewhere else.</p>
+      ) : (
+        <>
+          <p className="mb-2 font-medium">
+            <TitleText title={view.title || "Untitled"} />
+          </p>
+          {view.body ? (
+            <pre className="whitespace-pre-wrap break-words font-mono text-sm leading-[1.55] text-foreground">
+              {view.body}
+            </pre>
+          ) : (
+            <p className="text-muted-foreground">This version of the page is empty.</p>
+          )}
+        </>
+      )}
     </div>
   );
 }
