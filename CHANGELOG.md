@@ -39,6 +39,9 @@ All notable changes to note-scion are listed here. The format follows
   end of its title on hover; on touch screens they're one 40px "⋯" menu.
 - On phones, the top bar keeps room for the page's name; a long save status shortens
   first.
+- The quick switcher stays in place as you type instead of re-centring, and a match in
+  a page's text shows the words around it.
+- The demo's empty state can bring back the sample pages.
 - Screen readers read an `@` date as "Tomorrow", not "at Tomorrow".
 - An `@` date more than a day away shows its full date, "November 8, 2026", instead of
   "Nov 8". Yesterday, today and tomorrow still read as words.
@@ -51,6 +54,9 @@ All notable changes to note-scion are listed here. The format follows
 - A long save status no longer overlaps the breadcrumb of a top-level page on phones.
 - A page restored in the trash and deleted again while the trash was open now shows up
   there again.
+- Resetting the demo from its empty state no longer leaves a blank page.
+- The "Type '/' for commands" hint no longer shows on a new page while you're typing its
+  title.
 - The MCP tools now say that a page created inside another isn't linked from the parent's
   body, and that an `@` date never links to a page, so Claude adds a real sub-page link
   instead of a date.

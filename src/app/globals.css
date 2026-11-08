@@ -235,8 +235,10 @@ body {
   font-weight: 650;
 }
 
-/* Placeholder: the extension marks only the empty block holding the cursor. */
-.notes-editor .is-empty::before {
+/* Placeholder: the extension marks the empty block holding the cursor. The cursor is
+   only really there while the editor has focus; with focus in the title, the empty
+   first line stays empty. */
+.notes-editor.ProseMirror-focused .is-empty::before {
   content: attr(data-placeholder);
   float: left;
   height: 0;
