@@ -225,9 +225,11 @@ body {
   margin: 1.2em 0;
 }
 
+/* A link in the text: the underline is the only thing that marks it, so it takes the
+   secondary ink (Slate Pencil, Lifted Pencil in dark mode), not the hairline color. */
 .notes-editor a {
   text-decoration: underline;
-  text-decoration-color: hsl(var(--input));
+  text-decoration-color: hsl(var(--muted-foreground));
   text-underline-offset: 3px;
 }
 

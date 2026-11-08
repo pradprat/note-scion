@@ -422,6 +422,9 @@ The page is the product, and its details are the system's distinctive work.
 - **Sub-page link:** one text line tall, with the page's emoji in a 20px column and the
   title in weight 500, underlined in Pale Rule with a 3px offset. Hover fills the row
   with Frost Paper. A missing page goes muted and loses its underline.
+- **Link in the text:** the text's own ink, underlined in the secondary ink (Slate Pencil,
+  Lifted Pencil in dark mode) with a 3px offset, since the underline is all that marks it.
+  A plain click puts the cursor in it to edit; Ctrl or ⌘ and a click opens it.
 - **To-dos:** native checkboxes in the foreground color. A checked item turns muted and
   is struck through.
 - **Quote:** a 3px Night Ink rule on the left with 16px padding.
