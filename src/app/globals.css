@@ -96,6 +96,14 @@ body {
   scrollbar-color: hsl(var(--border)) transparent;
 }
 
+/* Toasts (Undo after a delete) centre on the page column, not the window, while the
+   sidebar is open beside it, so they sit under the text they're about. */
+@media (min-width: 768px) {
+  .group\/sidebar-wrapper:has([data-side][data-state="expanded"]) [data-sonner-toaster][data-x-position="center"] {
+    left: calc(50% + var(--sidebar-width) / 2);
+  }
+}
+
 .notes-editor {
   min-height: 12rem;
   outline: none;

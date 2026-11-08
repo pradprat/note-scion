@@ -107,8 +107,14 @@ function ShellBody({
         Skip to page
       </a>
       <Sidebar />
-      {/* The main column scrolls on its own, so the sidebar and top bar stay put. */}
-      <SidebarInset id="main" tabIndex={-1} className="min-h-0 min-w-0 overflow-y-auto outline-none">
+      {/* The main column scrolls on its own, so the sidebar and top bar stay put. Its
+          scrollbar's room is kept even on short pages, so the page column doesn't shift
+          sideways when you move between a short page and a long one. */}
+      <SidebarInset
+        id="main"
+        tabIndex={-1}
+        className="min-h-0 min-w-0 overflow-y-auto outline-none [scrollbar-gutter:stable]"
+      >
         {children}
       </SidebarInset>
     </ShellContext.Provider>
