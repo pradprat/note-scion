@@ -174,7 +174,8 @@ function buildServer(origin: string, writer: Writer): McpServer {
     "create_page",
     {
       title: "Create page",
-      description: "Create a new page, optionally inside another page, with an optional Markdown body.",
+      description:
+        "Create a new page, optionally inside another page, with an optional Markdown body. A page created inside another one is filed under it in the page tree, but nothing is added to the parent's body. To show a link to it there, add a line that is only [Title](/<id>) to the parent with update_page (mode 'append' adds it at the end).",
       inputSchema: {
         title: z.string().max(MAX_TITLE).describe("Page title"),
         markdown: markdownInput("Page body").optional(),
@@ -199,7 +200,7 @@ function buildServer(origin: string, writer: Writer): McpServer {
     {
       title: "Update page",
       description:
-        "Change a page's title, icon or body. The body is replaced by default; set mode to 'append' to add to the end. Omitted fields are left as they are. A line that is only a link to a page, like [Title](/<id>), becomes a sub-page block that shows that page's live title; keep those lines as they are when rewriting a body. Write a date as @YYYY-MM-DD (for example @2026-11-12) to make it a date the app shows as Today, Tomorrow or the date.",
+        "Change a page's title, icon or body. The body is replaced by default; set mode to 'append' to add to the end. Omitted fields are left as they are. A line that is only a link to a page, like [Title](/<id>), becomes a sub-page block that shows that page's live title; keep those lines as they are when rewriting a body. Write a date as @YYYY-MM-DD (for example @2026-11-12) to make it a date the app shows as Today, Tomorrow or the date. A date is only a date: it never links to a page, even one titled with that date; link pages with [Title](/<id>).",
       inputSchema: {
         id: pageId,
         title: z.string().max(MAX_TITLE).optional().describe("New title"),
