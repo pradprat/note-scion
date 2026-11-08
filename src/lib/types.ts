@@ -38,3 +38,15 @@ export interface TrashItem {
   parentTitle: string | null;
   subPageCount: number;
 }
+
+/** Where a search matched inside a page's text, split so the match can be marked. */
+export interface Snippet {
+  before: string;
+  match: string;
+  after: string;
+}
+
+/** A page found by search; `snippet` is set when the match is in its text, not its title. */
+export interface SearchHit extends NoteNode {
+  snippet: Snippet | null;
+}

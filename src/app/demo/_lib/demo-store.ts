@@ -1,6 +1,7 @@
 import type { JSONContent } from "@tiptap/core";
 import type { UpdateResult } from "@/lib/db";
-import type { NoteNode, NotePage, NotePatch, TrashItem } from "@/lib/types";
+import { snippetAround } from "@/lib/snippet";
+import type { NoteNode, NotePage, NotePatch, SearchHit, TrashItem } from "@/lib/types";
 import type { MoveResult } from "../../actions";
 import type { NotesBackend } from "../../_components/backend";
 
@@ -207,10 +208,15 @@ function descendants(pages: StoredPage[], id: string, sameDelete?: string | null
   return ids;
 }
 
-function textOf(node: JSONContent | null | undefined): string {
-  if (!node) return "";
-  if (typeof node.text === "string") return node.text;
-  return (node.content ?? []).map(textOf).join(" ");
+/** The first run of text in a page that contains `q` (lower case), as Postgres finds it. */
+function firstTextWith(node: JSONContent | null | undefined, q: string): string | null {
+  if (!node) return null;
+  if (typeof node.text === "string") return node.text.toLowerCase().includes(q) ? node.text : null;
+  for (const child of node.content ?? []) {
+    const hit = firstTextWith(child, q);
+    if (hit !== null) return hit;
+  }
+  return null;
 }
 
 let cachedTrash: { state: State; items: TrashItem[] } | null = null;
@@ -403,14 +409,15 @@ export function createDemoBackend(): NotesBackend {
       return { ok: true };
     },
 
-    async searchPages(query) {
+    async searchPages(query): Promise<SearchHit[]> {
       const q = query.trim().toLowerCase();
       if (q.length < 2) return [];
       return live(current().pages)
-        .filter((p) => p.title.toLowerCase().includes(q) || textOf(p.content).toLowerCase().includes(q))
-        .sort((a, b) => Date.parse(b.updatedAt) - Date.parse(a.updatedAt))
+        .map((page) => ({ page, text: firstTextWith(page.content, q) }))
+        .filter(({ page, text }) => page.title.toLowerCase().includes(q) || text !== null)
+        .sort((a, b) => Date.parse(b.page.updatedAt) - Date.parse(a.page.updatedAt))
         .slice(0, SEARCH_LIMIT)
-        .map(toNode);
+        .map(({ page, text }) => ({ ...toNode(page), snippet: text ? snippetAround(text, q) : null }));
     },
   };
 }

@@ -1,7 +1,8 @@
 import { neon, type NeonQueryFunction } from "@neondatabase/serverless";
 import type { JSONContent } from "@tiptap/core";
 import { revalidateTag, unstable_cache } from "next/cache";
-import type { NoteNode, NotePage, NotePatch, TrashItem } from "./types";
+import { snippetAround } from "./snippet";
+import type { NoteNode, NotePage, NotePatch, SearchHit, TrashItem } from "./types";
 
 let client: NeonQueryFunction<false, false> | null = null;
 
@@ -168,11 +169,16 @@ export async function updatePage(
   return exists[0] ? { status: "conflict" } : { status: "missing" };
 }
 
-/** Case-insensitive match on the title or on any text inside the page body. */
-export async function searchPages(query: string, limit = 20): Promise<NoteNode[]> {
+/**
+ * Case-insensitive match on the title or on any text inside the page body, with the
+ * first matching run of text as a snippet.
+ */
+export async function searchPages(query: string, limit = 20): Promise<SearchHit[]> {
   const pattern = `%${query.replace(/[\\%_]/g, (c) => `\\${c}`)}%`;
   const rows = await sql()`
-    select id, parent_id, title, icon, position
+    select id, parent_id, title, icon, position,
+      (select t #>> '{}' from jsonb_path_query(p.content, 'strict $.**.text') t
+       where t #>> '{}' ilike ${pattern} limit 1) as hit_text
     from notes_pages p
     where p.deleted_at is null
       and (p.title ilike ${pattern}
@@ -182,7 +188,10 @@ export async function searchPages(query: string, limit = 20): Promise<NoteNode[]
            ))
     order by p.updated_at desc
     limit ${limit}`;
-  return rows.map(toNode);
+  return rows.map((row) => ({
+    ...toNode(row),
+    snippet: typeof row.hit_text === "string" ? snippetAround(row.hit_text, query) : null,
+  }));
 }
 
 export class MoveError extends Error {}

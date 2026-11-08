@@ -3,7 +3,7 @@
 import { createContext, useContext, useMemo } from "react";
 import { useRouter } from "next/navigation";
 import type { UpdateResult } from "@/lib/db";
-import type { NoteNode, NotePage, NotePatch } from "@/lib/types";
+import type { NoteNode, NotePage, NotePatch, SearchHit } from "@/lib/types";
 import {
   createPageAction,
   deleteForeverAction,
@@ -38,8 +38,8 @@ export interface NotesBackend {
   deleteForever: (id: string) => Promise<void>;
   emptyTrash: () => Promise<void>;
   movePage: (id: string, parentId: string | null, position: number) => Promise<MoveResult>;
-  /** Pages whose title or text contains the query. */
-  searchPages: (query: string) => Promise<NoteNode[]>;
+  /** Pages whose title or text contains the query, with a snippet of a text match. */
+  searchPages: (query: string) => Promise<SearchHit[]>;
   /** Demo only: puts the sample workspace back. */
   reset?: () => Promise<void>;
 }

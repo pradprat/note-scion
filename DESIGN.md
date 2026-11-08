@@ -392,9 +392,12 @@ notification.
   The menu keeps its side while it still fits, and its height is capped at the room on
   that side, measured in the visual viewport so a phone keyboard counts. The list
   scrolls and keeps the highlighted item in view.
-- **Quick switcher:** a centred Overlay dialog with a 48px search field and rows of
-  emoji and title, with the page's path after the title in 12px muted text. Selected
-  rows fill with Frost Paper on a 4px radius. On coarse pointers its text is 16px.
+- **Quick switcher:** an Overlay dialog with its top edge pinned 15vh down (12vh on
+  phones), so the search field stays put as results come and go. A 48px search field,
+  then rows of emoji and title, with the page's path after the title in 12px muted
+  text. A match found in a page's text adds a second 12px muted line with the words
+  around it, the match itself in the ink color at weight 500. Selected rows fill with
+  Frost Paper on a 4px radius. On coarse pointers its text is 16px.
 
 ### Toasts
 Sonner, on the page color with a hairline border and the Overlay shadow. The undo toast

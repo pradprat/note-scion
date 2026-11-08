@@ -16,7 +16,7 @@ import {
   type UpdateResult,
 } from "@/lib/db";
 import { disconnectClient } from "@/lib/oauth";
-import type { NoteNode, NotePage, NotePatch } from "@/lib/types";
+import type { NoteNode, NotePage, NotePatch, SearchHit } from "@/lib/types";
 
 // Login and logout are route handlers in ../session, not actions: Next 15.1 runs a
 // form action submitted without JavaScript outside the request scope, so cookies()
@@ -135,7 +135,7 @@ export async function movePageAction(
 }
 
 /** Full-text matches for the quick switcher; titles are matched in the browser. */
-export async function searchPagesAction(query: string): Promise<NoteNode[]> {
+export async function searchPagesAction(query: string): Promise<SearchHit[]> {
   await requireSession();
   if (typeof query !== "string") return [];
   const q = query.trim().slice(0, MAX_QUERY);

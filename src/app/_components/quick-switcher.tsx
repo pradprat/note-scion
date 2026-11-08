@@ -11,7 +11,7 @@ import {
   CommandList,
   CommandSeparator,
 } from "@/components/ui/command";
-import type { NoteNode } from "@/lib/types";
+import type { NoteNode, SearchHit } from "@/lib/types";
 import { useBackend } from "./backend";
 import { useNotes } from "./notes-provider";
 
@@ -45,7 +45,7 @@ function SwitcherBody({ onClose }: { onClose: () => void }) {
   const { href, searchPages } = useBackend();
   const { tree, ancestorsOf, addPage, activeId } = useNotes();
   const [query, setQuery] = useState("");
-  const [textHits, setTextHits] = useState<NoteNode[]>([]);
+  const [textHits, setTextHits] = useState<SearchHit[]>([]);
   const [searching, setSearching] = useState(false);
 
   const q = query.trim().toLowerCase();
@@ -115,16 +115,27 @@ function SwitcherBody({ onClose }: { onClose: () => void }) {
       .map((a) => a.title.trim() || "Untitled")
       .join(" / ");
 
-  const pageItem = (node: NoteNode, group: string) => {
+  const pageItem = (node: NoteNode | SearchHit, group: string) => {
     const path = pathOf(node);
+    // A text match shows the line it was found in, the match itself in the ink color.
+    const snippet = "snippet" in node ? node.snippet : null;
     return (
       <CommandItem key={`${group}-${node.id}`} value={`${group}-${node.id}`} onSelect={() => openPage(node)}>
-        <span className="flex w-5 shrink-0 justify-center leading-none" aria-hidden>
-          {node.icon ?? <FileText className="text-muted-foreground" />}
+        <span className="flex w-5 shrink-0 justify-center self-start leading-6" aria-hidden>
+          {node.icon ?? <FileText className="mt-0.5 text-muted-foreground" />}
         </span>
-        <span className="min-w-0 flex-1 truncate">
-          {node.title.trim() || "Untitled"}
-          {path && <span className="ml-2 text-xs text-muted-foreground">{path}</span>}
+        <span className="min-w-0 flex-1">
+          <span className="block truncate">
+            {node.title.trim() || "Untitled"}
+            {path && <span className="ml-2 text-xs text-muted-foreground">{path}</span>}
+          </span>
+          {snippet && (
+            <span className="mt-0.5 block truncate text-xs text-muted-foreground">
+              {snippet.before}
+              <mark className="bg-transparent font-medium text-foreground">{snippet.match}</mark>
+              {snippet.after}
+            </span>
+          )}
         </span>
       </CommandItem>
     );
