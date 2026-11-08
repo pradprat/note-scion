@@ -11,6 +11,10 @@ All notable changes to note-scion are listed here. The format follows
 - After an MCP client edits a page, its save status says which app made the change and
   how long ago ("Claude Code edited 4m ago"), until you edit the page again. Stored in
   two new columns, `notes_pages.mcp_editor` and `mcp_edited_at`, which the build adds.
+- The demo's "Working with Claude" page can simulate an edit from Claude: after a short
+  countdown, a to-do lands on the page as an MCP edit would, with the save status naming
+  Claude, or the conflict bar if you're still typing. The welcome page points to it and
+  now ends on deploying your own copy.
 
 ### Fixed
 

@@ -15,7 +15,7 @@ function day(offset: number): string {
  * The workspace a first visit to the demo opens on. Written in Markdown, the same way
  * Claude writes pages over MCP; sub-page blocks are `[Title](/<id>)` lines.
  */
-export function samplePages(): Sample[] {
+export function samplePages(): { pages: Sample[]; claudePageId: string } {
   const id = {
     welcome: crypto.randomUUID(),
     blocks: crypto.randomUUID(),
@@ -43,7 +43,7 @@ export function samplePages(): Sample[] {
     content: fromMarkdown(markdown.trim()),
   });
 
-  return [
+  const pages = [
     page(
       "welcome",
       null,
@@ -58,6 +58,7 @@ note-scion is a calm notes app for one person, with nested pages and a block edi
 ## Try it
 
 - [ ] Click anywhere on this page and start typing. It saves as you go.
+- [ ] Open **Working with Claude** and simulate an edit from Claude.
 - [ ] On an empty line, type \`/\` for headings, lists, to-dos, quotes and code.
 - [ ] Press Ctrl K (⌘ K on a Mac) to jump to any page or search inside them.
 - [ ] Type \`@\` and then "tomorrow" or "next friday" to drop in a date.
@@ -70,7 +71,13 @@ note-scion is a calm notes app for one person, with nested pages and a block edi
 
 [Dates that stay true](/${id.dates})
 
-When you're done exploring, **Reset demo** at the bottom of the sidebar puts everything back.
+**Reset demo** at the bottom of the sidebar puts the sample pages back at any time.
+
+## Your own copy
+
+Pages here stay in this browser. Your own copy keeps them in your own database, and Claude can read and write them there.
+
+[Deploy your own](/${id.deploy})
 `
     ),
     page(
@@ -146,7 +153,7 @@ In your own copy, Claude connects to note-scion over MCP. Add \`https://<your-si
 4. Move pages around the tree
 5. Send pages to the trash, where you can restore them
 
-If Claude changes a page you have open, the editor notices. You choose which version to keep, so nothing is silently overwritten.
+When Claude changes a page you have open, the new text appears in place, and the status at the top of the page says which app made the edit and when. If you were typing at that moment, you choose which version to keep, so nothing is silently overwritten.
 `
     ),
     page(
@@ -216,4 +223,5 @@ The free tiers of Vercel and Neon are plenty for one person.
 `
     ),
   ];
+  return { pages, claudePageId: id.claude };
 }

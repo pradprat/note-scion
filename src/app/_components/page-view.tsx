@@ -162,7 +162,8 @@ function useAutosave(page: NotePage, applyRemote: (page: NotePage) => void) {
   return { status, mcpEdit, schedule, flush, loadLatest, keepMine };
 }
 
-export default function PageView({ page }: { page: NotePage }) {
+/** `after` sits in the page column under the last block, outside the editable text. */
+export default function PageView({ page, after }: { page: NotePage; after?: React.ReactNode }) {
   const { ancestorsOf, patchNode, createPage } = useNotes();
   const router = useRouter();
   const { href } = useBackend();
@@ -395,6 +396,7 @@ export default function PageView({ page }: { page: NotePage }) {
           onCreateChild={createChild}
           onOpenPage={openPage}
         />
+        {after}
         {/* Mouse-only shortcut; from the keyboard the end of the page is Mod+End. */}
         <div aria-hidden className="h-[max(10rem,35vh)] cursor-text" onMouseDown={writeAtEnd} />
       </article>

@@ -37,7 +37,9 @@ any MCP client.
 ## Features
 
 Every feature below works in the [demo](https://notes.pradprat.blue/demo), except Claude:
-there, pages live in your browser's storage, so no MCP server can reach them.
+there, pages live in your browser's storage, so no MCP server can reach them. Instead, a
+button on the demo's "Working with Claude" page simulates an edit from Claude, so you can
+see one arrive.
 
 **Writing**
 

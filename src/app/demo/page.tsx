@@ -7,7 +7,8 @@ import { Button } from "@/components/ui/button";
 import EmptyState from "../_components/empty-state";
 import PageView from "../_components/page-view";
 import TopBar from "../_components/top-bar";
-import { DEMO_BASE, demoHref, firstRootId, peekPage, subscribe } from "./_lib/demo-store";
+import { claudePageId, DEMO_BASE, demoHref, firstRootId, peekPage, subscribe } from "./_lib/demo-store";
+import SimulateClaude from "./_lib/simulate-claude";
 
 /**
  * `/demo?page=<id>` shows that page; plain `/demo` opens the first one, as the real
@@ -25,7 +26,13 @@ function OpenPage({ id }: { id: string }) {
 
   if (!page) return <Missing />;
   // Keyed so moving between pages remounts the editor with fresh state.
-  return <PageView key={page.id} page={page} />;
+  return (
+    <PageView
+      key={page.id}
+      page={page}
+      after={page.id === claudePageId() ? <SimulateClaude pageId={page.id} /> : null}
+    />
+  );
 }
 
 function FirstPage() {

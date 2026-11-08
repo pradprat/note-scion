@@ -32,6 +32,8 @@ interface StoredPage extends NotePage {
 
 interface State {
   pages: StoredPage[];
+  /** The sample page that explains Claude, where the demo can simulate an edit from it. */
+  claudePageId?: string | null;
 }
 
 let state: State | null = null;
@@ -55,7 +57,12 @@ function read(): State | null {
     const raw = localStorage.getItem(KEY);
     if (!raw) return null;
     const parsed = JSON.parse(raw) as State;
-    return Array.isArray(parsed?.pages) ? parsed : null;
+    if (!Array.isArray(parsed?.pages)) return null;
+    // Demos saved before the guide was tracked: find it by its sample title.
+    if (parsed.claudePageId === undefined) {
+      parsed.claudePageId = parsed.pages.find((p) => p.title === "Working with Claude")?.id ?? null;
+    }
+    return parsed;
   } catch {
     return null;
   }
@@ -99,7 +106,7 @@ export function loadDemo(): Promise<void> {
   ready ??= (async () => {
     const saved = read();
     if (saved) {
-      state = { pages: purge(saved.pages) };
+      state = { ...saved, pages: purge(saved.pages) };
     } else {
       await reseed();
     }
@@ -122,8 +129,10 @@ export function loadDemo(): Promise<void> {
 export async function reseed(): Promise<void> {
   const { samplePages } = await import("./seed");
   const now = stamp();
+  const { pages, claudePageId } = samplePages();
   commit({
-    pages: samplePages().map((page) => ({ ...page, updatedAt: now, mcpEdit: null, deletedAt: null })),
+    pages: pages.map((page) => ({ ...page, updatedAt: now, mcpEdit: null, deletedAt: null })),
+    claudePageId,
   });
 }
 
@@ -133,6 +142,9 @@ export function subscribe(listener: () => void): () => void {
 }
 
 export const isLoaded = () => state !== null;
+
+/** The page that explains Claude, unless it was deleted for good. */
+export const claudePageId = () => current().claudePageId ?? null;
 
 const live = (pages: StoredPage[]) => pages.filter((p) => !p.deletedAt);
 const toNode = ({ id, parentId, title, icon, position }: StoredPage): NoteNode => ({
@@ -231,6 +243,47 @@ function listTrash(pages: StoredPage[]): TrashItem[] {
     });
 }
 
+// ------------------------------------------------------ a stand-in for Claude
+
+/** What the simulated Claude adds, one line per click, in turn. */
+const CLAUDE_TODOS = [
+  "Deploy my own copy and connect Claude to it",
+  "Ask Claude what's on my reading list",
+  "Turn the trip ideas into a plan for each day",
+];
+let claudeTurn = 0;
+
+/**
+ * Writes to a page the way Claude's `update_page` does in append mode: Markdown added to
+ * the end of what is stored now, a new version, and the client's name on the edit. The
+ * open page receives it as it would a real MCP edit, conflict included.
+ */
+export async function simulateClaudeEdit(id: string): Promise<void> {
+  const { fromMarkdown } = await import("@/lib/markdown");
+  const { pages } = current();
+  const page = pages.find((p) => p.id === id && !p.deletedAt);
+  if (!page) return;
+  const todo = CLAUDE_TODOS[claudeTurn++ % CLAUDE_TODOS.length];
+  const extra = fromMarkdown(`- [ ] ${todo}`).content ?? [];
+  const head = [...(page.content?.content ?? [])];
+  const last = head[head.length - 1];
+  if (last?.type === "paragraph" && !last.content?.length) head.pop();
+  // Joins a list already at the end, so repeat clicks read as one list.
+  const tail = head[head.length - 1];
+  if (tail?.type === "taskList" && extra[0]?.type === "taskList") {
+    head[head.length - 1] = { ...tail, content: [...(tail.content ?? []), ...(extra[0].content ?? [])] };
+    extra.shift();
+  }
+  const at = stamp();
+  const next: StoredPage = {
+    ...page,
+    content: { type: "doc", content: [...head, ...extra] },
+    updatedAt: at,
+    mcpEdit: { client: "Claude", at },
+  };
+  commit({ ...current(), pages: pages.map((p) => (p.id === id ? next : p)) });
+}
+
 // --------------------------------------------------------------- the backend
 
 class DemoError extends Error {}
@@ -261,7 +314,7 @@ export function createDemoBackend(): NotesBackend {
         mcpEdit: null,
         deletedAt: null,
       };
-      commit({ pages: [...pages, page] });
+      commit({ ...current(), pages: [...pages, page] });
       return toNode(page);
     },
 
@@ -285,7 +338,7 @@ export function createDemoBackend(): NotesBackend {
         // Every write here is the visitor's own, as the owner's are in the real app.
         mcpEdit: null,
       };
-      commit({ pages: pages.map((p) => (p.id === id ? next : p)) });
+      commit({ ...current(), pages: pages.map((p) => (p.id === id ? next : p)) });
       return { status: "saved", updatedAt: next.updatedAt };
     },
 
@@ -294,7 +347,7 @@ export function createDemoBackend(): NotesBackend {
       if (!pages.some((p) => p.id === id && !p.deletedAt)) return;
       const doomed = descendants(pages, id, null);
       const at = stamp();
-      commit({ pages: pages.map((p) => (doomed.has(p.id) ? { ...p, deletedAt: at } : p)) });
+      commit({ ...current(), pages: pages.map((p) => (doomed.has(p.id) ? { ...p, deletedAt: at } : p)) });
     },
 
     async restorePage(id) {
@@ -309,7 +362,7 @@ export function createDemoBackend(): NotesBackend {
         const position = nextPosition(restored, null, id);
         restored = restored.map((p) => (p.id === id ? { ...p, parentId: null, position } : p));
       }
-      commit({ pages: restored });
+      commit({ ...current(), pages: restored });
       const page = restored.find((p) => p.id === id);
       return page ? toNode(page) : null;
     },
@@ -318,7 +371,7 @@ export function createDemoBackend(): NotesBackend {
       const { pages } = current();
       if (!pages.some((p) => p.id === id && p.deletedAt)) return;
       const gone = descendants(pages, id);
-      commit({ pages: pages.filter((p) => !gone.has(p.id)) });
+      commit({ ...current(), pages: pages.filter((p) => !gone.has(p.id)) });
     },
 
     async emptyTrash() {
@@ -326,7 +379,7 @@ export function createDemoBackend(): NotesBackend {
       const trashed = pages.filter((p) => p.deletedAt);
       const gone = new Set<string>();
       for (const p of trashed) descendants(pages, p.id).forEach((d) => gone.add(d));
-      commit({ pages: pages.filter((p) => !gone.has(p.id)) });
+      commit({ ...current(), pages: pages.filter((p) => !gone.has(p.id)) });
     },
 
     async movePage(id, parentId, position): Promise<MoveResult> {
@@ -345,7 +398,7 @@ export function createDemoBackend(): NotesBackend {
       }
       // Unlike Postgres, the version stays: a move doesn't touch the page body, and a new
       // version would stop an open copy of the page from saving.
-      commit({ pages: pages.map((p) => (p.id === id ? { ...p, parentId, position } : p)) });
+      commit({ ...current(), pages: pages.map((p) => (p.id === id ? { ...p, parentId, position } : p)) });
       return { ok: true };
     },
 
