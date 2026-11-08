@@ -14,6 +14,7 @@ import {
   ListTodo,
   Minus,
   Quote,
+  Table,
   Type,
   type LucideIcon,
 } from "lucide-react";
@@ -93,6 +94,14 @@ export const SLASH_ITEMS: SlashItem[] = [
     keywords: ["blockquote", "citation"],
     icon: Quote,
     run: (editor, range) => editor.chain().focus().deleteRange(range).toggleBlockquote().run(),
+  },
+  {
+    title: "Table",
+    description: "Rows and columns",
+    keywords: ["grid", "columns", "rows", "spreadsheet"],
+    icon: Table,
+    run: (editor, range) =>
+      editor.chain().focus().deleteRange(range).insertTable({ rows: 3, cols: 3, withHeaderRow: true }).run(),
   },
   {
     title: "Code",

@@ -328,6 +328,55 @@ body {
   border-radius: 4px;
 }
 
+/* Tables: hairline grid, header row in muted ink. A wide table scrolls sideways
+   inside its wrapper rather than pushing the page wider. */
+.notes-editor .tableWrapper {
+  overflow-x: auto;
+  margin: 0.6em 0;
+}
+.notes-editor table {
+  border-collapse: collapse;
+  table-layout: auto;
+  line-height: 1.5;
+}
+.notes-editor th,
+.notes-editor td {
+  border: 1px solid hsl(var(--border));
+  padding: 0.35em 0.6em;
+  min-width: 6em;
+  vertical-align: top;
+  text-align: left;
+  position: relative;
+}
+.notes-editor th {
+  font-weight: 600;
+  background: hsl(var(--muted));
+}
+.notes-editor th > * + *,
+.notes-editor td > * + * {
+  margin-top: 0.25em;
+}
+.notes-editor th p,
+.notes-editor td p {
+  min-height: 1.5em;
+}
+/* "Type '/' for commands" is too long for a cell: an empty cell just stays empty. */
+.notes-editor th .is-empty::before,
+.notes-editor td .is-empty::before {
+  content: none;
+}
+/* Cells picked by dragging across them. */
+.notes-editor .selectedCell::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background: hsl(var(--foreground) / 0.08);
+}
+.notes-editor table.ProseMirror-selectednode {
+  outline-offset: 2px;
+}
+
 /* Block grip, placed by the DragHandle extension to the left of the block under the
    pointer. The editor reaches into the left margin so the pointer still finds a block
    there, on the way to its grip; the text itself does not move. */

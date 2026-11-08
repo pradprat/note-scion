@@ -9,6 +9,7 @@ import { Placeholder } from "@tiptap/extensions";
 import { DragHandle } from "@tiptap/extension-drag-handle-react";
 import type { NestedOptions } from "@tiptap/extension-drag-handle";
 import { Selection, TextSelection } from "@tiptap/pm/state";
+import { CellSelection } from "@tiptap/pm/tables";
 import type { EditorView } from "@tiptap/pm/view";
 import { noteExtensions } from "@/lib/schema";
 import { PageLink } from "@/lib/page-link";
@@ -21,7 +22,10 @@ import {
   GripVertical,
   Italic,
   Link as LinkIcon,
+  Minus,
+  Plus,
   Strikethrough,
+  Trash2,
   Underline,
   Unlink,
 } from "lucide-react";
@@ -133,6 +137,7 @@ export default function NoteEditor({
     <div className="relative">
       <BlockHandle editor={editor} />
       <FormatMenu editor={editor} />
+      <TableMenu editor={editor} />
       <EditorContent editor={editor} />
     </div>
   );
@@ -146,7 +151,8 @@ const GRIP_GAP = 4;
  * the pointer is in the top 12px of the line (or near their left edge), and since it also
  * never offers a whole list, nothing qualifies there and the grip stays on the previous
  * block. Without it the innermost list or to-do item wins, as in Notion. A quote moves
- * as one block rather than paragraph by paragraph.
+ * as one block rather than paragraph by paragraph, and so does a table: its rows,
+ * cells and the text in them have no grips of their own.
  */
 const NESTED_GRIPS: NestedOptions = {
   edgeDetection: "none",
@@ -154,6 +160,16 @@ const NESTED_GRIPS: NestedOptions = {
     {
       id: "quoteMovesWhole",
       evaluate: ({ parent }) => (parent?.type.name === "blockquote" ? 1000 : 0),
+    },
+    {
+      id: "tableMovesWhole",
+      // `$pos` is the pointer's position, shared by every candidate: look above this one.
+      evaluate: ({ $pos, depth }) => {
+        for (let d = Math.min(depth, $pos.depth + 1) - 1; d > 0; d--) {
+          if ($pos.node(d).type.name === "table") return 1000;
+        }
+        return 0;
+      },
     },
   ],
 };
@@ -401,6 +417,120 @@ function FormatMenu({ editor }: { editor: Editor }) {
           </button>
         </>
       )}
+    </BubbleMenu>
+  );
+}
+
+/** The table holding the selection, and where it starts. */
+function selectedTable(editor: Editor): { pos: number; node: PMNode } | null {
+  const { $from } = editor.state.selection;
+  for (let depth = $from.depth; depth > 0; depth--) {
+    const node = $from.node(depth);
+    if (node.type.name === "table") return { pos: $from.before(depth), node };
+  }
+  return null;
+}
+
+/** A labelled toolbar button: "+ Row", "− Column". */
+const TABLE_BUTTON = cn(
+  buttonVariants({ variant: "ghost", size: "sm" }),
+  "h-8 gap-1 px-2 font-normal text-muted-foreground hover:text-accent-foreground"
+);
+
+/**
+ * Rows and columns for the table holding the cursor, above its top edge. It stands aside
+ * while text is selected (the format menu's turn) or the cursor rests in a link.
+ */
+function TableMenu({ editor }: { editor: Editor }) {
+  const state = useEditorState({
+    editor,
+    selector: ({ editor }) => ({
+      headerRow: selectedTable(editor)?.node.firstChild?.firstChild?.type.name === "tableHeader",
+      canDeleteRow: editor.can().deleteRow(),
+      canDeleteColumn: editor.can().deleteColumn(),
+    }),
+  });
+
+  const buttons = [
+    { label: "Row", title: "Add a row below", icon: Plus, run: () => editor.chain().focus().addRowAfter().run() },
+    {
+      label: "Column",
+      title: "Add a column to the right",
+      icon: Plus,
+      run: () => editor.chain().focus().addColumnAfter().run(),
+    },
+    null,
+    {
+      label: "Row",
+      title: "Delete this row",
+      icon: Minus,
+      disabled: !state.canDeleteRow,
+      run: () => editor.chain().focus().deleteRow().run(),
+    },
+    {
+      label: "Column",
+      title: "Delete this column",
+      icon: Minus,
+      disabled: !state.canDeleteColumn,
+      run: () => editor.chain().focus().deleteColumn().run(),
+    },
+  ];
+
+  return (
+    <BubbleMenu
+      editor={editor}
+      pluginKey="tableMenu"
+      shouldShow={({ editor, state: editorState }) => {
+        if (!editor.isEditable || !editor.isActive("table") || editor.isActive("link")) return false;
+        const { selection } = editorState;
+        return selection instanceof CellSelection || (selection instanceof TextSelection && selection.empty);
+      }}
+      getReferencedVirtualElement={() => {
+        const table = selectedTable(editor);
+        const dom = table && editor.view.nodeDOM(table.pos);
+        if (!(dom instanceof HTMLElement)) return null;
+        return { getBoundingClientRect: () => dom.getBoundingClientRect() };
+      }}
+      options={{ placement: "top-start", offset: 6, flip: true }}
+      className="flex items-center gap-0.5 rounded-md border bg-popover p-1 text-popover-foreground shadow-md"
+    >
+      {buttons.map((button, index) =>
+        button ? (
+          <button
+            key={`${button.title}`}
+            type="button"
+            title={button.title}
+            aria-label={button.title}
+            disabled={button.disabled}
+            onClick={button.run}
+            className={cn(TABLE_BUTTON, "disabled:opacity-40")}
+          >
+            <button.icon size={14} />
+            {button.label}
+          </button>
+        ) : (
+          <span key={`sep-${index}`} aria-hidden className="mx-0.5 h-5 w-px bg-border" />
+        )
+      )}
+      <span aria-hidden className="mx-0.5 h-5 w-px bg-border" />
+      <button
+        type="button"
+        title="Show the first row as headings"
+        aria-pressed={state.headerRow}
+        onClick={() => editor.chain().focus().toggleHeaderRow().run()}
+        className={cn(TABLE_BUTTON, state.headerRow && MENU_ACTIVE)}
+      >
+        Header
+      </button>
+      <button
+        type="button"
+        aria-label="Delete table"
+        title="Delete table"
+        onClick={() => editor.chain().focus().deleteTable().run()}
+        className={MENU_BUTTON}
+      >
+        <Trash2 size={15} />
+      </button>
     </BubbleMenu>
   );
 }

@@ -1,5 +1,6 @@
 import StarterKit from "@tiptap/starter-kit";
 import { TaskItem, TaskList } from "@tiptap/extension-list";
+import { TableKit } from "@tiptap/extension-table";
 import { DateMention } from "./date-mention";
 import { PageLink } from "./page-link";
 
@@ -17,6 +18,9 @@ export const noteExtensions = [
   }),
   TaskList,
   TaskItem.configure({ nested: true }),
+  // Tables read and write as GitHub-flavoured Markdown tables over MCP. Columns size to
+  // their content: no drag-to-resize, since Markdown couldn't keep the widths anyway.
+  TableKit.configure({ table: { resizable: false, renderWrapper: true } }),
   PageLink,
   DateMention,
 ];
