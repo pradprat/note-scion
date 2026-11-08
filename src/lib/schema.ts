@@ -17,7 +17,9 @@ export const noteExtensions = [
     codeBlock: { enableTabIndentation: true, tabSize: 2 },
   }),
   TaskList,
-  TaskItem.configure({ nested: true }),
+  // A screen reader hears the to-do itself ("Book the cabin, checkbox, checked"), not
+  // "Task item checkbox for Book the cabin".
+  TaskItem.configure({ nested: true, a11y: { checkboxLabel: (node) => node.textContent || "Empty to-do" } }),
   // Tables read and write as GitHub-flavoured Markdown tables over MCP. Columns size to
   // their content: no drag-to-resize, since Markdown couldn't keep the widths anyway.
   TableKit.configure({ table: { resizable: false, renderWrapper: true } }),

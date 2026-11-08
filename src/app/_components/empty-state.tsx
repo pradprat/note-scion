@@ -30,7 +30,8 @@ export default function EmptyState() {
     <>
       <TopBar />
       <div className="mx-auto flex max-w-md flex-col items-start px-6 py-20 sm:py-28">
-        <h1 className="mb-3 text-2xl font-semibold tracking-tight">Start your first page</h1>
+        {/* True on a first visit and after deleting everything alike. */}
+        <h1 className="mb-3 text-2xl font-semibold tracking-tight">Your workspace is empty</h1>
         <p className="mb-6 text-muted-foreground">
           Pages can hold other pages. Inside a page, type <kbd className={KBD}>/</kbd> for headings, lists, to-dos and
           code

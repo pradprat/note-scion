@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import Link from "next/link";
 import { FileText, RotateCcw, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import type { TrashItem } from "@/lib/types";
@@ -20,8 +21,9 @@ export default function TrashView({ items, days }: { items: TrashItem[]; days: n
   const [confirmEmpty, setConfirmEmpty] = useState(false);
   const [now, setNow] = useState<number | null>(null);
   const [error, setError] = useState<string | null>(null);
-  // What just happened, for screen readers: the row it happened to is gone.
-  const [notice, setNotice] = useState("");
+  // What just happened, said in words, since the row it happened to is gone. A restored
+  // page can be opened from here.
+  const [notice, setNotice] = useState<{ text: string; openId?: string } | null>(null);
   const headingRef = useRef<HTMLHeadingElement>(null);
   const emptyRef = useReturnFocus<HTMLButtonElement>(confirmEmpty);
   const today = useNow();
@@ -49,7 +51,12 @@ export default function TrashView({ items, days }: { items: TrashItem[]; days: n
     });
   };
 
-  const run = async (id: string, action: () => Promise<unknown>, done: string, failure: string) => {
+  const run = async (
+    id: string,
+    action: () => Promise<unknown>,
+    done: { text: string; openId?: string },
+    failure: string
+  ) => {
     setError(null);
     const at = visible.findIndex((item) => item.id === id);
     const next = visible[at + 1] ?? visible[at - 1];
@@ -77,7 +84,7 @@ export default function TrashView({ items, days }: { items: TrashItem[]; days: n
     focusAfter(null);
     try {
       await backend.emptyTrash();
-      setNotice("Emptied the trash.");
+      setNotice({ text: "Emptied the trash." });
       backend.refresh();
     } catch {
       setHidden(before);
@@ -124,8 +131,20 @@ export default function TrashView({ items, days }: { items: TrashItem[]; days: n
             ))}
         </div>
 
-        <p aria-live="polite" className="sr-only">
-          {notice}
+        {/* Always mounted, so a screen reader hears each notice as it arrives. */}
+        <p aria-live="polite" className={notice ? "mb-4 text-sm text-muted-foreground" : "sr-only"}>
+          {notice?.text}
+          {notice?.openId && (
+            <>
+              {" "}
+              <Link
+                href={backend.href(`/${notice.openId}`)}
+                className="rounded-sm font-medium text-foreground underline decoration-muted-foreground underline-offset-[3px] outline-none focus-visible:ring-2 focus-visible:ring-ring"
+              >
+                Open it
+              </Link>
+            </>
+          )}
         </p>
 
         {error && (
@@ -156,7 +175,7 @@ export default function TrashView({ items, days }: { items: TrashItem[]; days: n
                     void run(
                       item.id,
                       () => backend.restorePage(item.id),
-                      `Restored “${title}”.`,
+                      { text: `Restored “${title}”.`, openId: item.id },
                       `Couldn't restore “${title}”.`
                     )
                   }
@@ -164,7 +183,7 @@ export default function TrashView({ items, days }: { items: TrashItem[]; days: n
                     void run(
                       item.id,
                       () => backend.deleteForever(item.id),
-                      `Deleted “${title}” for good.`,
+                      { text: `Deleted “${title}” for good.` },
                       `Couldn't delete “${title}”.`
                     )
                   }
