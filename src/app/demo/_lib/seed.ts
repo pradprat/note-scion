@@ -55,18 +55,20 @@ export function samplePages(touch = false): { pages: Sample[]; claudePageId: str
       "👋",
       "Welcome to note-scion",
       `
-This is a live demo. It runs entirely in your browser: what you write here is saved in this browser only, and nothing is sent anywhere.
+note-scion is a calm notes app for one person, with nested pages and a block editor. Your own copy also comes with an MCP server, so Claude can read and write the same pages. See it happen here:
 
-note-scion is a calm notes app for one person, with nested pages and a block editor. Your own copy also comes with an MCP server, so Claude can read and write the same pages.
+[Working with Claude](/${id.claude})
+
+This is a live demo. It runs entirely in your browser: what you write here is saved in this browser only, and nothing is sent anywhere.
 
 ## Try it
 
 - [ ] ${touch ? "Tap" : "Click"} anywhere on this page and start typing. It saves as you go.
-- [ ] Open **Working with Claude** and simulate an edit from Claude.
+- [ ] Open **Working with Claude**, above, and simulate an edit from Claude.
 - [ ] On an empty line, type \`/\` for headings, lists, to-dos, quotes and code.
 - [ ] ${touch ? "Tap **Search** in the sidebar" : "Press Ctrl K (⌘ K on a Mac)"} to jump to any page or search inside them.
 - [ ] Type \`@\` and then "tomorrow" or "next friday" to drop in a date.
-- [ ] ${touch ? "Tap + next to a page in the sidebar to add a page inside it." : "Drag a page in the sidebar onto another one to nest it."}
+- [ ] ${touch ? "Tap ⋯ next to a page in the sidebar, then **Add a page inside**." : "Nest a page by dragging it onto another in the sidebar, or with Alt Shift →."}
 - [ ] Delete a page, then bring it back from the Trash.
 
 ## Inside this page
@@ -79,9 +81,9 @@ note-scion is a calm notes app for one person, with nested pages and a block edi
 
 ## Your own copy
 
-Pages here stay in this browser. Your own copy keeps them in your own database, and Claude can read and write them there.
+Your own copy keeps your pages in your own database, where Claude can read and write them too.
 
-[Deploy your own](/${id.deploy})
+[Your own copy](/${id.deploy})
 `
     ),
     page(
@@ -142,20 +144,12 @@ Type \`@\` followed by **today**, **tomorrow**, **next monday**, **in 3 days** o
       `
 In your own copy, Claude connects to note-scion over MCP. Add \`https://<your-site>/api/mcp\` as a custom connector on claude.ai, or in Claude Code, and approve the connection on your site.
 
+Claude can list, search and read your pages as Markdown, create pages (inside other pages too), change a title, an icon or the body, move pages around the tree, and send pages to the trash, where you can restore them.
+
 ## Things to ask
 
 - "What's on my reading list?"
-- "Add today's decisions to the weekly sync page."
 - "Turn these meeting notes into a page under Projects, with to-dos for each owner."
-- "Find everything I wrote about the trip and summarise it."
-
-## What Claude can do
-
-1. List, search and read pages, as Markdown
-2. Create pages, inside other pages too
-3. Change a title, an icon or the body, replacing it or adding to the end
-4. Move pages around the tree
-5. Send pages to the trash, where you can restore them
 
 When Claude changes a page you have open, the new text appears in place, and the status at the top of the page says which app made the edit and when. If you were typing at that moment, you choose which version to keep, so nothing is silently overwritten.
 `
@@ -215,7 +209,7 @@ Two nights up north, leaving ${day(10)}.
       null,
       5,
       "🚀",
-      "Deploy your own",
+      "Your own copy",
       `
 note-scion is open source under the MIT license. Your own copy keeps your pages in your own Postgres database, behind your password.
 

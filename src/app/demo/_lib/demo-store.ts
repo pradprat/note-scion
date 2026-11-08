@@ -252,13 +252,24 @@ function listTrash(pages: StoredPage[]): TrashItem[] {
 
 // ------------------------------------------------------ a stand-in for Claude
 
-/** What the simulated Claude adds, one line per click, in turn. */
+/** What the simulated Claude adds, one line per click: the first not on the page yet. */
 const CLAUDE_TODOS = [
   "Deploy my own copy and connect Claude to it",
   "Ask Claude what's on my reading list",
   "Turn the trip ideas into a plan for each day",
+  "Ask Claude to add a packing list for the trip",
+  "Have Claude sort the reading list by length",
 ];
 let claudeTurn = 0;
+
+const textOf = (node: { text?: string; content?: unknown[] }): string =>
+  (node.text ?? "") + (node.content ?? []).map((child) => textOf(child as typeof node)).join("\n");
+
+/** The next to-do this page doesn't already have, so a reload doesn't repeat one. */
+function nextTodo(pageText: string): string {
+  const fresh = CLAUDE_TODOS.find((todo) => !pageText.includes(todo));
+  return fresh ?? CLAUDE_TODOS[claudeTurn++ % CLAUDE_TODOS.length];
+}
 
 /**
  * Writes to a page the way Claude's `update_page` does in append mode: Markdown added to
@@ -270,7 +281,7 @@ export async function simulateClaudeEdit(id: string): Promise<void> {
   const { pages } = current();
   const page = pages.find((p) => p.id === id && !p.deletedAt);
   if (!page) return;
-  const todo = CLAUDE_TODOS[claudeTurn++ % CLAUDE_TODOS.length];
+  const todo = nextTodo(page.content ? textOf(page.content) : "");
   const extra = fromMarkdown(`- [ ] ${todo}`).content ?? [];
   const head = [...(page.content?.content ?? [])];
   const last = head[head.length - 1];
