@@ -206,7 +206,7 @@ export function NotesProvider({
 
       setTree((prev) => prev.filter((other) => !doomed.has(other.id)));
       if (toastTimer.current) clearTimeout(toastTimer.current);
-      setPendingDelete({ id, title: node.title.trim() || "Untitled", removed });
+      setPendingDelete({ id, title: node.title, removed });
       toastTimer.current = setTimeout(() => setPendingDelete(null), UNDO_WINDOW);
 
       if (activeId && doomed.has(activeId)) {

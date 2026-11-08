@@ -35,6 +35,8 @@ import type { NoteNode, NotePatch } from "@/lib/types";
 export const dynamic = "force-dynamic";
 
 const MAX_TITLE = 500;
+/** How a title holds a date, as the app shows it (see src/lib/title-dates.ts). */
+const TITLE_DATES = "A date in it is written @YYYY-MM-DD and reads as Today, Yesterday or Tomorrow, or in full, as in a page body: a daily page can be titled @2026-11-12.";
 const MAX_ICON = 16;
 const MAX_MARKDOWN = 500_000;
 
@@ -177,7 +179,7 @@ function buildServer(origin: string, writer: Writer): McpServer {
       description:
         "Create a new page, optionally inside another page, with an optional Markdown body. A page created inside another one is filed under it in the page tree, but nothing is added to the parent's body. To show a link to it there, add a line that is only [Title](/<id>) to the parent with update_page (mode 'append' adds it at the end).",
       inputSchema: {
-        title: z.string().max(MAX_TITLE).describe("Page title"),
+        title: z.string().max(MAX_TITLE).describe(`Page title. ${TITLE_DATES}`),
         markdown: markdownInput("Page body").optional(),
         icon: z.string().max(MAX_ICON).optional().describe("A single emoji, e.g. 📝"),
         parentId: parentIdInput,
@@ -203,7 +205,7 @@ function buildServer(origin: string, writer: Writer): McpServer {
         "Change a page's title, icon or body. The body is replaced by default; set mode to 'append' to add to the end. Omitted fields are left as they are. A line that is only a link to a page, like [Title](/<id>), becomes a sub-page block that shows that page's live title; keep those lines as they are when rewriting a body. Write a date as @YYYY-MM-DD (for example @2026-11-12) to make it a date the app shows as Today, Tomorrow or the date. A date is only a date: it never links to a page, even one titled with that date; link pages with [Title](/<id>).",
       inputSchema: {
         id: pageId,
-        title: z.string().max(MAX_TITLE).optional().describe("New title"),
+        title: z.string().max(MAX_TITLE).optional().describe(`New title. ${TITLE_DATES}`),
         icon: z
           .string()
           .max(MAX_ICON)

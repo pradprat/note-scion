@@ -42,6 +42,10 @@ All notable changes to note-scion are listed here. The format follows
 - The quick switcher stays in place as you type instead of re-centring, and a match in
   a page's text shows the words around it.
 - The demo's empty state can bring back the sample pages.
+- `@` dates work in page titles as they do in the body: "@today" in a title reads
+  Today, then Yesterday, then its full date, in the title, the sidebar, breadcrumbs, the
+  quick switcher and sub-page links. Titles store the date as `@YYYY-MM-DD`, which
+  Claude can read and write over MCP.
 - Screen readers read an `@` date as "Tomorrow", not "at Tomorrow".
 - An `@` date more than a day away shows its full date, "November 8, 2026", instead of
   "Nov 8". Yesterday, today and tomorrow still read as words.

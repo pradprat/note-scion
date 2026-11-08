@@ -3,6 +3,7 @@
 import { useEffect, useRef } from "react";
 import { toast } from "sonner";
 import { useNotes } from "./notes-provider";
+import TitleText from "./title-text";
 
 /**
  * "Moved … to trash · Undo", shown while a delete can still be taken back. Drives a Sonner
@@ -19,7 +20,11 @@ export default function UndoToast() {
     const id = `notes-delete-${pendingDelete.id}`;
     toast(
       <span className="min-w-0 truncate">
-        Moved <span className="font-medium">{pendingDelete.title.trim() || "Untitled"}</span> to trash
+        Moved{" "}
+        <span className="font-medium">
+          <TitleText title={pendingDelete.title} />
+        </span>{" "}
+        to trash
       </span>,
       {
         id,

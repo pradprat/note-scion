@@ -34,6 +34,7 @@ import type { NoteNode } from "@/lib/types";
 import { useBackend } from "./backend";
 import { useNotes } from "./notes-provider";
 import { useShell } from "./notes-shell";
+import { useTitle } from "./title-text";
 import { useReturnFocus } from "./use-return-focus";
 
 /** Touch screens get finger-sized rows and buttons; a mouse keeps the dense tree. */
@@ -563,7 +564,7 @@ function TreeItem({ node, depth }: { node: NoteNode; depth: number }) {
   const hasKids = kids.length > 0;
   const open = hasKids && isExpanded(node.id);
   const active = node.id === activeId;
-  const title = node.title.trim() || "Untitled";
+  const title = useTitle(node.title);
   const zone = drop && drop.id === node.id ? drop.zone : null;
   const dragging = dragId === node.id;
   const { tabId, onFocusRow } = useContext(TreeNavContext);

@@ -300,6 +300,29 @@ body {
   opacity: 0.7;
 }
 
+/* The page title (title-editor.tsx). A date there is the title, so it takes the
+   title's ink and only the "@" stays quiet. "Untitled" shows whenever it's empty. */
+.notes-title .notes-date {
+  white-space: nowrap;
+  border-radius: 3px;
+  cursor: default;
+}
+.notes-title .notes-date-at {
+  margin-right: 0.05em;
+  color: hsl(var(--muted-foreground));
+}
+.notes-title .is-empty::before {
+  content: attr(data-placeholder);
+  float: left;
+  height: 0;
+  pointer-events: none;
+  color: hsl(var(--muted-foreground) / 0.6);
+}
+.notes-title .ProseMirror-selectednode {
+  outline: 2px solid hsl(var(--input));
+  border-radius: 4px;
+}
+
 .notes-editor .ProseMirror-selectednode {
   outline: 2px solid hsl(var(--input));
   border-radius: 4px;

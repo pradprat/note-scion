@@ -12,7 +12,9 @@ import {
   CommandSeparator,
 } from "@/components/ui/command";
 import type { NoteNode, SearchHit } from "@/lib/types";
+import { titleText } from "@/lib/title-dates";
 import { useBackend } from "./backend";
+import { useNow } from "./title-text";
 import { useNotes } from "./notes-provider";
 
 const SEARCH_DELAY = 180;
@@ -47,6 +49,9 @@ function SwitcherBody({ onClose }: { onClose: () => void }) {
   const [query, setQuery] = useState("");
   const [textHits, setTextHits] = useState<SearchHit[]>([]);
   const [searching, setSearching] = useState(false);
+  const today = useNow();
+  // A title as it reads ("Standup Today"), which is also what a search should match.
+  const read = (node: NoteNode) => titleText(node.title, today);
 
   const q = query.trim().toLowerCase();
 
@@ -57,7 +62,7 @@ function SwitcherBody({ onClose }: { onClose: () => void }) {
     }
     return tree
       .map((node) => {
-        const title = (node.title.trim() || "Untitled").toLowerCase();
+        const title = read(node).toLowerCase();
         const at = title.indexOf(q);
         const wordStart = at === 0 || (at > 0 && /\s/.test(title[at - 1]));
         return { node, at, score: at === 0 ? 0 : wordStart ? 1 : 2 };
@@ -66,7 +71,8 @@ function SwitcherBody({ onClose }: { onClose: () => void }) {
       .sort((a, b) => a.score - b.score || a.node.title.length - b.node.title.length)
       .slice(0, 8)
       .map((hit) => hit.node);
-  }, [tree, q, activeId]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [tree, q, activeId, today?.toDateString()]);
 
   // Text inside pages lives on the server (in the demo, in this browser).
   useEffect(() => {
@@ -112,7 +118,7 @@ function SwitcherBody({ onClose }: { onClose: () => void }) {
 
   const pathOf = (node: NoteNode) =>
     ancestorsOf(node.id)
-      .map((a) => a.title.trim() || "Untitled")
+      .map(read)
       .join(" / ");
 
   const pageItem = (node: NoteNode | SearchHit, group: string) => {
@@ -126,7 +132,7 @@ function SwitcherBody({ onClose }: { onClose: () => void }) {
         </span>
         <span className="min-w-0 flex-1">
           <span className="block truncate">
-            {node.title.trim() || "Untitled"}
+            {read(node)}
             {path && <span className="ml-2 text-xs text-muted-foreground">{path}</span>}
           </span>
           {snippet && (

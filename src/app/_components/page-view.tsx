@@ -1,6 +1,6 @@
 "use client";
 
-import { Fragment, useCallback, useEffect, useLayoutEffect, useRef, useState } from "react";
+import { Fragment, useCallback, useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import type { Editor, JSONContent } from "@tiptap/react";
@@ -23,7 +23,8 @@ import { useNotes } from "./notes-provider";
 import IconPicker from "./icon-picker";
 import NoteEditor from "./editor";
 import TopBar from "./top-bar";
-import { useTitleDates } from "./title-dates";
+import TitleEditor, { type TitleEditorHandle } from "./title-editor";
+import TitleText from "./title-text";
 
 type SaveStatus = "saved" | "unsaved" | "saving" | "error" | "conflict" | "missing";
 
@@ -171,11 +172,12 @@ export default function PageView({ page, after }: { page: NotePage; after?: Reac
   const [icon, setIcon] = useState(page.icon);
   const [pickerOpen, setPickerOpen] = useState(false);
   const editorRef = useRef<Editor | null>(null);
-  const titleRef = useRef<HTMLTextAreaElement>(null);
+  const titleRef = useRef<TitleEditorHandle>(null);
 
   const applyRemote = useCallback(
     (latest: NotePage) => {
       setTitle(latest.title);
+      titleRef.current?.setTitle(latest.title);
       setIcon(latest.icon);
       patchNode(latest.id, { title: latest.title, icon: latest.icon });
       editorRef.current?.commands.setContent(latest.content ?? "", { emitUpdate: false });
@@ -187,33 +189,14 @@ export default function PageView({ page, after }: { page: NotePage; after?: Reac
 
   const ancestors = ancestorsOf(page.id);
 
-  // Grow the title box with its text.
-  useLayoutEffect(() => {
-    const el = titleRef.current;
-    if (!el) return;
-    el.style.height = "auto";
-    el.style.height = `${el.scrollHeight}px`;
-  }, [title]);
-
-  // A fresh page opens with the cursor in the title.
-  useEffect(() => {
-    if (!page.title && !page.content) titleRef.current?.focus();
-    // Only on first open: a refreshed copy must not steal focus.
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
-
-  const changeTitle = (value: string) => {
-    const clean = value.replace(/\n/g, " ");
-    setTitle(clean);
-    patchNode(page.id, { title: clean });
-    schedule({ title: clean });
-  };
-
-  // "@today" in the title writes the date there.
-  const titleDates = useTitleDates(titleRef, (value, caret) => {
-    changeTitle(value);
-    requestAnimationFrame(() => titleRef.current?.setSelectionRange(caret, caret));
-  });
+  const changeTitle = useCallback(
+    (value: string) => {
+      setTitle(value);
+      patchNode(page.id, { title: value });
+      schedule({ title: value });
+    },
+    [patchNode, page.id, schedule]
+  );
 
   const changeIcon = (value: string | null) => {
     setIcon(value);
@@ -240,47 +223,22 @@ export default function PageView({ page, after }: { page: NotePage; after?: Reac
   const openPage = useCallback((id: string) => router.push(href(`/${id}`)), [router, href]);
 
   /** Back up from the page body: the cursor lands at the end of the title. */
-  const focusTitleEnd = useCallback(() => {
-    const el = titleRef.current;
-    if (!el) return;
-    el.focus();
-    el.setSelectionRange(el.value.length, el.value.length);
-  }, []);
+  const focusTitleEnd = useCallback(() => titleRef.current?.focusEnd(), []);
 
-  const onTitleKeyDown = (event: React.KeyboardEvent<HTMLTextAreaElement>) => {
-    if (titleDates.onKeyDown(event)) return;
+  /**
+   * Enter or Down in the title moves into the page. What followed the cursor comes down
+   * as the page's first line; on an empty page it takes the blank line's place.
+   */
+  const leaveTitle = useCallback((rest: JSONContent[] | null) => {
     const editor = editorRef.current;
-    if (!editor || event.nativeEvent.isComposing || event.altKey || event.metaKey || event.ctrlKey) return;
-    const el = event.currentTarget;
-    const caretAtEnd = el.selectionStart === el.value.length && el.selectionEnd === el.value.length;
-
-    if (event.key === "Enter") {
-      event.preventDefault();
-      // Enter inside the title carries the rest of it down as the first line of the page.
-      const rest = caretAtEnd || event.shiftKey ? "" : el.value.slice(el.selectionEnd).trim();
-      if (rest) {
-        changeTitle(el.value.slice(0, el.selectionStart).trimEnd());
-        // On an empty page it replaces the blank first line rather than stacking above it.
-        const at = editor.isEmpty ? { from: 0, to: editor.state.doc.content.size } : 0;
-        editor
-          .chain()
-          .insertContentAt(at, { type: "paragraph", content: [{ type: "text", text: rest }] })
-          .setTextSelection(1)
-          .focus()
-          .run();
-      } else {
-        editor.commands.focus("start");
-      }
-    } else if (event.key === "ArrowDown" && !event.shiftKey) {
-      // Only from the title's last line; a wrapped title moves down through itself first.
-      const lineHeight = parseFloat(getComputedStyle(el).lineHeight) || 0;
-      const oneLine = el.scrollHeight < lineHeight * 1.5;
-      if (caretAtEnd || oneLine) {
-        event.preventDefault();
-        editor.commands.focus("start");
-      }
+    if (!editor) return;
+    if (!rest?.length) {
+      editor.commands.focus("start");
+      return;
     }
-  };
+    const at = editor.isEmpty ? { from: 0, to: editor.state.doc.content.size } : 0;
+    editor.chain().insertContentAt(at, { type: "paragraph", content: rest }).setTextSelection(1).focus().run();
+  }, []);
 
   /**
    * A click in the open space under the page writes at its end. When the page ends in a
@@ -315,7 +273,9 @@ export default function PageView({ page, after }: { page: NotePage; after?: Reac
                   <BreadcrumbLink asChild>
                     <Link href={href(`/${node.id}`)} className="flex min-w-0 items-center gap-1.5 rounded-md px-1 py-0.5">
                       {node.icon && <span aria-hidden>{node.icon}</span>}
-                      <span className="truncate">{node.title.trim() || "Untitled"}</span>
+                      <span className="truncate">
+                        <TitleText title={node.title} />
+                      </span>
                     </Link>
                   </BreadcrumbLink>
                 </BreadcrumbItem>
@@ -327,7 +287,9 @@ export default function PageView({ page, after }: { page: NotePage; after?: Reac
             <BreadcrumbItem className="min-w-0 shrink">
               <BreadcrumbPage className="flex min-w-0 items-center gap-1.5 px-1">
                 {icon && <span aria-hidden>{icon}</span>}
-                <span className="truncate">{title.trim() || "Untitled"}</span>
+                <span className="truncate">
+                  <TitleText title={title} />
+                </span>
               </BreadcrumbPage>
             </BreadcrumbItem>
           </BreadcrumbList>
@@ -367,25 +329,14 @@ export default function PageView({ page, after }: { page: NotePage; after?: Reac
             </IconPicker>
           </div>
 
-          <div className="relative">
-            <textarea
-              ref={titleRef}
-              value={title}
-              rows={1}
-              placeholder="Untitled"
-              aria-label="Page title"
-              maxLength={500}
-              onChange={(event) => {
-                changeTitle(event.target.value);
-                titleDates.sync();
-              }}
-              onSelect={titleDates.sync}
-              onBlur={titleDates.close}
-              onKeyDown={onTitleKeyDown}
-              className="block w-full resize-none overflow-hidden bg-transparent text-4xl font-bold leading-tight tracking-tight outline-none placeholder:text-muted-foreground/60 [text-wrap:balance]"
-            />
-            {titleDates.menu}
-          </div>
+          <TitleEditor
+            ref={titleRef}
+            title={page.title}
+            // A fresh page opens with the cursor in the title (only on first open).
+            autoFocus={!page.title && !page.content}
+            onChange={changeTitle}
+            onExit={leaveTitle}
+          />
         </header>
 
         <NoteEditor

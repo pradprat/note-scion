@@ -7,7 +7,9 @@ import type { TrashItem } from "@/lib/types";
 import { useBackend } from "./backend";
 import { ago } from "./time";
 import TopBar from "./top-bar";
+import { useNow, useTitle } from "./title-text";
 import { useReturnFocus } from "./use-return-focus";
+import { titleText } from "@/lib/title-dates";
 
 /** Taller buttons where the pointer is a finger. */
 const COARSE = "[@media(pointer:coarse)]:h-10";
@@ -22,6 +24,7 @@ export default function TrashView({ items, days }: { items: TrashItem[]; days: n
   const [notice, setNotice] = useState("");
   const headingRef = useRef<HTMLHeadingElement>(null);
   const emptyRef = useReturnFocus<HTMLButtonElement>(confirmEmpty);
+  const today = useNow();
 
   // Relative times are worked out in the browser, so server and client render the same.
   useEffect(() => setNow(Date.now()), []);
@@ -143,7 +146,7 @@ export default function TrashView({ items, days }: { items: TrashItem[]; days: n
         ) : (
           <ul className="divide-y border-y">
             {visible.map((item) => {
-              const title = item.title.trim() || "Untitled";
+              const title = titleText(item.title, today);
               return (
                 <TrashRow
                   key={item.id}
@@ -188,9 +191,10 @@ function TrashRow({
 }) {
   const [confirming, setConfirming] = useState(false);
   const deleteRef = useReturnFocus<HTMLButtonElement>(confirming);
-  const title = item.title.trim() || "Untitled";
+  const title = useTitle(item.title);
+  const today = useNow();
   const meta = [
-    item.parentTitle !== null ? `from ${item.parentTitle.trim() || "Untitled"}` : null,
+    item.parentTitle !== null ? `from ${titleText(item.parentTitle, today)}` : null,
     item.subPageCount > 0 ? `with ${item.subPageCount} sub-page${item.subPageCount === 1 ? "" : "s"}` : null,
     now !== null ? `deleted ${ago(item.deletedAt, now)}` : null,
   ].filter(Boolean);

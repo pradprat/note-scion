@@ -346,8 +346,12 @@ Precise and plain: shadcn's button at exact sizes, with no custom shapes.
   padding. Text is 16px on mobile, so iOS doesn't zoom, and 14px from 768px up.
 - **Focus:** the same 2px Slate Pencil ring with an offset as buttons.
 - **Disabled:** 50% opacity with a not-allowed cursor.
-- **Title field:** the page title is a borderless, auto-growing textarea in the Display
-  style. Its placeholder ("Untitled") is muted text at 60% opacity.
+- **Title field:** the page title is a borderless one-line editor in the Display style,
+  with the same `@` menu as the body. A date in it is stored as `@YYYY-MM-DD` and reads
+  "@Today", then "@Yesterday", then in full. It takes the title's ink, with only the
+  "@" muted, because there the date is the title. Everywhere else a title shows (sidebar,
+  breadcrumb, switcher, sub-page links, trash) the date reads as a word without the
+  "@": "Standup Today". Its placeholder ("Untitled") is muted text at 60% opacity.
 
 ### Navigation
 - **Sidebar:** Frost Paper (Deep Slate in dark mode). The workspace name sits in a 48px

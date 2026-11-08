@@ -7,6 +7,7 @@ import { FileText, FileX } from "lucide-react";
 import { PageLink } from "@/lib/page-link";
 import { useNotes } from "./notes-provider";
 import { useBackend } from "./backend";
+import TitleText from "./title-text";
 
 declare module "@tiptap/core" {
   interface Commands<ReturnType> {
@@ -37,7 +38,9 @@ function PageLinkView({ node }: ReactNodeViewProps) {
           <span aria-hidden className="notes-page-link-icon">
             {page.icon ?? <FileText size={18} strokeWidth={1.75} />}
           </span>
-          <span className="notes-page-link-title">{page.title.trim() || "Untitled"}</span>
+          <span className="notes-page-link-title">
+            <TitleText title={page.title} />
+          </span>
         </Link>
       ) : (
         // Trashed or deleted. Restoring the page from the trash brings the link back.
