@@ -47,7 +47,10 @@ export const DateChip = DateMention.extend({
       dom.className = "notes-date";
       dom.contentEditable = "false";
       const label = document.createElement("span");
-      dom.append(Object.assign(document.createElement("span"), { className: "notes-date-at", textContent: "@" }), label);
+      // The "@" marks the chip for the eye only; read aloud it would be "Dentist at Tomorrow".
+      const at = Object.assign(document.createElement("span"), { className: "notes-date-at", textContent: "@" });
+      at.setAttribute("aria-hidden", "true");
+      dom.append(at, label);
 
       const render = () => {
         dom.dataset.date = date;

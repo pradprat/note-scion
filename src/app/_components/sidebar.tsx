@@ -32,10 +32,11 @@ import type { NoteNode } from "@/lib/types";
 import { useBackend } from "./backend";
 import { useNotes } from "./notes-provider";
 import { useShell } from "./notes-shell";
+import { useReturnFocus } from "./use-return-focus";
 
 /** Touch screens get finger-sized rows and buttons; a mouse keeps the dense tree. */
 const COARSE_ROW = "[@media(pointer:coarse)]:h-10";
-const COARSE_ICON = "[@media(pointer:coarse)]:h-9 [@media(pointer:coarse)]:w-9";
+const COARSE_ICON = "[@media(pointer:coarse)]:h-10 [@media(pointer:coarse)]:w-10";
 /** Small ghost icon button that sits on a sidebar row. */
 const ROW_ICON = cn(
   "h-6 w-6 shrink-0 rounded-md text-sidebar-foreground/70 hover:bg-sidebar-border hover:text-sidebar-accent-foreground [&_svg]:size-3.5",
@@ -258,6 +259,8 @@ function DemoMenu() {
   const { reset, href } = useBackend();
   const [confirming, setConfirming] = useState(false);
   const [busy, setBusy] = useState(false);
+  // After Cancel or a reset, focus goes back to "Reset demo".
+  const resetRef = useReturnFocus<HTMLButtonElement>(confirming);
 
   const startOver = async () => {
     setBusy(true);
@@ -291,7 +294,7 @@ function DemoMenu() {
             </Button>
           </div>
         ) : (
-          <SidebarMenuButton onClick={() => setConfirming(true)} className={COARSE_ROW}>
+          <SidebarMenuButton ref={resetRef} onClick={() => setConfirming(true)} className={COARSE_ROW}>
             <RotateCcw />
             <span>Reset demo</span>
           </SidebarMenuButton>
@@ -304,19 +307,89 @@ function DemoMenu() {
   );
 }
 
+// ------------------------------------------------------------ keyboard in the tree
+
+/**
+ * The page tree is one stop in the tab order. Only one row's link (and that row's own
+ * buttons) can take Tab; the arrow keys move between rows, as in a file tree.
+ */
+const TreeNavContext = createContext<{ tabId: string | null; onFocusRow: (id: string) => void }>({
+  tabId: null,
+  onFocusRow: () => {},
+});
+
+/**
+ * Down/Up: next and previous visible page. Right: open a closed page, or step into an
+ * open one. Left: close an open page, or step out to its parent. Home/End: first, last.
+ */
+function moveInTree(event: React.KeyboardEvent<HTMLElement>, toggle: (id: string) => void) {
+  const row = event.target as HTMLElement;
+  const id = row.dataset.treeId;
+  if (!id || event.altKey || event.ctrlKey || event.metaKey || event.shiftKey) return;
+  const rows = Array.from(event.currentTarget.querySelectorAll<HTMLElement>("[data-tree-id]"));
+  const at = rows.indexOf(row);
+  const level = Number(row.dataset.level);
+  const expanded = row.getAttribute("aria-expanded");
+  const go = (to: HTMLElement | undefined) => {
+    event.preventDefault();
+    to?.focus();
+  };
+
+  switch (event.key) {
+    case "ArrowDown":
+      return go(rows[at + 1]);
+    case "ArrowUp":
+      return go(rows[at - 1]);
+    case "Home":
+      return go(rows[0]);
+    case "End":
+      return go(rows[rows.length - 1]);
+    case "ArrowRight":
+      if (expanded === "false") {
+        event.preventDefault();
+        toggle(id);
+      } else if (expanded === "true") go(rows[at + 1]);
+      return;
+    case "ArrowLeft":
+      if (expanded === "true") {
+        event.preventDefault();
+        toggle(id);
+        return;
+      }
+      return go(rows.slice(0, at).findLast((other) => Number(other.dataset.level) < level));
+  }
+}
+
 function PageList({ roots, onAdd }: { roots: NoteNode[]; onAdd: () => void }) {
   const { dragId, drop, overRoot, finish } = useDrag();
+  const { childrenOf, isExpanded, toggleExpanded, activeId } = useNotes();
+  const [focusId, setFocusId] = useState<string | null>(null);
   const rootTarget = drop?.zone === "root";
+
+  // The row that takes Tab: the last one focused, else the open page, else the first,
+  // as long as it's showing (not inside a closed page).
+  const shown = new Set<string>();
+  const walk = (parentId: string | null) => {
+    for (const node of childrenOf(parentId)) {
+      shown.add(node.id);
+      if (isExpanded(node.id)) walk(node.id);
+    }
+  };
+  walk(null);
+  const tabId =
+    (focusId && shown.has(focusId) && focusId) || (activeId && shown.has(activeId) && activeId) || roots[0]?.id || null;
 
   return (
     <SidebarContent className="gap-0 px-2 pb-4">
-      <nav aria-label="Pages">
+      <nav aria-label="Pages" onKeyDown={(event) => moveInTree(event, toggleExpanded)}>
         {roots.length > 0 && (
-          <SidebarMenu className="gap-0">
-            {roots.map((node) => (
-              <TreeItem key={node.id} node={node} depth={0} />
-            ))}
-          </SidebarMenu>
+          <TreeNavContext.Provider value={{ tabId, onFocusRow: setFocusId }}>
+            <SidebarMenu className="gap-0">
+              {roots.map((node) => (
+                <TreeItem key={node.id} node={node} depth={0} />
+              ))}
+            </SidebarMenu>
+          </TreeNavContext.Provider>
         )}
       </nav>
       <SidebarMenu className="mt-0.5">
@@ -352,10 +425,12 @@ function AddButton({
   label,
   onAdd,
   className,
+  tabIndex,
 }: {
   label: string;
   onAdd: () => Promise<void>;
   className?: string;
+  tabIndex?: number;
 }) {
   const [busy, setBusy] = useState(false);
   return (
@@ -364,6 +439,7 @@ function AddButton({
       size="icon"
       aria-label={label}
       title={label}
+      tabIndex={tabIndex}
       disabled={busy}
       onClick={async (event) => {
         event.preventDefault();
@@ -405,7 +481,7 @@ const PREFETCH_ON_HOVER = { unstable_dynamicOnHover: true } as Record<string, un
 // Row actions show on hover and keyboard focus; where there is no hover (touch), always.
 // A named group: the shadcn <Sidebar> is itself a plain `group`.
 const ACTIONS =
-  "flex shrink-0 items-center opacity-0 transition-opacity focus-within:opacity-100 group-hover/row:opacity-100 [@media(hover:none)]:opacity-100 [@media(pointer:coarse)]:gap-1";
+  "flex shrink-0 items-center opacity-0 transition-opacity focus-within:opacity-100 group-hover/row:opacity-100 [@media(hover:none)]:opacity-100 [@media(pointer:coarse)]:gap-2";
 
 function TreeItem({ node, depth }: { node: NoteNode; depth: number }) {
   const { childrenOf, activeId, isExpanded, toggleExpanded, addPage, removePage } = useNotes();
@@ -418,9 +494,12 @@ function TreeItem({ node, depth }: { node: NoteNode; depth: number }) {
   const title = node.title.trim() || "Untitled";
   const zone = drop && drop.id === node.id ? drop.zone : null;
   const dragging = dragId === node.id;
+  const { tabId, onFocusRow } = useContext(TreeNavContext);
+  // Out of the tab order unless this is the tree's one stop.
+  const tab = node.id === tabId ? 0 : -1;
 
   return (
-    <SidebarMenuItem>
+    <SidebarMenuItem aria-level={depth + 1}>
       <div
         draggable
         onDragStart={(event) => {
@@ -464,19 +543,27 @@ function TreeItem({ node, depth }: { node: NoteNode; depth: number }) {
             size="icon"
             aria-label={open ? `Collapse ${title}` : `Expand ${title}`}
             aria-expanded={open}
+            // From the keyboard, Right and Left open and close the page.
+            tabIndex={-1}
             onClick={() => toggleExpanded(node.id)}
             className={ROW_ICON}
           >
             <ChevronRight className={cn("transition-transform duration-150", open && "rotate-90")} />
           </Button>
         ) : (
-          <span className="w-6 shrink-0 [@media(pointer:coarse)]:w-9" aria-hidden />
+          <span className="w-6 shrink-0 [@media(pointer:coarse)]:w-10" aria-hidden />
         )}
         <Link
           href={href(`/${node.id}`)}
           {...PREFETCH_ON_HOVER}
           draggable={false}
           aria-current={active ? "page" : undefined}
+          // Read as "Weekend trip, link, collapsed", so sub-pages aren't a surprise.
+          aria-expanded={hasKids ? open : undefined}
+          tabIndex={tab}
+          data-tree-id={node.id}
+          data-level={depth + 1}
+          onFocus={() => onFocusRow(node.id)}
           className={cn(
             "flex h-8 min-w-0 flex-1 items-center gap-2 rounded-md outline-none ring-sidebar-ring focus-visible:ring-2",
             COARSE_ROW
@@ -491,12 +578,13 @@ function TreeItem({ node, depth }: { node: NoteNode; depth: number }) {
             size="icon"
             aria-label={`Move ${title} to trash`}
             title="Move to trash"
+            tabIndex={tab}
             onClick={() => removePage(node.id)}
             className={ROW_ICON}
           >
             <Trash2 />
           </Button>
-          <AddButton label={`Add a page inside ${title}`} onAdd={() => addPage(node.id)} />
+          <AddButton label={`Add a page inside ${title}`} onAdd={() => addPage(node.id)} tabIndex={tab} />
         </div>
       </div>
 

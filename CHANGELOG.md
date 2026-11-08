@@ -27,6 +27,16 @@ All notable changes to note-scion are listed here. The format follows
   instead of Ctrl K, hover and drag.
 - The conflict bar says the page changed "in another tab or by Claude" rather than
   "probably by Claude".
+- The page tree is one stop in the tab order, with arrow keys to move, open and close
+  pages, and each page link says whether it's expanded. A "Skip to page" link goes
+  straight to the page title.
+- In the trash, Restore buttons name their page, focus moves to the next page after a
+  restore or delete, and a screen reader hears what happened. Cancelling a confirm
+  returns focus to the button that opened it.
+- The red of destructive buttons and error text is darker in light mode (#DC2626), and
+  red buttons in dark mode use dark text, so both read at 4.5:1 or more.
+- Sidebar row buttons are 40px on touch screens, with more room between trash and +.
+- Screen readers read an `@` date as "Tomorrow", not "at Tomorrow".
 - An `@` date more than a day away shows its full date, "November 8, 2026", instead of
   "Nov 8". Yesterday, today and tomorrow still read as words.
 
@@ -36,6 +46,8 @@ All notable changes to note-scion are listed here. The format follows
   screen. They open above the line when there's more room there, including above a
   phone's keyboard.
 - A long save status no longer overlaps the breadcrumb of a top-level page on phones.
+- A page restored in the trash and deleted again while the trash was open now shows up
+  there again.
 - The MCP tools now say that a page created inside another isn't linked from the parent's
   body, and that an `@` date never links to a page, so Claude adds a real sub-page link
   instead of a date.

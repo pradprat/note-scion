@@ -93,9 +93,24 @@ function ShellBody({
 
   return (
     <ShellContext.Provider value={{ openSwitcher, modKey }}>
+      {/* First stop for the keyboard: past the page tree, straight to the page title. */}
+      <a
+        href="#main"
+        onClick={(event) => {
+          const title = document.querySelector<HTMLElement>("#main [aria-label='Page title']");
+          if (!title) return;
+          event.preventDefault();
+          title.focus();
+        }}
+        className="sr-only focus:not-sr-only focus:fixed focus:left-3 focus:top-2 focus:z-50 focus:rounded-md focus:border focus:bg-background focus:px-3 focus:py-2 focus:text-sm focus:font-medium focus:shadow-md focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 focus:ring-offset-background"
+      >
+        Skip to page
+      </a>
       <Sidebar />
       {/* The main column scrolls on its own, so the sidebar and top bar stay put. */}
-      <SidebarInset className="min-h-0 min-w-0 overflow-y-auto">{children}</SidebarInset>
+      <SidebarInset id="main" tabIndex={-1} className="min-h-0 min-w-0 overflow-y-auto outline-none">
+        {children}
+      </SidebarInset>
     </ShellContext.Provider>
   );
 }

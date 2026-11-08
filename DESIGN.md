@@ -10,7 +10,7 @@ colors:
   paper-white: "#FFFFFF"
   pale-rule: "#D5DEE7"
   lifted-pencil: "#8E9EAF"
-  signal-red: "#EF4444"
+  signal-red: "#DC2626"
 typography:
   display:
     fontFamily: "Instrument Sans, ui-sans-serif, system-ui, sans-serif"
@@ -224,9 +224,11 @@ the other way (see the Dark-Mode Inversion Rule below).
   It sits between Frost Paper and Slate Pencil, so lines still show on the sidebar.
 
 ### Status
-- **Signal Red** (#EF4444): destructive buttons, the trash-delete hover, and the save
-  status when there's a conflict or a page is missing. Chosen over shadcn's dark-mode red
-  because error text in it reads at about 5:1 on Night Ink.
+- **Signal Red** (#DC2626 in light mode, #EF4444 in dark mode): destructive buttons, the
+  trash-delete hover, error text, and the save status when there's a conflict or a page
+  is missing. In light mode it reads at 4.8:1 as text on white and carries white text as
+  a fill. In dark mode the lighter red reads at about 5:1 as text on Night Ink, and as a
+  fill it carries Night Ink text (5.2:1), the same inversion as the primary button.
 
 ### Named Rules
 **The Dark-Mode Inversion Rule.** Dark mode is not a separate palette. It's the same five
@@ -353,6 +355,13 @@ Precise and plain: shadcn's button at exact sizes, with no custom shapes.
   and a chevron to expand nested pages. Hover and selection fill with Pale Rule (Graphite
   in dark mode), and the selected row also turns weight 500. Trash, Connected apps and
   Log out sit at the bottom, above a hairline.
+- **Page tree from the keyboard:** one stop in the tab order, like a file tree. Up and
+  Down move between visible pages, Right opens a page or steps into it, Left closes it or
+  steps out to its parent, Home and End jump to the ends. Each row's link says whether
+  it's expanded, and its list item carries its level. Only the focused row's trash and +
+  buttons take Tab.
+- **Skip link:** "Skip to page" is the first stop on every screen, shown on focus at the
+  top left, and lands in the page title.
 - **Top bar:** 48px, on the page color, with no border. On the left is a breadcrumb of
   emoji and title per page, where ancestors shrink before the current page does. On
   the right are the save status and the page's actions.
