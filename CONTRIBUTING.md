@@ -35,13 +35,18 @@ bun dev
    ```sh
    bun run typecheck
    bun run lint
+   bun run test
    bun run build
    ```
+
+   `bun run test` needs no database: the MCP endpoint and the save logic run against an
+   in-memory fake (`tests/support/fake-db.mts`). If you change a query in `src/lib/db.ts`
+   or `src/lib/oauth.ts`, update the fake to match, or the tests will say they don't know it.
 
 5. Open a pull request that says what changed and how you tested it. Screenshots help for
    anything visible.
 
-CI runs the same three checks on every pull request.
+CI runs the same four checks on every pull request.
 
 ## Things to keep in mind
 
