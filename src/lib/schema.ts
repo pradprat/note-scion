@@ -6,6 +6,7 @@ import { TableKit } from "@tiptap/extension-table";
 import { DateMention } from "./date-mention";
 import { PageLink } from "./page-link";
 import { Toggle, ToggleSummary } from "./toggle";
+import { Database } from "./database";
 
 /**
  * The block and mark types a note can hold. Shared by the browser editor and the
@@ -40,4 +41,6 @@ export const noteExtensions = [
   // Toggles read and write as <details> over MCP (see toggle.ts).
   ToggleSummary,
   Toggle,
+  // Databases are one block holding their rows as JSON; in Markdown, a fenced block (see database.ts).
+  Database,
 ];

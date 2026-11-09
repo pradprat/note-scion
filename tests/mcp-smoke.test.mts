@@ -321,6 +321,43 @@ describe("tools", () => {
     const id = idIn((await call("create_page", { title: "Round trip", markdown: sample })).text);
     expect(bodyOf((await call("read_page", { id })).text)).toBe(sample);
   });
+
+  test("a database block survives an append and a read_page then replace round trip", async () => {
+    // Written loosely, the way Claude would; what read_page hands back is the canonical form,
+    // so the checks compare against that rather than against this text.
+    const written = [
+      "Before",
+      "",
+      "```note-database",
+      JSON.stringify({
+        title: "Tasks",
+        properties: [
+          { name: "Name", type: "title" },
+          { name: "Status", type: "status", options: [{ name: "Not started", group: "todo" }, { name: "Done", group: "done" }] },
+          { name: "Score", type: "number" },
+        ],
+        rows: [{ id: "r1", cells: { Name: "Write the spec", Status: "Not started", Score: 3 } }],
+        views: { active: "board", groupBy: "Status" },
+      }),
+      "```",
+    ].join("\n");
+    const id = idIn((await call("create_page", { title: "With a database", markdown: written })).text);
+    // It is stored as a database node, not as an ordinary code block.
+    expect(JSON.stringify(db.page(id)?.content)).toContain('"type":"database"');
+    const first = bodyOf((await call("read_page", { id })).text);
+    expect(first).toContain("```note-database");
+    expect(first).toContain("Write the spec");
+
+    // Append adds after the database and leaves it exactly as it was.
+    await call("update_page", { id, markdown: "After", mode: "append" });
+    const appended = bodyOf((await call("read_page", { id })).text);
+    expect(appended).toBe(`${first}\n\nAfter`);
+
+    // read_page then update_page (replace) with the text as read gives back the same database.
+    await call("update_page", { id, markdown: appended });
+    expect(bodyOf((await call("read_page", { id })).text)).toBe(appended);
+    expect(JSON.stringify(db.page(id)?.content)).toContain('"type":"database"');
+  });
 });
 
 describe("saving and conflicts (updatePage)", () => {

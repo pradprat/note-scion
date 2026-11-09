@@ -45,6 +45,8 @@ see one arrive.
 
 - **Block editor** built on Tiptap: headings, lists, to-dos, toggles, quotes, code blocks
   and dividers, from the `/` menu or Markdown shortcuts. Drag any block by its handle.
+- **Databases**: a block of rows with typed properties, as a table or a board, inside any
+  page. Claude reads and writes it as JSON in a fenced block.
 - **Dates that stay true**: type `@` for Today, Tomorrow, "next friday" or any date. They
   read as relative dates and stay correct as the days pass.
 - **Autosave with conflict detection**: edits save as you type. If Claude or another tab
