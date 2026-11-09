@@ -36,6 +36,11 @@ export interface FakeDb {
   queries: string[];
   /** Cache tags db.ts asked Next to drop. */
   revalidated: string[];
+  /**
+   * Runs just before each statement is handled, to make something else happen first: an
+   * owner's save landing between a read and the write that follows it. Cleared by reset().
+   */
+  beforeStatement: ((statement: string) => void | Promise<void>) | null;
   /** A page as stored, for assertions that must not go through the code under test. */
   page(id: string): FakeRow | undefined;
   reset(): void;
@@ -57,8 +62,10 @@ export function installFakeDb(): FakeDb {
     accessTokens: new Map(),
     queries: [],
     revalidated: [],
+    beforeStatement: null,
     page: (id) => db.pages.find((row) => row.id === id),
     reset() {
+      db.beforeStatement = null;
       db.pages.length = 0;
       db.accessTokens.clear();
       db.queries.length = 0;
@@ -201,12 +208,22 @@ export function installFakeDb(): FakeDb {
     ],
   ];
 
-  function fakeSql(strings: TemplateStringsArray, ...params: Params): Promise<unknown[]> {
+  async function fakeSql(strings: TemplateStringsArray, ...params: Params): Promise<unknown[]> {
     const text = strings.reduce((out, part, i) => out + (i ? `$${i}` : "") + part, "").replace(/\s+/g, " ").trim();
     db.queries.push(text);
+    const hook = db.beforeStatement;
+    if (hook) {
+      // Off while it runs, so a write the hook makes isn't hooked in turn.
+      db.beforeStatement = null;
+      try {
+        await hook(text);
+      } finally {
+        db.beforeStatement = hook;
+      }
+    }
     const match = statements.find(([pattern]) => pattern.test(text));
     if (!match) throw new Error(`fake sql: no handler for this statement. Add one to tests/support/fake-db.mts:\n${text}`);
-    return Promise.resolve(match[1](params));
+    return match[1](params);
   }
 
   mock.module("@neondatabase/serverless", () => ({
