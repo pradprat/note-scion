@@ -109,6 +109,10 @@ All notable changes to note-scion are listed here. The format follows
   to-dos.
 - Enter in the quick switcher opens a page found by its text instead of making a new
   page named after the search.
+- Claude adding to the end of a page (`update_page` in append mode) no longer overwrites a
+  save you make at that moment. It reads the page again and adds to what you saved, and
+  after three tries in a row it stops with an error and writes nothing, telling Claude to
+  read the page and retry.
 
 ## [1.0.0] - 2026-11-06
 

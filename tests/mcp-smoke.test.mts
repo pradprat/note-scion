@@ -397,10 +397,94 @@ describe("saving and conflicts (updatePage)", () => {
     expect(await updatePage(id, {}, "owner")).toEqual({ status: "saved", updatedAt: version });
   });
 
-  // Known gap, left as a note rather than a failing test: update_page in append mode reads
-  // the page and writes it back without passing the version it read, so an owner save that
-  // lands between the two is overwritten without a conflict. See the report to the lead.
-  test.todo("update_page append passes the version it read, so a save in between becomes a conflict");
+});
+
+describe("update_page append while the owner saves", () => {
+  const WRITE = "update notes_pages set title = case";
+  const LOAD = "select id, parent_id, title, icon, position, content, updated_at";
+  const paragraph = (text: string) => ({ type: "doc", content: [{ type: "paragraph", content: [{ type: "text", text }] }] });
+  const count = (from: number, prefix: string) => db.queries.slice(from).filter((q) => q.startsWith(prefix)).length;
+
+  /**
+   * An owner's save, as made in the app, that lands just before each of the next `times`
+   * writes the tool makes: after the tool has read the page and before it writes it back.
+   */
+  function ownerSavesBeforeWrite(id: string, times: number) {
+    let saved = 0;
+    db.beforeStatement = async (statement) => {
+      if (saved >= times || !statement.startsWith(WRITE)) return;
+      saved++;
+      await updatePage(id, { content: paragraph(`owner edit ${saved}`) }, "owner");
+    };
+  }
+
+  async function page(body = "base") {
+    return idIn((await call("create_page", { title: "Page", markdown: body })).text);
+  }
+
+  test("a save that lands between the read and the write of an append is kept, not overwritten", async () => {
+    const id = await page();
+    ownerSavesBeforeWrite(id, 1);
+    const reply = await call("update_page", { id, markdown: "claude line", mode: "append" });
+    expect(reply.isError).toBe(false);
+    // The owner's edit replaced "base", and Claude's line went after it.
+    expect(bodyOf((await call("read_page", { id })).text)).toBe("owner edit 1\n\nclaude line");
+  });
+
+  test("after a conflict it reads the page again and appends once, on the second attempt", async () => {
+    const id = await page();
+    ownerSavesBeforeWrite(id, 1);
+    const from = db.queries.length;
+    const reply = await call("update_page", { id, markdown: "claude line", mode: "append", title: "Retitled" });
+    expect(reply.text).toBe('Updated "Retitled" (title, content).');
+    expect(count(from, LOAD)).toBe(2);
+    const stored = await loadPage(id);
+    expect(stored?.title).toBe("Retitled");
+    expect(bodyOf((await call("read_page", { id })).text).split("claude line")).toHaveLength(2); // once
+    expect(stored?.mcpEdit).not.toBeNull();
+  });
+
+  test("when the page changes on every attempt it gives up after three, with an error and nothing written", async () => {
+    const id = await page();
+    ownerSavesBeforeWrite(id, 99);
+    const from = db.queries.length;
+    const reply = await call("update_page", { id, markdown: "claude line", mode: "append", title: "Retitled" });
+    expect(reply.isError).toBe(true);
+    expect(reply.text).toContain("3 times");
+    expect(reply.text).toContain("read_page");
+    expect(count(from, LOAD)).toBe(3);
+    const stored = await loadPage(id);
+    expect(stored?.title).toBe("Page"); // the title in the same call wasn't applied either
+    expect(bodyOf((await call("read_page", { id })).text)).toBe("owner edit 3");
+  });
+
+  test("replace is still an explicit overwrite, in one attempt", async () => {
+    const id = await page();
+    ownerSavesBeforeWrite(id, 1);
+    const from = db.queries.length;
+    const reply = await call("update_page", { id, markdown: "replacement" });
+    expect(reply.isError).toBe(false);
+    expect(count(from, LOAD)).toBe(1);
+    expect(bodyOf((await call("read_page", { id })).text)).toBe("replacement");
+  });
+
+  test("a change of title or icon alone sends no version either", async () => {
+    const id = await page();
+    ownerSavesBeforeWrite(id, 1);
+    expect((await call("update_page", { id, title: "New title", icon: "N" })).isError).toBe(false);
+    const stored = await loadPage(id);
+    expect([stored?.title, stored?.icon]).toEqual(["New title", "N"]);
+  });
+
+  test("an append to a page trashed in between is an error, not a silent success", async () => {
+    const id = await page();
+    db.beforeStatement = (statement) => {
+      if (statement.startsWith(WRITE)) db.page(id)!.deleted_at = new Date();
+    };
+    const reply = await call("update_page", { id, markdown: "claude line", mode: "append" });
+    expect(reply.isError).toBe(true);
+    expect(reply.text).toContain("No page with id");
+  });
 });
 
 describe("GET", () => {

@@ -39,6 +39,8 @@ const MAX_TITLE = 500;
 const TITLE_DATES = "A date in it is written @YYYY-MM-DD and reads as Today, Yesterday or Tomorrow, or in full, as in a page body: a daily page can be titled @2026-11-12.";
 const MAX_ICON = 16;
 const MAX_MARKDOWN = 500_000;
+/** Tries an append makes in all when the page keeps changing under it (the first one included). */
+const APPEND_ATTEMPTS = 3;
 
 /**
  * Accepts either an OAuth access token issued for this endpoint (claude.ai and other
@@ -221,18 +223,29 @@ function buildServer(origin: string, writer: Writer): McpServer {
       annotations: { destructiveHint: true },
     },
     async ({ id, title, icon, markdown, mode }) => {
-      const page = await loadPage(id); // read-modify-write: never from the cache
-      if (!page) return fail(`No page with id ${id}.`);
-      const patch: NotePatch = {};
-      if (title !== undefined) patch.title = title;
-      if (icon !== undefined) patch.icon = icon;
-      if (markdown !== undefined) {
-        const body = fromMarkdown(markdown);
-        patch.content = mode === "append" ? appendContent(page.content, body) : body;
+      // An append writes back what it read, so it only lands on the version it read: a save
+      // made in between (the owner's, in the app) makes it read again rather than be lost.
+      // Replace is an explicit overwrite and sends no version.
+      const append = mode === "append" && markdown !== undefined;
+      for (let attempt = 1; attempt <= APPEND_ATTEMPTS; attempt++) {
+        const page = await loadPage(id); // read-modify-write: never from the cache
+        if (!page) return fail(`No page with id ${id}.`);
+        const patch: NotePatch = {};
+        if (title !== undefined) patch.title = title;
+        if (icon !== undefined) patch.icon = icon;
+        if (markdown !== undefined) {
+          const body = fromMarkdown(markdown);
+          patch.content = mode === "append" ? appendContent(page.content, body) : body;
+        }
+        if (!Object.keys(patch).length) return fail("Nothing to change: pass title, icon or markdown.");
+        const result = await updatePage(id, patch, writer, append ? page.updatedAt : null);
+        if (result.status === "conflict") continue;
+        if (result.status === "missing" && append) return fail(`No page with id ${id}.`);
+        return text(`Updated "${(title ?? page.title) || "Untitled"}" (${Object.keys(patch).join(", ")}).`);
       }
-      if (!Object.keys(patch).length) return fail("Nothing to change: pass title, icon or markdown.");
-      await updatePage(id, patch, writer);
-      return text(`Updated "${(title ?? page.title) || "Untitled"}" (${Object.keys(patch).join(", ")}).`);
+      return fail(
+        `Nothing was added: the page was changed by someone else ${APPEND_ATTEMPTS} times in a row while appending. Read the page again with read_page, then retry.`
+      );
     }
   );
 
