@@ -14,5 +14,7 @@ jobs:
       - run: bun install --frozen-lockfile
       - run: bun run typecheck
       - run: bun run lint
+      # No database: the MCP route and the save logic run against an in-memory fake.
+      - run: bun run test
       # The build needs no database: every page that reads data is rendered on request.
       - run: bun run build

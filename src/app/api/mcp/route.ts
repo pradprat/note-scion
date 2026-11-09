@@ -287,6 +287,13 @@ async function handle(request: Request): Promise<Response> {
       "www-authenticate": `Bearer resource_metadata="${metadata}", scope="${SCOPE}"`,
     });
   }
+  // A stateless server has no notification stream to offer, and an open GET would hold
+  // this function until Vercel's 300 s timeout. The spec allows 405 for that.
+  if (request.method === "GET") {
+    return json({ error: "method_not_allowed", error_description: "This server has no GET stream" }, 405, {
+      allow: "POST, DELETE, OPTIONS",
+    });
+  }
   // Stateless: a fresh server and transport per request, no session ids.
   const server = buildServer(issuerFor(request), writer);
   const transport = new WebStandardStreamableHTTPServerTransport({

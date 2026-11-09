@@ -32,6 +32,7 @@
     "start": "next start",
     "lint": "next lint",
     "typecheck": "tsc --noEmit",
+    "test": "bun test",
     "db:migrate": "bun scripts/migrate.mjs"
   },
   "dependencies": {
