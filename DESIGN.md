@@ -436,6 +436,15 @@ The page is the product, and its details are the system's distinctive work.
 - **To-dos:** native checkboxes in the foreground color. A checked item turns muted and
   is struck through.
 - **Quote:** a 3px Night Ink rule on the left with 16px padding.
+- **Toggle:** a 16px chevron in a 24px gutter that turns down while the toggle is open, and
+  a summary that reads as text or as Heading 1 to 3. The blocks inside align with the
+  summary's text. Closed, only the summary shows.
+- **Database:** a block with a title, then Table and Board tabs on a hairline. Rows are
+  hairlines, headers are 12px muted type with a property icon, and a column's options are
+  quiet Frost Paper chips: a status leads with an outline, half-dot or check instead of a
+  color. The board's columns are Frost Paper at half strength with white cards. Row
+  actions appear on hover and are always shown on touch screens, where a card's "Move to"
+  is a native menu because drag doesn't work there.
 - **Code:** DM Mono on Frost Paper with a hairline border, 6px radius for blocks and 4px
   for inline code.
 - **Placeholder:** shown only in the empty block holding the cursor, in muted text.

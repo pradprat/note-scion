@@ -35,8 +35,9 @@ MCP plugin, or plain Markdown files:
 - **Shared with Claude.** The owner and Claude edit the same pages. Autosave checks for
   conflicts, so an edit from the app and an edit over MCP never silently overwrite each
   other; the owner chooses which version to keep.
-- **Deliberately small.** It's built for one person, with no team features and no
-  databases or other heavy features. Anything outside that scope is left out on purpose.
+- **Deliberately small.** It's built for one person, with no team features and no heavy
+  features. A database is one block inside a page, with typed properties, a table and a
+  board; relations, formulas and rows that are pages of their own are left out on purpose.
 - **Free to run.** It fits inside the Vercel Hobby and Neon free tiers, with guards that
   stop strangers from using up those limits.
 
@@ -57,8 +58,9 @@ MCP plugin, or plain Markdown files:
 
 ## Capabilities and Constraints
 
-- **Today's features:** block editor (headings, lists, to-dos, quotes, code blocks,
-  dividers, drag handles, Markdown shortcuts); nested pages with drag-and-drop and
+- **Today's features:** block editor (headings, lists, to-dos, toggles, quotes, code
+  blocks, dividers, tables, database blocks with a table and a board view, drag handles,
+  Markdown shortcuts); nested pages with drag-and-drop and
   sub-page blocks; relative `@` dates; full-text quick switcher; autosave with conflict
   detection; trash with 30-day retention and undo; a Connected apps view that lists and
   revokes OAuth clients; light and dark themes that follow the system.
@@ -103,8 +105,8 @@ MCP plugin, or plain Markdown files:
 2. **Claude is a second author, not a feature.** Every surface has to hold up when Claude
    edits the same page, and no edit from either side may be lost silently.
 3. **Small on purpose.** Choose depth in writing, finding and organising over breadth.
-   A feature that brings in teams, databases or admin work has to justify itself against
-   the product's scope.
+   A feature that brings in teams, linked databases or admin work has to justify itself
+   against the product's scope.
 4. **Calm and fast.** The workspace stays out of the way: instant navigation, no noise,
    and quiet feedback.
 5. **Keyboard and phone are both first-class.** A flow that works only with a mouse, or

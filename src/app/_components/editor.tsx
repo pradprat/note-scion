@@ -15,6 +15,7 @@ import { noteExtensions } from "@/lib/schema";
 import { PageLink } from "@/lib/page-link";
 import { DateMention } from "@/lib/date-mention";
 import { Toggle } from "@/lib/toggle";
+import { Database } from "@/lib/database";
 import {
   Bold,
   Check,
@@ -36,6 +37,7 @@ import { SlashCommand, slashKey } from "./slash-command";
 import { PageBlock } from "./page-link-view";
 import { DateChip, DateCommand, dateKey } from "./date-mention";
 import { ToggleBehavior, ToggleBlock } from "./toggle-view";
+import { DatabaseBlock } from "./database/database-block";
 
 /**
  * Up from the first line, or Backspace at the very start of a leading paragraph, hands the
@@ -92,11 +94,13 @@ export default function NoteEditor({
     // Required with server rendering: the editor only exists on the client.
     immediatelyRender: false,
     extensions: [
-      // The shared sub-page block, date and toggle, with editor-only views (and "/page") on top.
+      // The shared sub-page block, date, toggle and database, with editor-only views (and "/page") on top.
       ...noteExtensions.filter(
-        (extension) => extension !== PageLink && extension !== DateMention && extension !== Toggle
+        (extension) =>
+          extension !== PageLink && extension !== DateMention && extension !== Toggle && extension !== Database
       ),
       DateChip,
+      DatabaseBlock,
       ToggleBlock,
       ToggleBehavior,
       PageBlock.configure({

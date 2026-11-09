@@ -5,6 +5,7 @@ import type { Editor, Range } from "@tiptap/core";
 import type { SuggestionProps } from "@tiptap/suggestion";
 import {
   Code2,
+  Database,
   FileText,
   Heading1,
   Heading2,
@@ -127,6 +128,13 @@ export const SLASH_ITEMS: SlashItem[] = [
     icon: Table,
     run: (editor, range) =>
       editor.chain().focus().deleteRange(range).insertTable({ rows: 3, cols: 3, withHeaderRow: true }).run(),
+  },
+  {
+    title: "Database",
+    description: "Rows with properties, as a table or a board",
+    keywords: ["table", "board", "kanban", "tracker", "tasks", "list", "view", "db"],
+    icon: Database,
+    run: (editor, range) => editor.chain().focus().deleteRange(range).insertDatabase().run(),
   },
   {
     title: "Code",

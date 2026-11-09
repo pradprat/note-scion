@@ -8,6 +8,14 @@ All notable changes to note-scion are listed here. The format follows
 
 ### Added
 
+- Databases. Type `/database` for a block of rows with typed properties (title, text, select,
+  status, date, checkbox and number), shown as a Table or a Board with tabs on the block. The
+  table edits cells in place; the board groups the rows by a select or status property, and a
+  card moves by dragging or by its "Move to" menu. Open a row for all of it, and add,
+  rename or delete properties and their options from a column's header. A database lives
+  in the page itself, so it needs no new tables, and saves and undoes like the rest of the
+  page. Over MCP it is a fenced `note-database` block of JSON that reads and writes back
+  unchanged, and appending to a page never touches it.
 - Toggles. Type `/toggle` for a toggle list or a toggle heading 1 to 3, or `>` and a space
   at the start of a line (`#`, `##` or `###` and then `>` for a heading). "Turn into" in
   the `/` menu makes a line you've already written into one. The arrow, or Ctrl or ⌘

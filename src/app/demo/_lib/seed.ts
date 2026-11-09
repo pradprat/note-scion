@@ -1,9 +1,47 @@
 import { fromMarkdown } from "@/lib/markdown";
 import { toISODate } from "@/lib/dates";
+import { databaseJson } from "@/lib/database";
+import { normalizeDatabase } from "@/lib/database-model";
 import { DEPLOY_URL } from "@/lib/links";
 import type { NotePage } from "@/lib/types";
 
 type Sample = Omit<NotePage, "updatedAt" | "mcpEdit">;
+
+/** A day this many days from today, as a database's date cell stores it. */
+function isoDay(offset: number): string {
+  return day(offset).slice(1);
+}
+
+/** The sample database, as the fenced block Claude would write for it (see src/lib/database.ts). */
+function sampleDatabase(): string {
+  const database = normalizeDatabase({
+    title: "Launch tasks",
+    properties: [
+      { name: "Name", type: "title" },
+      {
+        name: "Status",
+        type: "status",
+        options: [
+          { name: "Not started", group: "todo" },
+          { name: "In progress", group: "doing" },
+          { name: "Done", group: "done" },
+        ],
+      },
+      { name: "Priority", type: "select", options: [{ name: "High" }, { name: "Medium" }, { name: "Low" }] },
+      { name: "Due", type: "date" },
+    ],
+    rows: [
+      { id: "demo-1", cells: { Name: "Write the launch post", Status: "In progress", Priority: "High", Due: isoDay(2) } },
+      { id: "demo-2", cells: { Name: "Review the open pull requests", Status: "Not started", Priority: "Medium", Due: isoDay(1) } },
+      { id: "demo-3", cells: { Name: "Plan the demo walkthrough", Status: "Not started", Priority: "Low", Due: isoDay(9) } },
+      { id: "demo-4", cells: { Name: "Fix the login redirect", Status: "Done", Priority: "High", Due: isoDay(-1) } },
+      { id: "demo-5", cells: { Name: "Update the README", Status: "Done", Priority: "Medium" } },
+      { id: "demo-6", cells: { Name: "Collect feedback", Status: "In progress", Priority: "Medium", Due: isoDay(5) } },
+    ],
+    views: { active: "table", groupBy: "Status" },
+  });
+  return "```note-database\n" + databaseJson(database) + "\n```";
+}
 
 /** A date this many days from today, as the editor's date chip writes it. */
 function day(offset: number): string {
@@ -24,6 +62,7 @@ export function samplePages(touch = false): { pages: Sample[]; claudePageId: str
     welcome: crypto.randomUUID(),
     blocks: crypto.randomUUID(),
     dates: crypto.randomUUID(),
+    tasks: crypto.randomUUID(),
     claude: crypto.randomUUID(),
     trip: crypto.randomUUID(),
     packing: crypto.randomUUID(),
@@ -76,6 +115,8 @@ This is a live demo. It runs entirely in your browser: what you write here is sa
 [Writing in blocks](/${id.blocks})
 
 [Dates that stay true](/${id.dates})
+
+[Tracking tasks](/${id.tasks})
 
 **Reset demo** at the bottom of the sidebar puts the sample pages back at any time.
 
@@ -154,6 +195,20 @@ Dates read the way you'd say them, and stay right as the days pass. Something wr
 - Started this list ${day(-2)}
 
 Type \`@\` followed by **today**, **tomorrow**, **next monday**, **in 3 days** or a date like **march 4**. Dates work in titles too.
+`
+    ),
+    page(
+      "tasks",
+      "welcome",
+      3,
+      "✅",
+      "Tracking tasks",
+      `
+A database is a block of rows with typed properties. Type \`/database\` to add one. This one shows the same rows two ways: switch between **Table** and **Board** with the tabs. ${touch ? "On the board, the arrows on a card move it to another column." : "On the board, drag a card to another column, or use the arrows on the card."}
+
+${sampleDatabase()}
+
+Add a property with the + at the end of the header, and open a row to see all of it. Select and status properties keep their own options: click a column's name to rename, add or reorder them. Claude reads and writes a database as one block of JSON, so you can ask it to add a row or move tasks along.
 `
     ),
     page(
