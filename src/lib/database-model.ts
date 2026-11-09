@@ -224,6 +224,22 @@ export function normalizeDatabase(input: unknown): DatabaseData {
   return { title, properties, rows, views: groupBy ? { active, groupBy: groupBy.name } : { active } };
 }
 
+/** What typed text means in a number field: nothing, a number, or not a number. */
+export type NumberInput = { kind: "empty" } | { kind: "valid"; value: number } | { kind: "invalid" };
+
+/**
+ * Reads the text of a number field. Only plain decimals count (a sign, digits, a point,
+ * an exponent), so "0x10", "Infinity" and "12x" are not numbers. Typing something that
+ * isn't a number must never be taken for clearing the field: only empty text clears it.
+ */
+export function parseNumberInput(text: string): NumberInput {
+  const trimmed = text.trim();
+  if (!trimmed) return { kind: "empty" };
+  if (!/^[+-]?(\d+\.?\d*|\.\d+)(e[+-]?\d+)?$/i.test(trimmed)) return { kind: "invalid" };
+  const value = Number(trimmed);
+  return Number.isFinite(value) ? { kind: "valid", value } : { kind: "invalid" };
+}
+
 // --- Reading ---------------------------------------------------------------------------
 
 export const cellOf = (row: DbRow, name: string): CellValue | undefined =>

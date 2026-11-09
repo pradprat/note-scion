@@ -20,6 +20,7 @@ import { appendContent, fromMarkdown, toMarkdown } from "../src/lib/markdown";
 import { toAttrs } from "../src/lib/database";
 import { createStableKeys } from "../src/app/_components/database/stable-keys";
 import {
+  parseNumberInput,
   addProperty,
   addRow,
   cleanName,
@@ -238,6 +239,20 @@ check("database: nothing at all becomes an empty database", same(normalizeDataba
   check("keys: a rename keeps the column's key", keys.keyOf("Hours") === before[3]);
   check("keys: a name added later gets a new key", keys.keyOf("Effort") !== before[3] && keys.keyOf("Effort") !== keys.keyOf("Hours"));
   check("keys: all keys are distinct", new Set(["Name", "Status", "Hours", "Effort"].map((n) => keys.keyOf(n))).size === 4);
+}
+
+// Bug fix: a typo in a number field must never read as "clear the number".
+{
+  const kind = (text: string) => parseNumberInput(text).kind;
+  const value = (text: string) => { const r = parseNumberInput(text); return r.kind === "valid" ? r.value : undefined; };
+  check("number input: '12' is 12", value("12") === 12);
+  check("number input: '12x' is invalid, not empty", kind("12x") === "invalid");
+  check("number input: 'x' is invalid", kind("x") === "invalid");
+  check("number input: empty and blank text clear", kind("") === "empty" && kind("   ") === "empty");
+  check("number input: signs, decimals and exponents are numbers", value("-3.5") === -3.5 && value("+2") === 2 && value(".5") === 0.5 && value("1.") === 1 && value("1e3") === 1000 && value(" 7 ") === 7);
+  check("number input: zero is a number, not empty", value("0") === 0 && kind("0") === "valid");
+  check("number input: '-', '.', '1e' are invalid while typing", kind("-") === "invalid" && kind(".") === "invalid" && kind("1e") === "invalid");
+  check("number input: hex, Infinity and overflow are invalid", kind("0x10") === "invalid" && kind("Infinity") === "invalid" && kind("1e999") === "invalid" && kind("1,5") === "invalid");
 }
 
 if (failures) {

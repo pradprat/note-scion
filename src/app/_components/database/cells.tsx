@@ -5,7 +5,7 @@ import { Check, Circle, CircleCheck, CircleDot, X } from "lucide-react";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { cn } from "@/lib/utils";
 import { dateLabel as relativeLabel, parseISODate } from "@/lib/dates";
-import { isOptionType, type CellValue, type DbProperty, type StatusGroup } from "@/lib/database-model";
+import { isOptionType, parseNumberInput, type CellValue, type DbProperty, type StatusGroup } from "@/lib/database-model";
 import { openDatePicker } from "../date-picker";
 
 /** A text field that sits in a cell: no box until it has focus. 16px on a phone, so iOS doesn't zoom. */
@@ -88,6 +88,13 @@ export function TextCell({
   );
 }
 
+/**
+ * A number field. What is typed is kept in the field and the stored number changes only
+ * when the text is leaving (blur, Enter, Escape) and is a number or empty: text that is
+ * not a number is marked and, on leaving, replaced by the stored number, so a typo can
+ * never clear a value. Emptying the field on purpose does. One edit is one change, so
+ * one Ctrl+Z takes it back.
+ */
 export function NumberCell({
   value,
   onChange,
@@ -99,25 +106,39 @@ export function NumberCell({
   label: string;
   placeholder?: string;
 }) {
-  const parse = (text: string) => (text.trim() && Number.isFinite(Number(text)) ? Number(text) : null);
-  const [draft, setDraft] = useDraft(
-    value,
-    (text, current) => parse(text) === (current ?? null),
-    (current) => (current === undefined ? "" : String(current))
-  );
+  const show = (number: number | undefined) => (number === undefined ? "" : String(number));
+  const [draft, setDraft] = useState(show(value));
+  // A number changed from outside (undo, an edit from Claude) replaces the text.
+  useEffect(() => setDraft(show(value)), [value]);
+  const parsed = parseNumberInput(draft);
+  const invalid = parsed.kind === "invalid";
+
+  const leave = () => {
+    if (parsed.kind === "invalid") {
+      setDraft(show(value));
+      return;
+    }
+    const next = parsed.kind === "empty" ? null : parsed.value;
+    if (next !== (value ?? null)) onChange(next);
+    else setDraft(show(value));
+  };
+
   return (
     <input
       type="text"
       inputMode="decimal"
       value={draft}
       aria-label={label}
+      aria-invalid={invalid || undefined}
+      title={invalid ? "Not a number. It will go back to the saved number." : undefined}
       placeholder={placeholder}
-      className={cn(CELL_INPUT, "tabular-nums")}
-      onChange={(event) => {
-        setDraft(event.target.value);
-        onChange(parse(event.target.value));
+      className={cn(CELL_INPUT, "tabular-nums", invalid && "text-destructive ring-1 ring-destructive")}
+      onChange={(event) => setDraft(event.target.value)}
+      onBlur={leave}
+      onKeyDown={(event) => {
+        // Escape closes the dialog this may sit in without a blur: keep what was typed first.
+        if (event.key === "Enter" || event.key === "Escape") leave();
       }}
-      onKeyDown={(event) => event.key === "Enter" && event.currentTarget.blur()}
     />
   );
 }
