@@ -6,6 +6,8 @@ All notable changes to note-scion are listed here. The format follows
 
 ## [Unreleased]
 
+## [1.1.0] - 2026-11-09
+
 ### Added
 
 - Databases. Type `/database` for a block of rows with typed properties (title, text, select,
@@ -157,5 +159,6 @@ The first public release.
 - Light and dark themes.
 - One-click deploy to Vercel with Neon; the build creates the tables.
 
-[Unreleased]: https://github.com/pradprat/note-scion/compare/v1.0.0...HEAD
+[Unreleased]: https://github.com/pradprat/note-scion/compare/v1.1.0...HEAD
+[1.1.0]: https://github.com/pradprat/note-scion/compare/v1.0.0...v1.1.0
 [1.0.0]: https://github.com/pradprat/note-scion/releases/tag/v1.0.0
