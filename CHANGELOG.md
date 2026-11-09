@@ -83,6 +83,10 @@ All notable changes to note-scion are listed here. The format follows
 
 ### Fixed
 
+- An authenticated `GET /api/mcp` now gets `405 Method Not Allowed` at once. Before, it
+  opened a notification stream that nothing ever wrote to, and held the function open
+  until Vercel's 300-second timeout. `POST` and `DELETE` work as before, and a request
+  without a token still gets `401`.
 - The `/` and `@` menus no longer cover the line being typed or run off the bottom of the
   screen. They open above the line when there's more room there, including above a
   phone's keyboard.
