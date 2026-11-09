@@ -47,7 +47,8 @@ All notable changes to note-scion are listed here. The format follows
 ### Changed
 
 - `>` and a space now starts a toggle instead of a quote. A quote is `"` and a space, and
-  stays in the `/` menu.
+  stays in the `/` menu. A straight double quote at the start of a line followed by a space
+  now turns the line into a quote block as you type; Ctrl+Z puts the characters back.
 - The sidebar moves with more care. Hiding and showing it slides and settles (260ms in,
   180ms out) instead of a linear 200ms, and its contents fade as it goes. Opening a page
   in the tree grows its sub-pages out of the row, and closing it folds them back. Rows
