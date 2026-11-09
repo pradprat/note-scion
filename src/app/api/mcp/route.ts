@@ -109,7 +109,7 @@ const markdownInput = (what: string) =>
     .string()
     .max(MAX_MARKDOWN)
     .describe(
-      `${what} as Markdown. Supported: # to ### headings, paragraphs, **bold**, *italic*, ~~strike~~, \`code\`, [links](url), - bullets, 1. numbered lists, - [ ] / - [x] to-dos (nestable), > quotes, \`\`\` code blocks and --- dividers.`
+      `${what} as Markdown. Supported: # to ### headings, paragraphs, **bold**, *italic*, ~~strike~~, \`code\`, [links](url), - bullets, 1. numbered lists, - [ ] / - [x] to-dos (nestable), > quotes, \`\`\` code blocks and --- dividers. A toggle (a line that hides the blocks inside it) is HTML: \`<details open><summary>Title</summary>\`, a blank line, the blocks inside as Markdown, a blank line, then \`</details>\`. Leave out \`open\` for a toggle that starts closed. Starting the summary with \`# \`, \`## \` or \`### \` makes a toggle heading, as in \`<summary>## Title</summary>\`; otherwise it is plain. Toggles nest.`
     );
 
 /**
@@ -204,7 +204,7 @@ function buildServer(origin: string, writer: Writer): McpServer {
     {
       title: "Update page",
       description:
-        "Change a page's title, icon or body. The body is replaced by default; set mode to 'append' to add to the end. Omitted fields are left as they are. A line that is only a link to a page, like [Title](/<id>), becomes a sub-page block that shows that page's live title; keep those lines as they are when rewriting a body. Write a date as @YYYY-MM-DD (for example @2026-11-12) to make it a date the app shows as Today, Tomorrow or the date. A date is only a date: it never links to a page, even one titled with that date; link pages with [Title](/<id>).",
+        "Change a page's title, icon or body. The body is replaced by default; set mode to 'append' to add to the end. Omitted fields are left as they are. A line that is only a link to a page, like [Title](/<id>), becomes a sub-page block that shows that page's live title; keep those lines as they are when rewriting a body. Keep <details> toggles as they are too, with their \`open\` attribute, unless asked to change them; read_page shows whether each is open. Write a date as @YYYY-MM-DD (for example @2026-11-12) to make it a date the app shows as Today, Tomorrow or the date. A date is only a date: it never links to a page, even one titled with that date; link pages with [Title](/<id>).",
       inputSchema: {
         id: pageId,
         title: z.string().max(MAX_TITLE).optional().describe(`New title. ${TITLE_DATES}`),

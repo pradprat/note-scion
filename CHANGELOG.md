@@ -8,6 +8,12 @@ All notable changes to note-scion are listed here. The format follows
 
 ### Added
 
+- Toggles. Type `/toggle` for a toggle list or a toggle heading 1 to 3, or `>` and a space
+  at the start of a line (`#`, `##` or `###` and then `>` for a heading). "Turn into" in
+  the `/` menu makes a line you've already written into one. The arrow, or Ctrl or ⌘
+  Enter, opens and closes a toggle, and whether it is open is saved with the page. Any
+  block can go inside, including more toggles. Over MCP a toggle is HTML,
+  `<details open><summary>Title</summary>`, with the blocks inside it as Markdown.
 - After an MCP client edits a page, its save status says which app made the change and
   how long ago ("Claude Code edited 4m ago"), until you edit the page again. Stored in
   two new columns, `notes_pages.mcp_editor` and `mcp_edited_at`, which the build adds.
@@ -32,6 +38,8 @@ All notable changes to note-scion are listed here. The format follows
 
 ### Changed
 
+- `>` and a space now starts a toggle instead of a quote. A quote is `"` and a space, and
+  stays in the `/` menu.
 - The sidebar moves with more care. Hiding and showing it slides and settles (260ms in,
   180ms out) instead of a linear 200ms, and its contents fade as it goes. Opening a page
   in the tree grows its sub-pages out of the row, and closing it folds them back. Rows

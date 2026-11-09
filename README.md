@@ -43,8 +43,8 @@ see one arrive.
 
 **Writing**
 
-- **Block editor** built on Tiptap: headings, lists, to-dos, quotes, code blocks and
-  dividers, from the `/` menu or Markdown shortcuts. Drag any block by its handle.
+- **Block editor** built on Tiptap: headings, lists, to-dos, toggles, quotes, code blocks
+  and dividers, from the `/` menu or Markdown shortcuts. Drag any block by its handle.
 - **Dates that stay true**: type `@` for Today, Tomorrow, "next friday" or any date. They
   read as relative dates and stay correct as the days pass.
 - **Autosave with conflict detection**: edits save as you type. If Claude or another tab

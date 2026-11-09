@@ -14,6 +14,7 @@ import type { EditorView } from "@tiptap/pm/view";
 import { noteExtensions } from "@/lib/schema";
 import { PageLink } from "@/lib/page-link";
 import { DateMention } from "@/lib/date-mention";
+import { Toggle } from "@/lib/toggle";
 import {
   Bold,
   Check,
@@ -34,6 +35,7 @@ import { buttonVariants } from "@/components/ui/button";
 import { SlashCommand, slashKey } from "./slash-command";
 import { PageBlock } from "./page-link-view";
 import { DateChip, DateCommand, dateKey } from "./date-mention";
+import { ToggleBehavior, ToggleBlock } from "./toggle-view";
 
 /**
  * Up from the first line, or Backspace at the very start of a leading paragraph, hands the
@@ -90,16 +92,26 @@ export default function NoteEditor({
     // Required with server rendering: the editor only exists on the client.
     immediatelyRender: false,
     extensions: [
-      // The shared sub-page block and date, with editor-only views (and "/page") on top.
-      ...noteExtensions.filter((extension) => extension !== PageLink && extension !== DateMention),
+      // The shared sub-page block, date and toggle, with editor-only views (and "/page") on top.
+      ...noteExtensions.filter(
+        (extension) => extension !== PageLink && extension !== DateMention && extension !== Toggle
+      ),
       DateChip,
+      ToggleBlock,
+      ToggleBehavior,
       PageBlock.configure({
         createChild: () => onCreateChildRef.current?.() ?? Promise.resolve(null),
         openPage: (id) => onOpenPageRef.current?.(id),
       }),
       Placeholder.configure({
-        placeholder: ({ node }) =>
-          node.type.name === "heading" ? "Heading" : "Type '/' for commands",
+        placeholder: ({ node, pos, editor }) => {
+          if (node.type.name === "heading") return "Heading";
+          if (node.type.name === "toggleSummary") {
+            const level = editor.state.doc.resolve(pos).parent.attrs.level as number;
+            return level ? `Toggle heading ${level}` : "Toggle";
+          }
+          return "Type '/' for commands";
+        },
       }),
       SlashCommand,
       DateCommand,
@@ -162,6 +174,12 @@ const NESTED_GRIPS: NestedOptions = {
       evaluate: ({ parent }) => (parent?.type.name === "blockquote" ? 1000 : 0),
     },
     {
+      // The summary is the toggle's first line: its grip moves the toggle. Blocks inside
+      // keep their own grips, so they can be reordered or taken out.
+      id: "summaryMovesToggle",
+      evaluate: ({ node }) => (node.type.name === "toggleSummary" ? 1000 : 0),
+    },
+    {
       id: "tableMovesWhole",
       // `$pos` is the pointer's position, shared by every candidate: look above this one.
       evaluate: ({ $pos, depth }) => {
@@ -215,8 +233,8 @@ function BlockHandle({ editor }: { editor: Editor }) {
       target.current = { pos, dom, marker };
       // The grip's height follows the block's first line so the dots sit level with it.
       if (gripRef.current) {
-        gripRef.current.dataset.block =
-          node.type.name === "heading" ? `heading-${node.attrs.level as number}` : node.type.name;
+        const level = node.type.name === "heading" || node.type.name === "toggle" ? (node.attrs.level as number) : 0;
+        gripRef.current.dataset.block = level ? `heading-${level}` : node.type.name;
       }
     },
     [editor]

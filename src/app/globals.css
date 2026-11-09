@@ -201,6 +201,105 @@ body {
   padding-left: 1em;
 }
 
+/* Toggles: an arrow in the left gutter, and a summary line that looks like text or like
+   Heading 1 to 3. Closed, only the summary shows. The blocks inside align with the
+   summary's text, as in Notion. */
+.notes-toggle {
+  --toggle-line: 1.65rem;
+  position: relative;
+}
+.notes-toggle[data-level="1"] {
+  --toggle-line: calc(1.875rem * 1.3);
+}
+.notes-toggle[data-level="2"] {
+  --toggle-line: calc(1.45rem * 1.3);
+}
+.notes-toggle[data-level="3"] {
+  --toggle-line: calc(1.2rem * 1.3);
+}
+.notes-toggle[data-level="1"]:not(:first-child) {
+  margin-top: 1.4em;
+}
+.notes-toggle[data-level="2"]:not(:first-child) {
+  margin-top: 1.2em;
+}
+.notes-toggle[data-level="3"]:not(:first-child) {
+  margin-top: 1em;
+}
+.notes-toggle-content {
+  padding-left: 1.6rem;
+}
+.notes-toggle-content > * + * {
+  margin-top: 0.35em;
+}
+.notes-toggle-content > summary {
+  /* A <summary> outside a <details> would draw its own marker. */
+  display: block;
+  list-style: none;
+  min-height: 1.65em;
+}
+.notes-toggle-content > summary::marker,
+.notes-toggle-content > summary::-webkit-details-marker {
+  display: none;
+}
+.notes-toggle[data-level="1"] > .notes-toggle-content > summary,
+.notes-toggle[data-level="2"] > .notes-toggle-content > summary,
+.notes-toggle[data-level="3"] > .notes-toggle-content > summary {
+  font-weight: 650;
+  letter-spacing: -0.01em;
+  line-height: 1.3;
+}
+.notes-toggle[data-level="1"] > .notes-toggle-content > summary {
+  font-size: 1.875rem;
+}
+.notes-toggle[data-level="2"] > .notes-toggle-content > summary {
+  font-size: 1.45rem;
+}
+.notes-toggle[data-level="3"] > .notes-toggle-content > summary {
+  font-size: 1.2rem;
+}
+.notes-toggle[data-open="false"] > .notes-toggle-content > :not(:first-child) {
+  display: none;
+}
+.notes-toggle-arrow {
+  position: absolute;
+  top: 0;
+  left: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.5rem;
+  height: var(--toggle-line);
+  border-radius: 4px;
+  color: hsl(var(--muted-foreground));
+  cursor: pointer;
+  transition: background-color 120ms ease-out, color 120ms ease-out;
+}
+.notes-toggle-arrow:hover {
+  background: hsl(var(--muted));
+  color: hsl(var(--foreground));
+}
+.notes-toggle-arrow svg {
+  transition: transform 120ms ease-out;
+}
+.notes-toggle[data-open="true"] > .notes-toggle-arrow svg {
+  transform: rotate(90deg);
+}
+@media (pointer: coarse) {
+  /* Finger-sized, without making the line taller. */
+  .notes-toggle-arrow::after {
+    content: "";
+    position: absolute;
+    inset: -0.6rem -0.3rem;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .notes-toggle-arrow,
+  .notes-toggle-arrow svg {
+    transition: none;
+  }
+}
+
 .notes-editor code {
   font-family: var(--font-dm-mono), ui-monospace, monospace;
   font-size: 0.875em;

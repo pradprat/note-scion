@@ -100,8 +100,12 @@ export const SlashCommand = Extension.create({
         editor: this.editor,
         pluginKey: slashKey,
         char: "/",
-        // Not inside code, where "/" is just a character.
-        allow: ({ state }) => !state.selection.$from.parent.type.spec.code,
+        // Not inside code, where "/" is just a character, and not in a toggle's summary,
+        // which can only hold text.
+        allow: ({ state }) => {
+          const parent = state.selection.$from.parent;
+          return !parent.type.spec.code && parent.type.name !== "toggleSummary";
+        },
         items: ({ query }) => filterSlashItems(query),
         command: ({ editor, range, props }) => props.run(editor, range),
         render: () => {

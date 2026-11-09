@@ -11,6 +11,7 @@ import {
   Heading3,
   List,
   ListOrdered,
+  ListCollapse,
   ListTodo,
   Minus,
   Quote,
@@ -22,6 +23,12 @@ import { cn } from "@/lib/utils";
 
 export interface SlashItem {
   title: string;
+  /** Said after the title in muted text: "Turn into". */
+  suffix?: string;
+  /** What typing at the start of a line does instead, shown on the right: "## >". */
+  shortcut?: string;
+  /** Only offered once something is typed, so the default list stays short. */
+  searchOnly?: boolean;
   description: string;
   keywords: string[];
   icon: LucideIcon;
@@ -89,6 +96,24 @@ export const SLASH_ITEMS: SlashItem[] = [
     run: (editor, range) => editor.chain().focus().deleteRange(range).toggleTaskList().run(),
   },
   {
+    title: "Toggle list",
+    shortcut: ">",
+    description: "Hide blocks inside a line",
+    keywords: ["collapse", "collapsible", "details", "dropdown", "fold"],
+    icon: ListCollapse,
+    run: (editor, range) => editor.chain().focus().deleteRange(range).insertToggle(0).run(),
+  },
+  ...([1, 2, 3] as const).map(
+    (level): SlashItem => ({
+      title: `Toggle heading ${level}`,
+      shortcut: `${"#".repeat(level)} >`,
+      description: "Collapsible heading",
+      keywords: ["collapse", "collapsible", "details", "dropdown", `h${level}`],
+      icon: [Heading1, Heading2, Heading3][level - 1],
+      run: (editor, range) => editor.chain().focus().deleteRange(range).insertToggle(level).run(),
+    })
+  ),
+  {
     title: "Quote",
     description: "Capture a quote",
     keywords: ["blockquote", "citation"],
@@ -117,11 +142,23 @@ export const SLASH_ITEMS: SlashItem[] = [
     icon: Minus,
     run: (editor, range) => editor.chain().focus().deleteRange(range).setHorizontalRule().run(),
   },
+  // The same four, for the line that's already there: its text becomes the toggle's.
+  ...([0, 1, 2, 3] as const).map(
+    (level): SlashItem => ({
+      title: level ? `Toggle heading ${level}` : "Toggle list",
+      suffix: "Turn into",
+      searchOnly: true,
+      description: "Keep this line's text",
+      keywords: ["toggle", "turn into", "convert", "collapse", ...(level ? [`h${level}`] : [])],
+      icon: level ? [Heading1, Heading2, Heading3][level - 1] : ListCollapse,
+      run: (editor, range) => editor.chain().focus().deleteRange(range).wrapInToggle(level).run(),
+    })
+  ),
 ];
 
 export function filterSlashItems(query: string): SlashItem[] {
   const q = query.trim().toLowerCase();
-  if (!q) return SLASH_ITEMS;
+  if (!q) return SLASH_ITEMS.filter((item) => !item.searchOnly);
   return SLASH_ITEMS.filter(
     (item) =>
       item.title.toLowerCase().includes(q) || item.keywords.some((keyword) => keyword.startsWith(q))
@@ -189,7 +226,7 @@ const SlashMenu = forwardRef<SlashMenuHandle, SuggestionProps<SlashItem, SlashIt
           const Icon = item.icon;
           return (
             <button
-              key={item.title}
+              key={`${item.title}${item.suffix ?? ""}`}
               type="button"
               role="option"
               aria-selected={index === selected}
@@ -205,10 +242,19 @@ const SlashMenu = forwardRef<SlashMenuHandle, SuggestionProps<SlashItem, SlashIt
               <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-md border bg-background">
                 <Icon size={16} />
               </span>
-              <span className="min-w-0">
-                <span className="block text-sm">{item.title}</span>
+              <span className="min-w-0 flex-1">
+                <span className="block truncate text-sm">
+                  {item.title}
+                  {item.suffix && <span className="text-muted-foreground"> · {item.suffix}</span>}
+                </span>
                 <span className="block truncate text-xs text-muted-foreground">{item.description}</span>
               </span>
+              {item.shortcut && (
+                // A key hint: there is no keyboard to type it on a phone.
+                <span className="shrink-0 font-mono text-[0.625rem] font-medium text-muted-foreground [@media(hover:none)]:hidden">
+                  {item.shortcut}
+                </span>
+              )}
             </button>
           );
         })}

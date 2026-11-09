@@ -102,13 +102,34 @@ Type these at the start of a line:
 - \`#\`, \`##\` or \`###\` and a space for a heading
 - \`-\` or \`*\` for a bullet list, \`1.\` for a numbered one
 - \`[]\` for a to-do
-- \`>\` for a quote
+- \`>\` for a toggle, or \`#\`, \`##\` or \`###\` and then \`>\` for a toggle heading
+- \`"\` for a quote
 - \`\`\`\` \`\`\` \`\`\`\` for a code block
 - \`---\` for a divider
 
 Inline, wrap text in \`**\` for **bold**, \`*\` for *italic* and backticks for \`code\`. Select text and ${touch ? "tap **Link**" : "press Ctrl K"} to add a [link](https://github.com/pradprat/note-scion).
 
 > A page can hold other pages. Type \`/page\` to start one right here.
+
+## Toggles
+
+<details open><summary>A toggle hides what's inside</summary>
+
+${touch ? "Tap the arrow" : "Click the arrow, or press Ctrl Enter (⌘ Enter on a Mac)"} to close it. Whether it is open is saved with the page. Any block can go inside, including another toggle.
+
+<details><summary>Toggles nest</summary>
+
+This one starts closed.
+
+</details>
+
+</details>
+
+<details open><summary>## A toggle heading</summary>
+
+Type \`/toggle\` for the four kinds, or turn a line you've already written into one.
+
+</details>
 
 \`\`\`ts
 // Code blocks keep their indentation. Tab indents inside them.
