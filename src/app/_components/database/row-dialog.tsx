@@ -35,6 +35,13 @@ export function RowDialog({
       <DialogContent
         className="max-h-[85vh] max-w-lg overflow-y-auto"
         onCloseAutoFocus={(event) => event.preventDefault()}
+        // Escape closes the dialog before the field under the cursor hears it, and a field
+        // that is removed gives no blur, so a number typed but not yet kept would be lost.
+        // Leaving the field first lets it keep (or put back) its number as it does on Tab.
+        onEscapeKeyDown={() => {
+          const field = document.activeElement;
+          if (field instanceof HTMLInputElement || field instanceof HTMLTextAreaElement) field.blur();
+        }}
         // The date calendar is drawn by the editor's own picker, outside this dialog's React
         // tree, so a click in it would read as a click outside and close the dialog.
         onInteractOutside={(event) => {
