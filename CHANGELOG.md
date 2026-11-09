@@ -100,6 +100,8 @@ All notable changes to note-scion are listed here. The format follows
 
 ### Fixed
 
+- A date in a database can be cleared on a phone or tablet: the clear button, which only
+  showed on hover, is now always visible on screens without hover.
 - An authenticated `GET /api/mcp` now gets `405 Method Not Allowed` at once. Before, it
   opened a notification stream that nothing ever wrote to, and held the function open
   until Vercel's 300-second timeout. `POST` and `DELETE` work as before, and a request

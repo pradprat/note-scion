@@ -324,7 +324,7 @@ function DateCell({
           aria-label={`Clear ${label}`}
           title="Clear date"
           onClick={() => onChange(null)}
-          className="mr-1 flex h-6 w-6 shrink-0 items-center justify-center rounded text-muted-foreground opacity-0 hover:bg-accent hover:text-foreground focus-visible:opacity-100 group-hover/date:opacity-100 [@media(hover:none)]:hidden"
+          className="mr-1 flex h-6 w-6 shrink-0 items-center justify-center rounded text-muted-foreground opacity-0 hover:bg-accent hover:text-foreground focus-visible:opacity-100 group-hover/date:opacity-100 [@media(hover:none)]:opacity-100 [@media(hover:none)]:mr-0 [@media(pointer:coarse)]:h-10"
         >
           <X aria-hidden size={14} />
         </button>
