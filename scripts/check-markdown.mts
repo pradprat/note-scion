@@ -15,9 +15,12 @@
 import { readFileSync, writeFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
-import type { JSONContent } from "@tiptap/core";
+import { getSchema, type JSONContent } from "@tiptap/core";
+import { Fragment, type Node as PMNode } from "@tiptap/pm/model";
+import { EditorState, TextSelection } from "@tiptap/pm/state";
+import { noteExtensions } from "../src/lib/schema";
 import { appendContent, fromMarkdown, toMarkdown } from "../src/lib/markdown";
-import { toAttrs } from "../src/lib/database";
+import { planDatabaseInsert, toAttrs } from "../src/lib/database";
 import { createStableKeys } from "../src/app/_components/database/stable-keys";
 import {
   parseNumberInput,
@@ -260,6 +263,48 @@ check("database: nothing at all becomes an empty database", same(normalizeDataba
 {
   const renamed = renameOption(start, "Status", "Done", "Doing");
   check("option rename: a taken name gets a suffix at the same index", renamed.properties[2].options?.[2]?.name === "Doing 2" && renamed.properties[2].options?.[1]?.name === "Doing");
+}
+
+// Bug fix: "/database" on the first line of a bullet or to-do item did nothing.
+{
+  const schema = getSchema(noteExtensions);
+  const insertAt = (docJson: JSONContent, pick: (node: PMNode) => boolean) => {
+    const pmDoc = schema.nodeFromJSON(docJson);
+    let at = -1;
+    pmDoc.descendants((node, pos) => {
+      if (at < 0 && pick(node)) at = pos + 1;
+      return at < 0;
+    });
+    const state = EditorState.create({ doc: pmDoc, selection: TextSelection.create(pmDoc, at) });
+    const plan = planDatabaseInsert(state);
+    if (!plan) return { plan, json: null as JSONContent | null };
+    const tr = state.tr.replaceWith(plan.from, plan.to, Fragment.from(plan.nodes));
+    return { plan, json: tr.doc.toJSON() as JSONContent };
+  };
+  const emptyPara = (node: PMNode) => node.type.name === "paragraph" && node.content.size === 0;
+  const types = (nodes?: JSONContent[]) => (nodes ?? []).map((n) => n.type).join(",");
+
+  const bullet = insertAt(doc({ type: "bulletList", content: [{ type: "listItem", content: [para()] }] }), emptyPara);
+  const item = bullet.json?.content?.[0]?.content?.[0];
+  check("insert database: on an empty bullet line it goes in after the line", types(item?.content) === "paragraph,database,paragraph");
+
+  const todo = insertAt(doc({ type: "taskList", content: [{ type: "taskItem", attrs: { checked: false }, content: [para()] }] }), emptyPara);
+  check("insert database: on an empty to-do line it goes in after the line", types(todo.json?.content?.[0]?.content?.[0]?.content) === "paragraph,database,paragraph");
+
+  const second = insertAt(doc({ type: "bulletList", content: [{ type: "listItem", content: [para(text("first"))] }, { type: "listItem", content: [para(text("second")), para()] }] }), (n) => emptyPara(n));
+  check("insert database: in a list item, below its first line, an empty line is replaced", types(second.json?.content?.[0]?.content?.[1]?.content) === "paragraph,database,paragraph");
+
+  const top = insertAt(doc(para(text("a")), para(), para(text("b"))), emptyPara);
+  check("insert database: an empty top-level line is replaced", types(top.json?.content) === "paragraph,database,paragraph" && top.plan?.caret === null);
+
+  const atEnd = insertAt(doc(para(text("a")), para()), emptyPara);
+  check("insert database: at the end of the page a line is left to land on", types(atEnd.json?.content) === "paragraph,database,paragraph" && atEnd.plan?.caret !== null);
+
+  const withText = insertAt(doc(para(text("some text")), para(text("b"))), (n) => n.type.name === "paragraph");
+  check("insert database: a line with text keeps it and the database goes after", types(withText.json?.content) === "paragraph,database,paragraph");
+
+  const inToggle = insertAt(doc(toggle(0, true, [text("T")], para())), emptyPara);
+  check("insert database: an empty line in a toggle's body is replaced", types(inToggle.json?.content?.[0]?.content) === "toggleSummary,database,paragraph");
 }
 
 if (failures) {

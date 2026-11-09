@@ -1,6 +1,6 @@
 import { Node } from "@tiptap/core";
-import { Fragment } from "@tiptap/pm/model";
-import { TextSelection } from "@tiptap/pm/state";
+import { Fragment, type Node as PMNode } from "@tiptap/pm/model";
+import { TextSelection, type EditorState } from "@tiptap/pm/state";
 import { newDatabase, normalizeDatabase, type DatabaseData } from "./database-model";
 
 declare module "@tiptap/core" {
@@ -130,21 +130,11 @@ export const Database = Node.create({
       insertDatabase:
         () =>
         ({ state, tr, dispatch }) => {
-          const { $from } = state.selection;
-          const parent = $from.node(-1);
-          const block = $from.parent;
-          const database = state.schema.nodes.database.create(toAttrs(newDatabase()));
-          const empty = block.isTextblock && block.content.size === 0 && $from.depth > 0;
-          const index = empty ? $from.index(-1) : $from.indexAfter(-1);
-          if (!parent.canReplaceWith(index, empty ? index + 1 : index, database.type)) return false;
+          const plan = planDatabaseInsert(state);
+          if (!plan) return false;
           if (dispatch) {
-            const from = empty ? $from.before() : $from.after();
-            // The cursor needs a line to land on below an atom.
-            const last = index + (empty ? 1 : 0) >= parent.childCount;
-            const after = Fragment.from(last ? [database, state.schema.nodes.paragraph.create()] : [database]);
-            if (empty) tr.replaceWith(from, $from.after(), after);
-            else tr.insert(from, after);
-            if (last) tr.setSelection(TextSelection.create(tr.doc, from + database.nodeSize + 1));
+            tr.replaceWith(plan.from, plan.to, Fragment.from(plan.nodes));
+            if (plan.caret !== null) tr.setSelection(TextSelection.create(tr.doc, plan.caret));
             dispatch(tr.scrollIntoView());
           }
           return true;
@@ -152,3 +142,39 @@ export const Database = Node.create({
     };
   },
 });
+
+/** Where and what insertDatabase puts into the document; null when the block can't go anywhere here. */
+export interface DatabasePlan {
+  from: number;
+  to: number;
+  nodes: PMNode[];
+  /** Where the cursor goes, when it needs a new line to land on; null to leave it. */
+  caret: number | null;
+}
+
+/**
+ * An empty line is replaced by the database. Where it can't be (the first line of a
+ * bullet or to-do item must stay a paragraph), or when the line has text, the database
+ * goes in after the line, as a toggle does. The cursor needs a line below an atom, so one
+ * is added when nothing follows.
+ */
+export function planDatabaseInsert(state: EditorState): DatabasePlan | null {
+  const { $from } = state.selection;
+  if ($from.depth < 1) return null;
+  const parent = $from.node(-1);
+  const database = state.schema.nodes.database.create(toAttrs(newDatabase()));
+  const index = $from.index(-1);
+  const empty = $from.parent.isTextblock && $from.parent.content.size === 0;
+  const replace = empty && parent.canReplaceWith(index, index + 1, database.type);
+  const at = replace ? index : $from.indexAfter(-1);
+  if (!replace && !parent.canReplaceWith(at, at, database.type)) return null;
+
+  const from = replace ? $from.before() : $from.after();
+  const last = (replace ? index + 1 : at) >= parent.childCount;
+  return {
+    from,
+    to: replace ? $from.after() : from,
+    nodes: last ? [database, state.schema.nodes.paragraph.create()] : [database],
+    caret: last ? from + database.nodeSize + 1 : null,
+  };
+}
