@@ -255,6 +255,13 @@ check("database: nothing at all becomes an empty database", same(normalizeDataba
   check("number input: hex, Infinity and overflow are invalid", kind("0x10") === "invalid" && kind("Infinity") === "invalid" && kind("1e999") === "invalid" && kind("1,5") === "invalid");
 }
 
+// Bug fix: the option menu follows a renamed option by its position, so a rename that
+// gets a suffix ("Done" -> "Doing 2") must land at the same index.
+{
+  const renamed = renameOption(start, "Status", "Done", "Doing");
+  check("option rename: a taken name gets a suffix at the same index", renamed.properties[2].options?.[2]?.name === "Doing 2" && renamed.properties[2].options?.[1]?.name === "Doing");
+}
+
 if (failures) {
   console.log(`\n${failures} check(s) failed`);
   process.exit(1);

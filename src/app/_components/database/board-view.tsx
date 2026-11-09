@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef, useState, type DragEvent } from "react";
+import { useEffect, useRef, useState, type DragEvent } from "react";
 import { ArrowRightLeft, Plus } from "lucide-react";
 import { cn } from "@/lib/utils";
 import {
@@ -29,10 +29,19 @@ interface Drop {
  * is a native select: it works from the keyboard and on a phone, where drag doesn't.
  */
 export function BoardView({ db, apply, openRow }: { db: DatabaseData; apply: Apply; openRow: (id: string) => void }) {
+  const root = useRef<HTMLDivElement>(null);
+  /** The card whose "Move to" menu gets focus back once it is drawn in its new column. */
+  const refocus = useRef<string | null>(null);
   const dragging = useRef<string | null>(null);
   const [lifted, setLifted] = useState<string | null>(null);
   const [drop, setDrop] = useState<Drop | null>(null);
   const property = groupProperty(db);
+
+  useEffect(() => {
+    if (!refocus.current) return;
+    root.current?.querySelector<HTMLElement>(`[data-card="${refocus.current}"] select`)?.focus();
+    refocus.current = null;
+  });
 
   if (!property) {
     return (
@@ -129,9 +138,12 @@ export function BoardView({ db, apply, openRow }: { db: DatabaseData; apply: App
             <select
               aria-label={`Move ${name} to`}
               value={current}
-              onChange={(event) =>
-                apply((now) => moveRow(now, row.id, property.name, event.target.value || null))
-              }
+              onChange={(event) => {
+                apply((now) => moveRow(now, row.id, property.name, event.target.value || null));
+                // The card is drawn again in its new column: the menu gets its focus back there.
+                refocus.current = row.id;
+                setTimeout(() => (refocus.current = null), 500);
+              }}
               className="absolute inset-0 cursor-pointer opacity-0"
             >
               <option value="">No {property.name}</option>
@@ -148,7 +160,7 @@ export function BoardView({ db, apply, openRow }: { db: DatabaseData; apply: App
   };
 
   return (
-    <div className="flex items-start gap-3 overflow-x-auto pb-2">
+    <div ref={root} className="flex items-start gap-3 overflow-x-auto pb-2">
       {columns.map((column) => {
         const name = column.key ?? `No ${property.name}`;
         const over = drop?.column === column.key;

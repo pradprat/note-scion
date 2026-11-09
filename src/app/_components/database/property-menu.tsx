@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, type ReactNode } from "react";
+import { useEffect, useRef, useState, type ReactNode } from "react";
 import {
   Calendar,
   ChevronDown,
@@ -35,6 +35,7 @@ import {
   type StatusGroup,
 } from "@/lib/database-model";
 import { CELL_INPUT } from "./cells";
+import { useStableKeys } from "./stable-keys";
 
 export const PROPERTY_ICONS: Record<PropertyType, LucideIcon> = {
   title: Type,
@@ -84,8 +85,8 @@ function NameField({
       onKeyDown={(event) => {
         if (event.key === "Enter") {
           event.preventDefault();
+          // Kept in the field: leaving it would drop the keyboard out of the open menu.
           commit();
-          event.currentTarget.blur();
         } else if (event.key === "Escape") {
           setDraft(value);
         }
@@ -98,21 +99,47 @@ function OptionRow({
   property,
   index,
   apply,
+  onRenamed,
 }: {
   property: DbProperty;
   index: number;
   apply: (change: (db: DatabaseData) => DatabaseData) => void;
+  onRenamed: (from: string, to: string) => void;
 }) {
   const option = property.options![index];
   const last = property.options!.length - 1;
   const icon = "flex h-8 w-6 shrink-0 items-center justify-center rounded text-muted-foreground hover:bg-accent hover:text-foreground disabled:opacity-30 disabled:hover:bg-transparent [@media(pointer:coarse)]:h-10 [@media(pointer:coarse)]:w-8";
+  // After a move the row is drawn at its new place, and an arrow that can't go further is
+  // disabled: focus goes to the arrow that was pressed, or the other one, once that is done.
+  const arrows = useRef<{ up: HTMLButtonElement | null; down: HTMLButtonElement | null }>({ up: null, down: null });
+  const pressed = useRef<"up" | "down" | null>(null);
+  useEffect(() => {
+    const want = pressed.current;
+    if (!want) return;
+    pressed.current = null;
+    const { up, down } = arrows.current;
+    const same = want === "up" ? up : down;
+    const other = want === "up" ? down : up;
+    (same && !same.disabled ? same : other)?.focus();
+  }, [index, last]);
+  const move = (by: -1 | 1) => {
+    pressed.current = by < 0 ? "up" : "down";
+    apply((db) => moveOption(db, property.name, option.name, by));
+  };
   return (
     <li className="flex items-center gap-1">
       <div className="min-w-0 flex-1">
         <NameField
           value={option.name}
           label={`Option ${index + 1} name`}
-          onCommit={(name) => apply((db) => renameOption(db, property.name, option.name, name))}
+          onCommit={(name) =>
+            apply((db) => {
+              const next = renameOption(db, property.name, option.name, name);
+              const renamed = next.properties.find((p) => p.name === property.name)?.options?.[index]?.name;
+              if (renamed && renamed !== option.name) onRenamed(option.name, renamed);
+              return next;
+            })
+          }
         />
       </div>
       {property.type === "status" && (
@@ -135,8 +162,11 @@ function OptionRow({
         type="button"
         className={icon}
         disabled={index === 0}
+        ref={(element) => {
+          arrows.current.up = element;
+        }}
         aria-label={`Move ${option.name} up`}
-        onClick={() => apply((db) => moveOption(db, property.name, option.name, -1))}
+        onClick={() => move(-1)}
       >
         <ChevronUp aria-hidden size={14} />
       </button>
@@ -144,8 +174,11 @@ function OptionRow({
         type="button"
         className={icon}
         disabled={index === last}
+        ref={(element) => {
+          arrows.current.down = element;
+        }}
         aria-label={`Move ${option.name} down`}
-        onClick={() => apply((db) => moveOption(db, property.name, option.name, 1))}
+        onClick={() => move(1)}
       >
         <ChevronDown aria-hidden size={14} />
       </button>
@@ -178,6 +211,7 @@ export function PropertyMenu({
   children: ReactNode;
 }) {
   const [confirming, setConfirming] = useState(false);
+  const optionKeys = useStableKeys();
   const Icon = PROPERTY_ICONS[property.type];
   return (
     <Popover onOpenChange={() => setConfirming(false)}>
@@ -205,7 +239,13 @@ export function PropertyMenu({
             <p className="px-1 pb-1 text-xs font-medium text-muted-foreground">Options</p>
             <ul className="space-y-1">
               {property.options.map((option, index) => (
-                <OptionRow key={index} property={property} index={index} apply={apply} />
+                <OptionRow
+                  key={optionKeys.keyOf(option.name)}
+                  property={property}
+                  index={index}
+                  apply={apply}
+                  onRenamed={optionKeys.renamed}
+                />
               ))}
             </ul>
             <NewOption property={property} apply={apply} />
