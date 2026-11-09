@@ -6,6 +6,7 @@ import { cn } from "@/lib/utils";
 import { addRow, cellOf, deleteRow, setCell, type DatabaseData, type PropertyType } from "@/lib/database-model";
 import { Cell } from "./cells";
 import { AddPropertyMenu, PROPERTY_ICONS, PropertyMenu } from "./property-menu";
+import { useStableKeys } from "./stable-keys";
 
 export type Apply = (change: (db: DatabaseData) => DatabaseData) => void;
 
@@ -33,6 +34,7 @@ const REVEALED = "opacity-0 group-hover/row:opacity-100 [@media(hover:none)]:opa
  */
 export function TableView({ db, apply, openRow }: { db: DatabaseData; apply: Apply; openRow: (id: string) => void }) {
   const root = useRef<HTMLDivElement>(null);
+  const keys = useStableKeys();
   const widths = db.properties.map((p) => MIN_WIDTH[p.type]);
   const template = `${widths.map((w, i) => `minmax(${w}rem, ${i === 0 ? 2 : 1}fr)`).join(" ")} ${ACTIONS}rem`;
   const min = `${widths.reduce((a, b) => a + b, ACTIONS)}rem`;
@@ -58,8 +60,8 @@ export function TableView({ db, apply, openRow }: { db: DatabaseData; apply: App
           {db.properties.map((property, index) => {
             const Icon = PROPERTY_ICONS[property.type];
             return (
-              <div key={index} role="columnheader" className="min-w-0">
-                <PropertyMenu property={property} apply={apply}>
+              <div key={keys.keyOf(property.name)} role="columnheader" className="min-w-0">
+                <PropertyMenu property={property} apply={apply} onRenamed={keys.renamed}>
                   <button
                     type="button"
                     className="flex h-8 w-full min-w-0 items-center gap-1.5 rounded px-2 text-left text-xs font-medium text-muted-foreground transition-colors duration-[120ms] hover:bg-accent hover:text-accent-foreground focus-visible:ring-2 focus-visible:ring-ring [@media(pointer:coarse)]:h-10"
@@ -92,7 +94,7 @@ export function TableView({ db, apply, openRow }: { db: DatabaseData; apply: App
               style={{ gridTemplateColumns: template }}
             >
               {db.properties.map((property, index) => (
-                <div key={index} role="cell" className="flex min-w-0 items-center">
+                <div key={keys.keyOf(property.name)} role="cell" className="flex min-w-0 items-center">
                   <div className="min-w-0 flex-1">
                     <Cell
                       property={property}

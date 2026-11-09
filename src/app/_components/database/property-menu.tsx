@@ -168,10 +168,13 @@ function OptionRow({
 export function PropertyMenu({
   property,
   apply,
+  onRenamed,
   children,
 }: {
   property: DbProperty;
   apply: (change: (db: DatabaseData) => DatabaseData) => void;
+  /** Called with the old and the new name once a rename is made (the new one may differ from what was typed). */
+  onRenamed?: (from: string, to: string) => void;
   children: ReactNode;
 }) {
   const [confirming, setConfirming] = useState(false);
@@ -183,7 +186,14 @@ export function PropertyMenu({
         <NameField
           value={property.name}
           label="Property name"
-          onCommit={(name) => apply((db) => renameProperty(db, property.name, name))}
+          onCommit={(name) =>
+            apply((db) => {
+              const next = renameProperty(db, property.name, name);
+              const renamed = next.properties[db.properties.findIndex((p) => p.name === property.name)]?.name;
+              if (renamed && renamed !== property.name) onRenamed?.(property.name, renamed);
+              return next;
+            })
+          }
         />
         <p className="mt-2 flex items-center gap-2 px-1 text-xs text-muted-foreground">
           <Icon aria-hidden size={14} />

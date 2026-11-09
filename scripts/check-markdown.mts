@@ -18,6 +18,7 @@ import { fileURLToPath } from "node:url";
 import type { JSONContent } from "@tiptap/core";
 import { appendContent, fromMarkdown, toMarkdown } from "../src/lib/markdown";
 import { toAttrs } from "../src/lib/database";
+import { createStableKeys } from "../src/app/_components/database/stable-keys";
 import {
   addProperty,
   addRow,
@@ -224,6 +225,20 @@ check("database: a status gets a group, a select doesn't", start.properties[2].o
 const wild = normalizeDatabase({ properties: [{ name: "A", type: "title" }, { name: "A", type: "title" }, { name: "A", type: "nonsense" }, { name: "__proto__", type: "text" }], rows: [{ id: "x", cells: { A: 5, "__proto__": "p" } }, { id: "x", cells: {} }], views: { active: "kanban", groupBy: "A" } });
 check("database: duplicate and reserved names, repeated ids and a bad view are repaired", wild.properties.map((p) => p.name).join() === "A,A 2,A 3,__proto___" && wild.rows[0].cells.A === "5" && new Set(wild.rows.map((r) => r.id)).size === 2 && wild.views.active === "table" && wild.views.groupBy === undefined);
 check("database: nothing at all becomes an empty database", same(normalizeDatabase(null), { title: "", properties: [{ name: "Name", type: "title" }], rows: [], views: { active: "table" } }));
+
+// Bug fix: deleting a property must not hand its open menu to the next column.
+{
+  const keys = createStableKeys();
+  const before = ["Name", "Status", "Date", "Effort"].map((n) => keys.keyOf(n));
+  // "Date" is deleted: the columns are asked for again without it.
+  const after = ["Name", "Status", "Effort"].map((n) => keys.keyOf(n));
+  check("keys: deleting a property leaves the other columns' keys alone", after[0] === before[0] && after[1] === before[1] && after[2] === before[3]);
+  check("keys: the column after a deleted one does not take its key", after[2] !== before[2]);
+  keys.renamed("Effort", "Hours");
+  check("keys: a rename keeps the column's key", keys.keyOf("Hours") === before[3]);
+  check("keys: a name added later gets a new key", keys.keyOf("Effort") !== before[3] && keys.keyOf("Effort") !== keys.keyOf("Hours"));
+  check("keys: all keys are distinct", new Set(["Name", "Status", "Hours", "Effort"].map((n) => keys.keyOf(n))).size === 4);
+}
 
 if (failures) {
   console.log(`\n${failures} check(s) failed`);
