@@ -55,7 +55,10 @@ function settlePageLinks(nodes: JSONContent[], top: boolean): JSONContent[] {
       else out.push(link);
       continue;
     }
-    out.push(node.content ? { ...node, content: settlePageLinks(node.content, false) } : node);
+    // A toggle's body holds blocks as the page does, so a sub-page block stays one there.
+    out.push(
+      node.content ? { ...node, content: settlePageLinks(node.content, top && node.type === "toggle") } : node
+    );
   }
   return out;
 }
