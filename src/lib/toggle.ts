@@ -15,6 +15,11 @@ declare module "@tiptap/core" {
        * when it has text.
        */
       insertToggle: (level: ToggleLevel) => ReturnType;
+      /**
+       * Undoes the toggle around the cursor: its summary becomes a line again (a heading for
+       * a toggle heading) and the blocks inside follow it.
+       */
+      unwrapToggle: () => ReturnType;
     };
   }
 }
@@ -245,6 +250,37 @@ export const Toggle = Node.create({
             const at = $from.after();
             tr.insert(at, toggle);
             tr.setSelection(TextSelection.create(tr.doc, at + 2));
+            dispatch(tr.scrollIntoView());
+          }
+          return true;
+        },
+
+      unwrapToggle:
+        () =>
+        ({ state, tr, dispatch }) => {
+          const { $from } = state.selection;
+          let depth = $from.depth;
+          while (depth > 0 && $from.node(depth).type.name !== "toggle") depth--;
+          if (!depth) return false;
+          const toggle = $from.node(depth);
+          const { paragraph, heading } = state.schema.nodes;
+          const level = toggle.attrs.level as ToggleLevel;
+          const summary = toggle.firstChild?.content ?? Fragment.empty;
+          const line = level ? heading.create({ level }, summary) : paragraph.create(null, summary);
+          const body: PMNode[] = [];
+          toggle.forEach((child, _offset, index) => {
+            if (index > 0) body.push(child);
+          });
+          // The placeholder line of a toggle with nothing in it goes with the toggle.
+          const empty = body.length === 1 && body[0].type === paragraph && body[0].content.size === 0;
+          const blocks = Fragment.from(empty ? [line] : [line, ...body]);
+          const index = $from.index(depth - 1);
+          if (!$from.node(depth - 1).canReplace(index, index + 1, blocks)) return false;
+          if (dispatch) {
+            const start = $from.before(depth);
+            tr.replaceWith(start, start + toggle.nodeSize, blocks);
+            // The cursor goes to the end of the line that was the summary.
+            tr.setSelection(TextSelection.create(tr.doc, start + 1 + line.content.size));
             dispatch(tr.scrollIntoView());
           }
           return true;

@@ -38,6 +38,8 @@ import { PageBlock } from "./page-link-view";
 import { DateChip, DateCommand, dateKey } from "./date-mention";
 import { ToggleBehavior, ToggleBlock } from "./toggle-view";
 import { DatabaseBlock } from "./database/database-block";
+import { TurnIntoMenu } from "./turn-into-menu";
+import { blockKind, type BlockKind } from "@/lib/turn-into";
 
 /**
  * Up from the first line, or Backspace at the very start of a leading paragraph, hands the
@@ -196,6 +198,15 @@ const NESTED_GRIPS: NestedOptions = {
   ],
 };
 
+/**
+ * Keeps the grip on its block (or lets it follow the pointer again). The React DragHandle
+ * adds only the plugin, not the extension's `lockDragHandle` command, so this sends the
+ * transaction meta that command would.
+ */
+function lockGrip(editor: Editor, locked: boolean) {
+  editor.view.dispatch(editor.state.tr.setMeta("lockDragHandle", locked));
+}
+
 interface GripTarget {
   pos: number;
   dom: HTMLElement | null;
@@ -264,6 +275,18 @@ function BlockHandle({ editor }: { editor: Editor }) {
     if (outlineRef.current) outlineRef.current.dataset.visible = "false";
   };
 
+  // Clicking the grip offers to turn the block into another kind. The grip stays on that
+  // block while the menu is open, rather than following the pointer.
+  const [menu, setMenu] = useState<{ pos: number; kind: BlockKind } | null>(null);
+  const menuOpen = useRef(false);
+  const closeMenu = useCallback(() => {
+    // Called again by the change a pick makes; only the first one unlocks.
+    if (!menuOpen.current) return;
+    menuOpen.current = false;
+    setMenu(null);
+    lockGrip(editor, false);
+  }, [editor]);
+
   return (
     <>
       <div ref={outlineRef} aria-hidden className="notes-drag-outline" data-visible="false" />
@@ -277,19 +300,37 @@ function BlockHandle({ editor }: { editor: Editor }) {
         <div
           ref={gripRef}
           className="notes-drag-handle"
-          title="Drag to move, click to select"
+          title="Drag to move, click to turn into"
+          aria-haspopup="listbox"
+          aria-expanded={menu !== null}
           onMouseEnter={showOutline}
           onMouseLeave={hideOutline}
           onClick={() => {
+            // A second click closes the menu again.
+            if (menu) return closeMenu();
             const pos = target.current?.pos;
             if (pos === undefined) return;
             hideOutline();
             editor.chain().focus().setNodeSelection(pos).run();
+            const kind = blockKind(editor.state.doc, pos);
+            if (!kind) return;
+            lockGrip(editor, true);
+            menuOpen.current = true;
+            setMenu({ pos, kind });
           }}
         >
           <GripVertical size={16} />
         </div>
       </DragHandle>
+      {menu && gripRef.current && (
+        <TurnIntoMenu
+          editor={editor}
+          pos={menu.pos}
+          current={menu.kind}
+          anchor={gripRef.current}
+          onClose={closeMenu}
+        />
+      )}
     </>
   );
 }

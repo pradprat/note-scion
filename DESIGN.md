@@ -423,6 +423,8 @@ The page is the product, and its details are the system's distinctive work.
 - **Drag grip:** a 20px-wide six-dot handle in the left margin, at the height of the
   block's first line (each heading level has its own height). It fills with Frost Paper
   and the text color on hover, and the Block halo appears under the block it will move.
+  A click opens "Turn into", the same list as the `/` menu with a check on the current
+  kind, hung below the grip; the grip stays put while it is open.
 - **`@` date:** a quiet word in muted text with a 70%-opacity `@`, not a pill, so the
   prose around it still reads. Within a day of now it says "@Yesterday", "@Today" or
   "@Tomorrow"; any other day reads in full, "@November 10, 2026".

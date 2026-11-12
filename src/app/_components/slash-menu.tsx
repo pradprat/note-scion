@@ -1,9 +1,10 @@
 "use client";
 
-import { forwardRef, useEffect, useImperativeHandle, useRef, useState } from "react";
+import { forwardRef, useCallback, useEffect, useImperativeHandle, useRef, useState } from "react";
 import type { Editor, Range } from "@tiptap/core";
 import type { SuggestionProps } from "@tiptap/suggestion";
 import {
+  Check,
   Code2,
   Database,
   FileText,
@@ -164,111 +165,143 @@ export const SLASH_ITEMS: SlashItem[] = [
   ),
 ];
 
-export function filterSlashItems(query: string): SlashItem[] {
+/** Whether an item answers what was typed after "/" (or into the "Turn into" menu). */
+export function matchesQuery(item: Pick<SlashItem, "title" | "keywords">, query: string): boolean {
   const q = query.trim().toLowerCase();
-  if (!q) return SLASH_ITEMS.filter((item) => !item.searchOnly);
-  return SLASH_ITEMS.filter(
-    (item) =>
-      item.title.toLowerCase().includes(q) || item.keywords.some((keyword) => keyword.startsWith(q))
-  );
+  return item.title.toLowerCase().includes(q) || item.keywords.some((keyword) => keyword.startsWith(q));
 }
 
-export interface SlashMenuHandle {
+export function filterSlashItems(query: string): SlashItem[] {
+  if (!query.trim()) return SLASH_ITEMS.filter((item) => !item.searchOnly);
+  return SLASH_ITEMS.filter((item) => matchesQuery(item, query));
+}
+
+/** One row of a block menu. */
+export type BlockMenuItem = Pick<SlashItem, "title" | "suffix" | "shortcut" | "description" | "icon">;
+
+export interface BlockMenuHandle {
   onKeyDown: (event: KeyboardEvent) => boolean;
 }
 
-const SlashMenu = forwardRef<SlashMenuHandle, SuggestionProps<SlashItem, SlashItem>>(
-  function SlashMenu({ items, command }, ref) {
-    const [selected, setSelected] = useState(0);
-    const listRef = useRef<HTMLDivElement>(null);
+/**
+ * The list of block types behind "/" and a block's grip: arrow keys move through it, Enter
+ * or Tab picks. The item marked `checked` is what the block already is.
+ */
+export const BlockMenuList = forwardRef<
+  BlockMenuHandle,
+  {
+    items: BlockMenuItem[];
+    onPick: (index: number) => void;
+    /** Read out for the list: "Insert block". */
+    label: string;
+    /** Shown above the items: "Blocks". */
+    heading: string;
+    checked?: number;
+  }
+>(function BlockMenuList({ items, onPick, label, heading, checked }, ref) {
+  const [selected, setSelected] = useState(0);
+  const listRef = useRef<HTMLDivElement>(null);
 
-    useEffect(() => setSelected(0), [items]);
+  useEffect(() => setSelected(0), [items]);
 
-    useEffect(() => {
-      listRef.current
-        ?.querySelector<HTMLElement>(`[data-index="${selected}"]`)
-        ?.scrollIntoView({ block: "nearest" });
-    }, [selected]);
+  useEffect(() => {
+    listRef.current
+      ?.querySelector<HTMLElement>(`[data-index="${selected}"]`)
+      ?.scrollIntoView({ block: "nearest" });
+  }, [selected]);
 
-    useImperativeHandle(
-      ref,
-      () => ({
-        onKeyDown: (event) => {
-          if (!items.length) return false;
-          if (event.key === "ArrowDown") {
-            setSelected((i) => (i + 1) % items.length);
-            return true;
-          }
-          if (event.key === "ArrowUp") {
-            setSelected((i) => (i - 1 + items.length) % items.length);
-            return true;
-          }
-          if (event.key === "Enter" || event.key === "Tab") {
-            const item = items[selected];
-            if (item) command(item);
-            return true;
-          }
-          return false;
-        },
-      }),
-      [items, selected, command]
-    );
+  useImperativeHandle(
+    ref,
+    () => ({
+      onKeyDown: (event) => {
+        if (!items.length) return false;
+        if (event.key === "ArrowDown") {
+          setSelected((i) => (i + 1) % items.length);
+          return true;
+        }
+        if (event.key === "ArrowUp") {
+          setSelected((i) => (i - 1 + items.length) % items.length);
+          return true;
+        }
+        if (event.key === "Enter" || event.key === "Tab") {
+          if (items[selected]) onPick(selected);
+          return true;
+        }
+        return false;
+      },
+    }),
+    [items, selected, onPick]
+  );
 
-    if (!items.length) {
-      return (
-        <div className="w-64 rounded-md border bg-popover px-3 py-2 text-sm text-muted-foreground shadow-md">
-          No matching blocks
-        </div>
-      );
-    }
-
+  if (!items.length) {
     return (
-      <div
-        ref={listRef}
-        role="listbox"
-        aria-label="Insert block"
-        className="max-h-[min(20rem,var(--menu-max-h,20rem))] w-64 overflow-y-auto overscroll-contain rounded-md border bg-popover p-1 text-popover-foreground shadow-md"
-      >
-        <p className="px-2 py-1.5 text-xs font-medium text-muted-foreground">Blocks</p>
-        {items.map((item, index) => {
-          const Icon = item.icon;
-          return (
-            <button
-              key={`${item.title}${item.suffix ?? ""}`}
-              type="button"
-              role="option"
-              aria-selected={index === selected}
-              data-index={index}
-              onMouseEnter={() => setSelected(index)}
-              onMouseDown={(event) => event.preventDefault()}
-              onClick={() => command(item)}
-              className={cn(
-                "flex w-full items-center gap-3 rounded-sm px-2 py-1.5 text-left outline-none",
-                index === selected && "bg-accent text-accent-foreground"
-              )}
-            >
-              <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-md border bg-background">
-                <Icon size={16} />
+      <div className="w-64 rounded-md border bg-popover px-3 py-2 text-sm text-muted-foreground shadow-md">
+        No matching blocks
+      </div>
+    );
+  }
+
+  return (
+    <div
+      ref={listRef}
+      role="listbox"
+      aria-label={label}
+      className="max-h-[min(20rem,var(--menu-max-h,20rem))] w-64 overflow-y-auto overscroll-contain rounded-md border bg-popover p-1 text-popover-foreground shadow-md"
+    >
+      <p className="px-2 py-1.5 text-xs font-medium text-muted-foreground">{heading}</p>
+      {items.map((item, index) => {
+        const Icon = item.icon;
+        return (
+          <button
+            key={`${item.title}${item.suffix ?? ""}`}
+            type="button"
+            role="option"
+            aria-selected={index === selected}
+            aria-current={index === checked || undefined}
+            data-index={index}
+            onMouseEnter={() => setSelected(index)}
+            onMouseDown={(event) => event.preventDefault()}
+            onClick={() => onPick(index)}
+            className={cn(
+              "flex w-full items-center gap-3 rounded-sm px-2 py-1.5 text-left outline-none",
+              index === selected && "bg-accent text-accent-foreground"
+            )}
+          >
+            <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-md border bg-background">
+              <Icon size={16} />
+            </span>
+            <span className="min-w-0 flex-1">
+              <span className="block truncate text-sm">
+                {item.title}
+                {item.suffix && <span className="text-muted-foreground"> · {item.suffix}</span>}
               </span>
-              <span className="min-w-0 flex-1">
-                <span className="block truncate text-sm">
-                  {item.title}
-                  {item.suffix && <span className="text-muted-foreground"> · {item.suffix}</span>}
-                </span>
-                <span className="block truncate text-xs text-muted-foreground">{item.description}</span>
-              </span>
-              {item.shortcut && (
+              <span className="block truncate text-xs text-muted-foreground">{item.description}</span>
+            </span>
+            {index === checked ? (
+              <Check size={15} aria-label="Current" className="shrink-0 text-muted-foreground" />
+            ) : (
+              item.shortcut && (
                 // A key hint: there is no keyboard to type it on a phone.
                 <span className="shrink-0 font-mono text-[0.625rem] font-medium text-muted-foreground [@media(hover:none)]:hidden">
                   {item.shortcut}
                 </span>
-              )}
-            </button>
-          );
-        })}
-      </div>
-    );
-  }
-);
+              )
+            )}
+          </button>
+        );
+      })}
+    </div>
+  );
+});
+
+export type SlashMenuHandle = BlockMenuHandle;
+
+const SlashMenu = forwardRef<SlashMenuHandle, SuggestionProps<SlashItem, SlashItem>>(function SlashMenu(
+  { items, command },
+  ref
+) {
+  const onPick = useCallback((index: number) => command(items[index]), [items, command]);
+  return <BlockMenuList ref={ref} items={items} onPick={onPick} label="Insert block" heading="Blocks" />;
+});
 
 export default SlashMenu;

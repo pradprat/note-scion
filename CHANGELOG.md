@@ -12,6 +12,12 @@ All notable changes to note-scion are listed here. The format follows
   double-click the edge to go back to 256px. From the keyboard, focus the edge and use
   the arrow keys, Home and End, or Enter to reset. The width is kept in a
   `sidebar_width` cookie, so it renders at that width on load.
+- Clicking a block's grip opens "Turn into": the block types from the `/` menu, with a
+  check on the current one. Pick one, or type to narrow the list and press Enter, to make
+  a line a heading, a list or to-do item, a toggle or toggle heading, a quote or code,
+  keeping its text. A list item changes on its own, a toggle's inside follows its line
+  out, and Ctrl or ⌘ Z undoes it in one step. Tables, databases, sub-pages and dividers
+  are still only selected by the click.
 
 ## [1.1.0] - 2026-11-09
 
