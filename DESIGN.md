@@ -403,6 +403,11 @@ notification.
   The menu keeps its side while it still fits, and its height is capped at the room on
   that side, measured in the visual viewport so a phone keyboard counts. The list
   scrolls and keeps the highlighted item in view.
+- **Entrance (slash, `@` date and Turn into menus):** they come out of their line in
+  140ms: a fade, and a 4px drift and 98% scale away from the line (down when below it, up
+  when above), on the same curve as the folds. Quicker and smaller than the click
+  popovers' entrance, so a menu that opens while typing doesn't pull the eye. They close
+  at once. With reduced motion they only fade.
 - **Quick switcher:** an Overlay dialog with its top edge pinned 15vh down (12vh on
   phones), so the search field stays put as results come and go. A 48px search field,
   then rows of emoji and title, with the page's path after the title in 12px muted
@@ -453,7 +458,11 @@ The page is the product, and its details are the system's distinctive work.
 - **Quote:** a 3px Night Ink rule on the left with 16px padding.
 - **Toggle:** a 16px chevron in a 24px gutter that turns down while the toggle is open, and
   a summary that reads as text or as Heading 1 to 3. The blocks inside align with the
-  summary's text. Closed, only the summary shows.
+  summary's text. Closed, only the summary shows. The blocks fold out of the summary and
+  back into it the way the sidebar's sub-pages do: the height moves on
+  `cubic-bezier(0.16, 1, 0.3, 1)` in 240ms opening and 180ms closing while the blocks
+  fade, and a fold turned round halfway carries on from where it is. With reduced motion,
+  opening only fades the blocks in and closing is immediate.
 - **Database:** a block with a title, then Table and Board tabs on a hairline. Rows are
   hairlines, headers are 12px muted type with a property icon, and a column's options are
   quiet Frost Paper chips: a status leads with an outline, half-dot or check instead of a
@@ -474,6 +483,10 @@ The page is the product, and its details are the system's distinctive work.
 - **Do** use Lifted Pencil (#8E9EAF), not Slate Pencil, for secondary text in dark mode.
 - **Do** show hover state with a Frost Paper fill (Graphite in dark mode) and a 120ms
   ease-out color transition.
+- **Do** let what opens grow out of what you touched (a page's row, a toggle's summary, the
+  line a menu belongs to) on `cubic-bezier(0.16, 1, 0.3, 1)`, closing quicker than
+  opening, with a fade-only path under `prefers-reduced-motion`. Nothing moves that you
+  didn't move, so an edit from Claude still arrives without motion.
 - **Do** raise touch targets to 40px under `pointer: coarse`, and hide hover-only
   affordances (drag grip, kbd hints) under `hover: none`.
 - **Do** keep the page in its single 768px column with 24px padding on phones and 64px

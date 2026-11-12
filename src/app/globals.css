@@ -258,8 +258,13 @@ body {
 .notes-toggle[data-level="3"] > .notes-toggle-content > summary {
   font-size: 1.2rem;
 }
-.notes-toggle[data-open="false"] > .notes-toggle-content > :not(:first-child) {
+/* While closing, the blocks stay laid out until the fold has covered them. */
+.notes-toggle[data-open="false"]:not([data-closing]) > .notes-toggle-content > :not(:first-child) {
   display: none;
+}
+/* The fold clips only while it moves (see toggle-view.ts), so focus rings show at rest. */
+.notes-toggle[data-moving] {
+  overflow: clip;
 }
 .notes-toggle-arrow {
   position: absolute;
@@ -610,6 +615,34 @@ body {
     opacity: 0;
   }
 }
+/* Menus that open from the text (/, @ and Turn into, placed by floatMenu) come out of the
+   line they belong to: a fade and a 4px drift away from it, quick enough to stay behind
+   the typing. Their side comes from data-side. */
+.notes-float-menu > :first-child {
+  transform-origin: top left;
+  animation: notes-menu-in 140ms cubic-bezier(0.16, 1, 0.3, 1);
+}
+.notes-float-menu[data-side="top"] > :first-child {
+  --menu-drift: 4px;
+  transform-origin: bottom left;
+}
+@keyframes notes-menu-in {
+  from {
+    opacity: 0;
+    transform: translateY(var(--menu-drift, -4px)) scale(0.98);
+  }
+}
+@keyframes notes-menu-fade {
+  from {
+    opacity: 0;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .notes-float-menu > :first-child {
+    animation-name: notes-menu-fade;
+  }
+}
+
 /* Reduced motion: the rows appear and go at once and only fade. */
 @media (prefers-reduced-motion: reduce) {
   .sidebar-sub-pages {

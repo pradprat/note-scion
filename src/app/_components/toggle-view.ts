@@ -2,9 +2,15 @@ import { Extension } from "@tiptap/core";
 import { Fragment, type Node as PMNode } from "@tiptap/pm/model";
 import { NodeSelection, Plugin, Selection, TextSelection, type EditorState } from "@tiptap/pm/state";
 import type { ResolvedPos } from "@tiptap/pm/model";
+import type { EditorView } from "@tiptap/pm/view";
 import { Toggle } from "@/lib/toggle";
 
 const SVG = "http://www.w3.org/2000/svg";
+
+/** The fold's timing, the same as `.sidebar-sub-pages` in globals.css: closing is quicker. */
+const FOLD_OPEN_MS = 240;
+const FOLD_CLOSE_MS = 180;
+const FOLD_EASE = "cubic-bezier(0.16, 1, 0.3, 1)";
 
 /** A small right-pointing chevron; CSS turns it down while the toggle is open. */
 function chevron(): SVGElement {
@@ -46,9 +52,46 @@ export const ToggleBlock = Toggle.extend({
       contentDOM.className = "notes-toggle-content";
       dom.append(arrow, contentDOM);
 
+      // Opening and closing fold the blocks out of the summary and back into it, the way
+      // the sidebar's sub-pages grow out of their row (same curve and timings).
+      let running: Animation[] = [];
+      const settle = () => {
+        for (const animation of running) animation.cancel();
+        running = [];
+        delete dom.dataset.moving;
+        delete dom.dataset.closing;
+      };
+      const animate = (open: boolean, from: number) => {
+        const body = Array.from(contentDOM.children).slice(1);
+        // Turned around halfway, the blocks fade on from where they were.
+        const opacity = running.length > 1 && body[0] ? Number(getComputedStyle(body[0]).opacity) : open ? 0 : 1;
+        settle();
+        const to = dom.getBoundingClientRect().height;
+        if (Math.abs(to - from) < 1 || !body.length) return;
+        if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
+          // No movement: opening only fades the blocks in, and closing is immediate.
+          if (open) running = body.map((el) => el.animate([{ opacity }, { opacity: 1 }], { duration: 150, easing: "ease-out" }));
+          return;
+        }
+        const timing = { duration: open ? FOLD_OPEN_MS : FOLD_CLOSE_MS, easing: FOLD_EASE };
+        dom.dataset.moving = "";
+        if (!open) dom.dataset.closing = "";
+        const height = dom.animate([{ height: `${from}px` }, { height: `${to}px` }], timing);
+        running = [height, ...body.map((el) => el.animate([{ opacity }, { opacity: open ? 1 : 0 }], timing))];
+        height.onfinish = () => {
+          if (running[0] === height) settle();
+        };
+      };
+
       const sync = () => {
         const open = Boolean(current.attrs.open);
+        // Its height as it shows now (partway through a fold, too), before it changes.
+        const changed = dom.dataset.open !== undefined && dom.dataset.open !== String(open);
+        const from = changed && dom.isConnected ? dom.getBoundingClientRect().height : 0;
         dom.dataset.open = String(open);
+        if (from && folding) animate(open, from);
+        // Changed some other way: no fold, and one in progress stops where the state is.
+        else if (changed) settle();
         dom.dataset.level = String(current.attrs.level);
         arrow.setAttribute("aria-expanded", String(open));
         arrow.setAttribute("aria-label", open ? "Close toggle" : "Open toggle");
@@ -61,7 +104,7 @@ export const ToggleBlock = Toggle.extend({
       arrow.addEventListener("click", () => {
         const pos = getPos();
         if (pos === undefined) return;
-        editor.view.dispatch(setOpen(editor.state, pos, !current.attrs.open));
+        fold(editor.view, pos, !current.attrs.open);
       });
 
       return {
@@ -76,14 +119,29 @@ export const ToggleBlock = Toggle.extend({
         // Only the arrow's own events are ours; everything in the content is ProseMirror's.
         stopEvent: (event) => event.target instanceof Node && arrow.contains(event.target),
         ignoreMutation: (mutation) => !contentDOM.contains(mutation.target),
+        destroy: settle,
       };
     };
   },
 });
 
-function setOpen(state: EditorState, pos: number, open: boolean) {
-  const node = state.doc.nodeAt(pos);
-  return state.tr.setNodeMarkup(pos, undefined, { ...node?.attrs, open }).setMeta("addToHistory", false);
+/**
+ * True only while the owner's own click or Ctrl Enter opens or closes a toggle. Only then
+ * does it fold; a page that changes under you (an edit from Claude, a newer version
+ * loaded) shows the new state at once, so nothing moves that you didn't move.
+ */
+let folding = false;
+
+/** Opens or closes the toggle at `pos`, as the owner asked, with its fold. */
+function fold(view: EditorView, pos: number, open: boolean) {
+  const node = view.state.doc.nodeAt(pos);
+  const tr = view.state.tr.setNodeMarkup(pos, undefined, { ...node?.attrs, open }).setMeta("addToHistory", false);
+  folding = true;
+  try {
+    view.dispatch(tr);
+  } finally {
+    folding = false;
+  }
 }
 
 /** The toggle holding `$pos`, innermost first. */
@@ -258,7 +316,7 @@ export const ToggleBehavior = Extension.create({
       if (state.selection.$from.parent.type.spec.code) return false;
       const found = enclosingToggle(state.selection.$from);
       if (!found) return false;
-      view.dispatch(setOpen(state, found.pos, !found.node.attrs.open));
+      fold(view, found.pos, !found.node.attrs.open);
       return true;
     };
 

@@ -31,6 +31,7 @@ export function floatMenu(element: HTMLElement, scrollContext: Element) {
   let clientRect: ClientRect = null;
   let last = new DOMRect();
   let side: Side | null = null;
+  element.classList.add("notes-float-menu");
   // The caret's rect; the last one we had, while the suggestion is being torn down.
   const reference = {
     contextElement: scrollContext,
@@ -56,6 +57,7 @@ export function floatMenu(element: HTMLElement, scrollContext: Element) {
     if (side && !fits(side) && room(preferred) > room(side)) next = preferred;
     if (full > 0) side = next; // not settled while React is still filling it in
     element.style.setProperty("--menu-max-h", `${Math.max(96, Math.floor(room(next)))}px`);
+    element.dataset.side = next;
 
     void computePosition(reference, element, {
       placement: `${next}-start`,

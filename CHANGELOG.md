@@ -26,6 +26,10 @@ All notable changes to note-scion are listed here. The format follows
   with a search field at the top. Type to narrow it ("heart", "blue heart", "food"),
   Enter picks the first match, and the arrow keys move from the field into the grid.
   On a touchscreen the field waits for a tap, so the keyboard doesn't cover the grid.
+- Toggles fold open and closed instead of snapping: the blocks inside grow out of the
+  summary and fold back into it, with the same timing as sub-pages in the sidebar. The
+  `/`, `@` and Turn into menus fade in with a slight drift away from their line. With
+  reduced motion turned on, toggles only fade in and menus only fade.
 
 ## [1.1.0] - 2026-11-09
 
