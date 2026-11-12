@@ -5,6 +5,7 @@ import { usePathname, useSearchParams } from "next/navigation";
 import { BackendProvider } from "../../_components/backend";
 import { NotesProvider } from "../../_components/notes-provider";
 import NotesShell from "../../_components/notes-shell";
+import { SIDEBAR_WIDTH_COOKIE_NAME, parseSidebarWidth } from "@/lib/sidebar-width";
 import { createDemoBackend, DEMO_BASE, getTree, loadDemo, subscribe } from "./demo-store";
 
 /**
@@ -43,11 +44,19 @@ function DemoWorkspace({ children }: { children: React.ReactNode }) {
   const activeId = pathname === DEMO_BASE ? page : null;
   // Written by the shadcn SidebarProvider, as in the real app.
   const [sidebarOpen] = useState(() => !document.cookie.includes("sidebar_state=false"));
+  const [sidebarWidth] = useState(() =>
+    parseSidebarWidth(
+      document.cookie
+        .split("; ")
+        .find((pair) => pair.startsWith(`${SIDEBAR_WIDTH_COOKIE_NAME}=`))
+        ?.slice(SIDEBAR_WIDTH_COOKIE_NAME.length + 1)
+    )
+  );
 
   return (
     <BackendProvider backend={backend}>
       <NotesProvider initialTree={tree} activeId={activeId}>
-        <NotesShell sidebarOpen={sidebarOpen}>{children}</NotesShell>
+        <NotesShell sidebarOpen={sidebarOpen} sidebarWidth={sidebarWidth}>{children}</NotesShell>
       </NotesProvider>
     </BackendProvider>
   );

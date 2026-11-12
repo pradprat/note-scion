@@ -275,8 +275,9 @@ would read: code, key names, ids. Never use it as decoration or as a label style
 
 ## Layout
 
-The app is a sidebar and a page. The sidebar is a fixed 256px rail (288px as a sheet on
-mobile, collapsible). The top bar is a 48px strip that sticks to the top of the page. The
+The app is a sidebar and a page. The sidebar is a 256px rail by default (288px as a sheet
+on mobile, collapsible). On desktop its right edge drags it anywhere from 208 to 480px,
+and that width is kept in a cookie so the first paint matches. The top bar is a 48px strip that sticks to the top of the page. The
 page is one centred column, `max-width` 768px, with 24px side padding that widens to 64px
 from 640px up. The page starts 40px below the top bar on phones and 64px on wider
 screens, and there's a click-to-write area below the last block that's at least 35% of
@@ -359,6 +360,11 @@ Precise and plain: shadcn's button at exact sizes, with no custom shapes.
   and a chevron to expand nested pages. Hover and selection fill with Pale Rule (Graphite
   in dark mode), and the selected row also turns weight 500. Trash, Connected apps and
   Log out sit at the bottom, above a hairline.
+- **Resize handle:** an 8px hit area over the sidebar's right border, with a
+  `col-resize` cursor. At rest it's invisible. On hover a 2px Pale Rule line shows over
+  the border, and it turns to the ring colour on focus and while dragging. While
+  dragging, the width follows the pointer with no easing. Double-click or Enter resets it
+  to 256px, and the arrow keys move it in 16px steps.
 - **Row actions:** with a mouse, a row's trash and + lie over the end of its title on
   the hover fill, only while the row is hovered or one of them has keyboard focus, so a
   title at rest has the whole row. On touch they fold into one 40px "⋯" that opens a

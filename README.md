@@ -57,6 +57,8 @@ see one arrive.
 
 - **Nested pages**: a page tree in the sidebar, with drag-and-drop to nest and reorder, and
   sub-page blocks inside pages.
+- **Resizable sidebar**: drag its right edge (208 to 480px) to fit long titles, and
+  double-click the edge to reset it. The width is remembered across visits.
 - **Quick switcher**: `Ctrl K` / `⌘ K` searches titles and the text inside pages, or
   starts a new page.
 - **Trash**: deleted pages wait 30 days, with an undo right after a delete.

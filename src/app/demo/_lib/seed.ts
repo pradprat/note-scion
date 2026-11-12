@@ -108,7 +108,7 @@ This is a live demo. It runs entirely in your browser: what you write here is sa
 - [ ] ${touch ? "Tap **Search** in the sidebar" : "Press Ctrl K (⌘ K on a Mac)"} to jump to any page or search inside them.
 - [ ] Type \`@\` and then "tomorrow" or "next friday" to drop in a date.
 - [ ] ${touch ? "Tap ⋯ next to a page in the sidebar, then **Add a page inside**." : "Nest a page by dragging it onto another in the sidebar, or with Alt Shift →."}
-- [ ] Delete a page, then bring it back from the Trash.
+${touch ? "" : "- [ ] Drag the sidebar's right edge to make room for long titles. Double-click the edge to reset it.\n"}- [ ] Delete a page, then bring it back from the Trash.
 
 ## Inside this page
 

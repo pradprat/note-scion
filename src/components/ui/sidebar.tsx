@@ -7,6 +7,13 @@ import { PanelLeft } from "lucide-react"
 
 import { useIsMobile } from "@/hooks/use-mobile"
 import { cn } from "@/lib/utils"
+import {
+  SIDEBAR_WIDTH_COOKIE_NAME,
+  SIDEBAR_WIDTH_DEFAULT,
+  SIDEBAR_WIDTH_MAX,
+  SIDEBAR_WIDTH_MIN,
+  clampSidebarWidth,
+} from "@/lib/sidebar-width"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Separator } from "@/components/ui/separator"
@@ -27,11 +34,14 @@ import {
 
 const SIDEBAR_COOKIE_NAME = "sidebar_state"
 const SIDEBAR_COOKIE_MAX_AGE = 60 * 60 * 24 * 7
-const SIDEBAR_WIDTH = "16rem"
 const SIDEBAR_WIDTH_MOBILE = "18rem"
 const SIDEBAR_WIDTH_ICON = "3rem"
 // Mod+B is bold in the notes editor, so the sidebar toggles on Mod+\ instead.
 const SIDEBAR_KEYBOARD_SHORTCUT = "\\"
+
+const SIDEBAR_WIDTH_COOKIE_MAX_AGE = 60 * 60 * 24 * 365
+/** How far one arrow key press moves the resize handle, in px. */
+const SIDEBAR_WIDTH_STEP = 16
 
 type SidebarContextProps = {
   state: "expanded" | "collapsed"
@@ -41,6 +51,14 @@ type SidebarContextProps = {
   setOpenMobile: (open: boolean) => void
   isMobile: boolean
   toggleSidebar: () => void
+  /** Desktop width in px. */
+  width: number
+  /** Sets the width (clamped) without remembering it. */
+  setWidth: (width: number) => void
+  /** Sets the width and remembers it in the cookie. */
+  commitWidth: (width: number) => void
+  resizing: boolean
+  setResizing: (resizing: boolean) => void
 }
 
 const SidebarContext = React.createContext<SidebarContextProps | null>(null)
@@ -58,6 +76,8 @@ const SidebarProvider = React.forwardRef<
   HTMLDivElement,
   React.ComponentProps<"div"> & {
     defaultOpen?: boolean
+    /** Desktop width in px, e.g. from the sidebar_width cookie. */
+    defaultWidth?: number
     open?: boolean
     onOpenChange?: (open: boolean) => void
   }
@@ -65,6 +85,7 @@ const SidebarProvider = React.forwardRef<
   (
     {
       defaultOpen = true,
+      defaultWidth = SIDEBAR_WIDTH_DEFAULT,
       open: openProp,
       onOpenChange: setOpenProp,
       className,
@@ -95,6 +116,18 @@ const SidebarProvider = React.forwardRef<
       },
       [setOpenProp, open]
     )
+
+    const [width, _setWidth] = React.useState(() => clampSidebarWidth(defaultWidth))
+    const [resizing, setResizing] = React.useState(false)
+    const setWidth = React.useCallback(
+      (value: number) => _setWidth(clampSidebarWidth(value)),
+      []
+    )
+    const commitWidth = React.useCallback((value: number) => {
+      const next = clampSidebarWidth(value)
+      _setWidth(next)
+      document.cookie = `${SIDEBAR_WIDTH_COOKIE_NAME}=${next}; path=/; max-age=${SIDEBAR_WIDTH_COOKIE_MAX_AGE}`
+    }, [])
 
     // Helper to toggle the sidebar.
     const toggleSidebar = React.useCallback(() => {
@@ -132,17 +165,35 @@ const SidebarProvider = React.forwardRef<
         openMobile,
         setOpenMobile,
         toggleSidebar,
+        width,
+        setWidth,
+        commitWidth,
+        resizing,
+        setResizing,
       }),
-      [state, open, setOpen, isMobile, openMobile, setOpenMobile, toggleSidebar]
+      [
+        state,
+        open,
+        setOpen,
+        isMobile,
+        openMobile,
+        setOpenMobile,
+        toggleSidebar,
+        width,
+        setWidth,
+        commitWidth,
+        resizing,
+      ]
     )
 
     return (
       <SidebarContext.Provider value={contextValue}>
         <TooltipProvider delayDuration={0}>
           <div
+            data-resizing={resizing || undefined}
             style={
               {
-                "--sidebar-width": SIDEBAR_WIDTH,
+                "--sidebar-width": `${width}px`,
                 "--sidebar-width-icon": SIDEBAR_WIDTH_ICON,
                 ...style,
               } as React.CSSProperties
@@ -244,6 +295,8 @@ const Sidebar = React.forwardRef<
           className={cn(
             // Folding away is quicker than coming back. Reduced motion: no sliding.
             "relative w-[--sidebar-width] bg-transparent transition-[width] duration-260 ease-drawer group-data-[state=collapsed]:duration-180 motion-reduce:transition-none",
+            // While the edge is dragged, the width follows the pointer with no easing.
+            "group-data-[resizing=true]/sidebar-wrapper:transition-none",
             "group-data-[collapsible=offcanvas]:w-0",
             "group-data-[side=right]:rotate-180",
             variant === "floating" || variant === "inset"
@@ -255,6 +308,7 @@ const Sidebar = React.forwardRef<
           className={cn(
             // Slides on transform rather than left/right, in step with the gap above.
             "fixed inset-y-0 z-10 hidden h-svh w-[--sidebar-width] transition-[transform,width] duration-260 ease-drawer group-data-[state=collapsed]:duration-180 motion-reduce:transition-none md:flex",
+            "group-data-[resizing=true]/sidebar-wrapper:transition-none",
             side === "left"
               ? "left-0 group-data-[collapsible=offcanvas]:-translate-x-full"
               : "right-0 group-data-[collapsible=offcanvas]:translate-x-full",
@@ -334,6 +388,94 @@ const SidebarRail = React.forwardRef<
   )
 })
 SidebarRail.displayName = "SidebarRail"
+
+/**
+ * The desktop sidebar's right edge: drag it to resize, double-click (or Enter) to go back
+ * to the default width. From the keyboard it's a separator the arrow keys move.
+ * Assumes a left sidebar flush with the window's left edge (the "sidebar" variant).
+ */
+const SidebarResizeHandle = React.forwardRef<
+  HTMLDivElement,
+  React.ComponentProps<"div">
+>(({ className, ...props }, ref) => {
+  const { width, setWidth, commitWidth, resizing, setResizing } = useSidebar()
+  // Set while a drag is under way: puts the page's cursor and text selection back.
+  const restoreBody = React.useRef<(() => void) | null>(null)
+
+  const stop = () => {
+    if (!restoreBody.current) return
+    restoreBody.current()
+    restoreBody.current = null
+    setResizing(false)
+    commitWidth(width)
+  }
+
+  // A drag cut short by unmounting still puts the cursor back.
+  React.useEffect(() => () => restoreBody.current?.(), [])
+
+  const onKeyDown = (event: React.KeyboardEvent<HTMLDivElement>) => {
+    const next =
+      event.key === "ArrowLeft"
+        ? width - SIDEBAR_WIDTH_STEP
+        : event.key === "ArrowRight"
+          ? width + SIDEBAR_WIDTH_STEP
+          : event.key === "Home"
+            ? SIDEBAR_WIDTH_MIN
+            : event.key === "End"
+              ? SIDEBAR_WIDTH_MAX
+              : event.key === "Enter"
+                ? SIDEBAR_WIDTH_DEFAULT
+                : null
+    if (next === null) return
+    event.preventDefault()
+    commitWidth(next)
+  }
+
+  return (
+    <div
+      ref={ref}
+      data-sidebar="resize-handle"
+      role="separator"
+      aria-orientation="vertical"
+      aria-label="Resize sidebar"
+      aria-valuenow={width}
+      aria-valuemin={SIDEBAR_WIDTH_MIN}
+      aria-valuemax={SIDEBAR_WIDTH_MAX}
+      tabIndex={0}
+      title="Drag to resize, double-click to reset"
+      data-resizing={resizing || undefined}
+      onPointerDown={(event) => {
+        if (event.button !== 0) return
+        event.preventDefault()
+        event.currentTarget.setPointerCapture(event.pointerId)
+        const { cursor, userSelect } = document.body.style
+        document.body.style.cursor = "col-resize"
+        document.body.style.userSelect = "none"
+        restoreBody.current = () => {
+          document.body.style.cursor = cursor
+          document.body.style.userSelect = userSelect
+        }
+        setResizing(true)
+      }}
+      onPointerMove={(event) => {
+        if (restoreBody.current) setWidth(event.clientX)
+      }}
+      onPointerUp={stop}
+      onLostPointerCapture={stop}
+      onDoubleClick={() => commitWidth(SIDEBAR_WIDTH_DEFAULT)}
+      onKeyDown={onKeyDown}
+      className={cn(
+        "absolute inset-y-0 -right-1 z-20 hidden w-2 cursor-col-resize touch-none outline-none md:block",
+        // A thin line over the border shows on hover, focus and while dragging.
+        "after:absolute after:inset-y-0 after:left-1/2 after:w-0.5 after:-translate-x-1/2 after:transition-colors after:duration-120",
+        "hover:after:bg-sidebar-border focus-visible:after:bg-sidebar-ring data-[resizing=true]:after:bg-sidebar-ring",
+        className
+      )}
+      {...props}
+    />
+  )
+})
+SidebarResizeHandle.displayName = "SidebarResizeHandle"
 
 const SidebarInset = React.forwardRef<
   HTMLDivElement,
@@ -778,6 +920,7 @@ export {
   SidebarMenuSubItem,
   SidebarProvider,
   SidebarRail,
+  SidebarResizeHandle,
   SidebarSeparator,
   SidebarTrigger,
   useSidebar,

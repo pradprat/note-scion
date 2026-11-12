@@ -6,6 +6,13 @@ All notable changes to note-scion are listed here. The format follows
 
 ## [Unreleased]
 
+### Added
+
+- The sidebar resizes. Drag its right edge to anywhere from 208 to 480px wide, and
+  double-click the edge to go back to 256px. From the keyboard, focus the edge and use
+  the arrow keys, Home and End, or Enter to reset. The width is kept in a
+  `sidebar_width` cookie, so it renders at that width on load.
+
 ## [1.1.0] - 2026-11-09
 
 ### Added

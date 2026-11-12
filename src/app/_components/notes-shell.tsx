@@ -29,10 +29,13 @@ export function useShell(): ShellContextValue {
  */
 export default function NotesShell({
   sidebarOpen,
+  sidebarWidth,
   children,
 }: {
   /** The folded state remembered in the sidebar cookie. */
   sidebarOpen: boolean;
+  /** The desktop width in px remembered in the sidebar_width cookie. */
+  sidebarWidth?: number;
   children: React.ReactNode;
 }) {
   const [switcherOpen, setSwitcherOpen] = useState(false);
@@ -58,7 +61,7 @@ export default function NotesShell({
   }, []);
 
   return (
-    <SidebarProvider defaultOpen={sidebarOpen} className="h-dvh overflow-hidden">
+    <SidebarProvider defaultOpen={sidebarOpen} defaultWidth={sidebarWidth} className="h-dvh overflow-hidden">
       <ShellBody openSwitcher={showSwitcher} modKey={modKey}>
         {children}
       </ShellBody>

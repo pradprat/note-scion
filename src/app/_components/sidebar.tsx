@@ -28,6 +28,7 @@ import {
   SidebarMenu,
   SidebarMenuButton,
   SidebarMenuItem,
+  SidebarResizeHandle,
   useSidebar,
 } from "@/components/ui/sidebar";
 import type { NoteNode } from "@/lib/types";
@@ -252,6 +253,8 @@ export default function NotesSidebar() {
             )}
           </SidebarMenu>
         </SidebarFooter>
+        {/* Desktop only: drag the edge to widen the tree for long titles. */}
+        <SidebarResizeHandle />
       </Sidebar>
     </DragProvider>
   );
