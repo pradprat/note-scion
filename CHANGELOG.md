@@ -19,6 +19,14 @@ All notable changes to note-scion are listed here. The format follows
   out, and Ctrl or ⌘ Z undoes it in one step. Tables, databases, sub-pages and dividers
   are still only selected by the click.
 
+### Changed
+
+- The page icon picker offers about 350 emoji instead of 48, in groups (notes and work,
+  ideas and status, tech, home, travel, nature, food, activities, people and symbols),
+  with a search field at the top. Type to narrow it ("heart", "blue heart", "food"),
+  Enter picks the first match, and the arrow keys move from the field into the grid.
+  On a touchscreen the field waits for a tap, so the keyboard doesn't cover the grid.
+
 ## [1.1.0] - 2026-11-09
 
 ### Added

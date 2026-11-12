@@ -57,7 +57,7 @@ see one arrive.
 **Organising**
 
 - **Nested pages**: a page tree in the sidebar, with drag-and-drop to nest and reorder, and
-  sub-page blocks inside pages.
+  sub-page blocks inside pages. Give a page an icon from about 350 searchable emoji.
 - **Resizable sidebar**: drag its right edge (208 to 480px) to fit long titles, and
   double-click the edge to reset it. The width is remembered across visits.
 - **Quick switcher**: `Ctrl K` / `⌘ K` searches titles and the text inside pages, or
