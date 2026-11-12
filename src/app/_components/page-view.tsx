@@ -16,6 +16,7 @@ import {
   BreadcrumbPage,
   BreadcrumbSeparator,
 } from "@/components/ui/breadcrumb";
+import { comparable } from "@/lib/comparable";
 import { exactTime, timeAgo } from "@/lib/dates";
 import type { McpEdit, NotePage, NotePatch } from "@/lib/types";
 import { useBackend } from "./backend";
@@ -32,21 +33,6 @@ type SaveStatus = "saved" | "unsaved" | "saving" | "error" | "conflict" | "missi
 const SAVE_DELAY = 800;
 
 const newer = (a: string, b: string) => Date.parse(a) > Date.parse(b);
-
-/**
- * A page body as it compares for saving: without the empty line the editor keeps at the
- * end. A page stored ending in a list or a heading gets that line added by the editor at
- * its first transaction, which is tidying, not an edit.
- */
-function comparable(content: JSONContent | null | undefined): string {
-  const blocks = [...(content?.content ?? [])];
-  while (blocks.length) {
-    const last = blocks[blocks.length - 1];
-    if (last.type !== "paragraph" || last.content?.length) break;
-    blocks.pop();
-  }
-  return JSON.stringify(blocks);
-}
 
 /**
  * Lets something under the page hold its autosave for a while: the demo's stand-in for

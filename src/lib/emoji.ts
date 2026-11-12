@@ -26,6 +26,7 @@ const groups: [name: string, lines: string[]][] = [
       "📍 pin location place",
       "📎 paperclip attachment",
       "🖇️ paperclips linked",
+      "✍️ writing hand write",
       "✏️ pencil edit draft",
       "🖊️ pen write",
       "🖋️ fountain pen write",
@@ -422,22 +423,49 @@ export const EMOJI_GROUPS: EmojiGroup[] = groups.map(([name, lines]) => ({
   }),
 }));
 
+/** What a search's matches are shown under, as one group. */
+export const RESULTS = "Results";
+
 /**
- * The groups with only the emoji whose words (or group name) start with every word of
- * the query, and without the groups that end up empty. An emoji in two groups shows
- * once, in the first.
+ * With no query, every group in order. With one, a single "Results" group of the emoji
+ * that have a word (or a group name) starting with each word of the query, best first:
+ * an emoji's own first words beat its later ones, and those beat its group's name, so
+ * "heart" leads with ❤️ rather than 😍. Empty when nothing matches. An emoji in two
+ * groups shows once.
  */
 export function searchEmoji(query: string): EmojiGroup[] {
   const terms = query.toLowerCase().split(/\s+/).filter(Boolean);
   const seen = new Set<string>();
-  return EMOJI_GROUPS.map((group) => ({
-    name: group.name,
-    entries: group.entries.filter((entry) => {
-      if (seen.has(entry.emoji)) return false;
-      const words = `${entry.words} ${group.name}`.toLowerCase().split(/\s+/);
-      const match = terms.every((term) => words.some((word) => word.startsWith(term)));
-      if (match) seen.add(entry.emoji);
-      return match;
-    }),
-  })).filter((group) => group.entries.length > 0);
+  if (!terms.length) {
+    return EMOJI_GROUPS.map((group) => ({
+      name: group.name,
+      entries: group.entries.filter((entry) => {
+        if (seen.has(entry.emoji)) return false;
+        seen.add(entry.emoji);
+        return true;
+      }),
+    }));
+  }
+  const found: { entry: EmojiEntry; rank: number; order: number }[] = [];
+  for (const group of EMOJI_GROUPS) {
+    const groupWords = group.name.toLowerCase().split(/\s+/);
+    for (const entry of group.entries) {
+      if (seen.has(entry.emoji)) continue;
+      seen.add(entry.emoji);
+      const words = entry.words.toLowerCase().split(/\s+/);
+      let rank = 0;
+      for (const term of terms) {
+        const own = words.findIndex((word) => word.startsWith(term));
+        if (own >= 0) rank += own;
+        else if (groupWords.some((word) => word.startsWith(term))) rank += 100;
+        else {
+          rank = -1;
+          break;
+        }
+      }
+      if (rank >= 0) found.push({ entry, rank, order: found.length });
+    }
+  }
+  found.sort((a, b) => a.rank - b.rank || a.order - b.order);
+  return found.length ? [{ name: RESULTS, entries: found.map((f) => f.entry) }] : [];
 }

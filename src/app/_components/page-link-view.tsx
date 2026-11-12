@@ -65,7 +65,16 @@ export const PageBlock = PageLink.extend<PageBlockOptions, { busy: boolean }>({
   },
 
   addNodeView() {
-    return ReactNodeViewRenderer(PageLinkView);
+    return ReactNodeViewRenderer(PageLinkView, {
+      // A press on the link opens the page, so the editor stays out of it. Otherwise it
+      // would select the block on release, from the page it saw on press: if that page
+      // changed in between, ProseMirror threw ("Selection passed to setSelection must
+      // point at the current document"). Drags and drops are still the editor's.
+      stopEvent: ({ event }) =>
+        ["mousedown", "mouseup", "click", "auxclick"].includes(event.type) &&
+        event.target instanceof Element &&
+        event.target.closest("a.notes-page-link-row") !== null,
+    });
   },
 
   addCommands() {

@@ -23,13 +23,24 @@ All notable changes to note-scion are listed here. The format follows
 
 - The page icon picker offers about 350 emoji instead of 48, in groups (notes and work,
   ideas and status, tech, home, travel, nature, food, activities, people and symbols),
-  with a search field at the top. Type to narrow it ("heart", "blue heart", "food"),
-  Enter picks the first match, and the arrow keys move from the field into the grid.
+  with a search field at the top. Typing shows the matches as one grid, best first
+  ("heart" leads with ❤️; "blue heart" and "food" work too), Enter picks the first, and
+  the arrow keys move from the field into the grid.
   On a touchscreen the field waits for a tap, so the keyboard doesn't cover the grid.
 - Toggles fold open and closed instead of snapping: the blocks inside grow out of the
   summary and fold back into it, with the same timing as sub-pages in the sidebar. The
   `/`, `@` and Turn into menus fade in with a slight drift away from their line. With
   reduced motion turned on, toggles only fade in and menus only fade.
+
+### Fixed
+
+- Clicking into a page that was written in Markdown (by Claude over MCP, or the demo's
+  sample pages) no longer counts as an edit. The save status said "Editing" and the
+  page was saved again unchanged, which could also turn a later edit from Claude into a
+  conflict. The check now compares the page as the editor holds it, with its default
+  attributes and key order.
+- Clicking a sub-page link inside a page no longer throws an error in the editor ("Selection
+  passed to setSelection must point at the current document") as the page opens.
 
 ## [1.1.0] - 2026-11-09
 

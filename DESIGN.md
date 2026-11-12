@@ -416,8 +416,9 @@ notification.
   Frost Paper on a 4px radius. On coarse pointers its text is 16px.
 - **Icon picker:** a 304px popover under the page icon: an "Icon" label with Remove, a
   32px search field, then about 350 emoji in named groups (12px muted group headings)
-  on an 8-column grid of 32px ghost buttons, scrolling within 288px. It opens scrolled to
-  the current icon, which keeps a Frost Paper fill. With a keyboard the search field has
+  on an 8-column grid of 32px ghost buttons, scrolling within 288px. A search shows one
+  "Results" group instead, best match first. It opens scrolled to the current icon, which
+  keeps a Frost Paper fill. With a keyboard the search field has
   focus (Enter picks the first match, ↓ enters the grid, ↑ from the top row returns);
   on coarse pointers the current icon takes focus instead, so no on-screen keyboard
   covers the grid.
