@@ -25,7 +25,7 @@ import IconPicker from "./icon-picker";
 import NoteEditor from "./editor";
 import TopBar from "./top-bar";
 import TitleEditor, { type TitleEditorHandle } from "./title-editor";
-import TitleText from "./title-text";
+import TitleText, { useTitle } from "./title-text";
 import { applyRemoteContent } from "./remote-content";
 
 type SaveStatus = "saved" | "unsaved" | "saving" | "error" | "conflict" | "missing";
@@ -224,6 +224,12 @@ export default function PageView({ page, after }: { page: NotePage; after?: Reac
   const { status, mcpEdit, schedule, flush, loadLatest, keepMine, hold } = useAutosave(page, applyRemote);
 
   const ancestors = ancestorsOf(page.id);
+
+  // The browser tab follows the title as it's typed, with its dates read relative to today.
+  const tabTitle = useTitle(title);
+  useEffect(() => {
+    document.title = `Notes | ${tabTitle}`;
+  }, [tabTitle]);
 
   const changeTitle = useCallback(
     (value: string) => {

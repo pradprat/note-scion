@@ -19,7 +19,7 @@ const dmMono = DM_Mono({
 
 // A private workspace: never indexed.
 export const metadata: Metadata = {
-  title: { default: "Notes", template: "%s · Notes" },
+  title: { default: "Notes", template: "Notes | %s" },
   robots: { index: false, follow: false, googleBot: { index: false, follow: false } },
 };
 

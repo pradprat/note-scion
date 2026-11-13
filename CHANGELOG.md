@@ -18,6 +18,9 @@ All notable changes to note-scion are listed here. The format follows
   keeping its text. A list item changes on its own, a toggle's inside follows its line
   out, and Ctrl or ⌘ Z undoes it in one step. Tables, databases, sub-pages and dividers
   are still only selected by the click.
+- The browser tab names the open page: "Notes | Standup Today". It follows the title as
+  you type it, and the trash and connected apps read "Notes | Trash" and
+  "Notes | Connected apps".
 
 ### Changed
 
