@@ -41,6 +41,10 @@ All notable changes to note-scion are listed here. The format follows
   attributes and key order.
 - Clicking a sub-page link inside a page no longer throws an error in the editor ("Selection
   passed to setSelection must point at the current document") as the page opens.
+- Scrolling the icon picker no longer lags. Over a transparent background at 1x zoom,
+  Chrome scrolled the grid by repainting it, so all ~350 colour emoji were drawn again
+  on every wheel tick. The grid now has the popover's own opaque background, so it is
+  drawn once when the picker opens and then scrolls on the compositor.
 
 ## [1.1.0] - 2026-11-09
 

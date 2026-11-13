@@ -126,7 +126,13 @@ export default function IconPicker({
           aria-label="Search emoji"
           className="mb-2 h-8 text-sm [@media(pointer:coarse)]:text-base"
         />
-        <div ref={gridRef} onKeyDown={onGridKey} className="relative max-h-72 overflow-y-auto overscroll-contain [scrollbar-width:thin]">
+        {/* The opaque background lets Chrome scroll the grid on the compositor; over a
+            transparent one at 1x it repaints all ~350 colour emoji on every wheel tick. */}
+        <div
+          ref={gridRef}
+          onKeyDown={onGridKey}
+          className="relative max-h-72 overflow-y-auto overscroll-contain bg-popover [scrollbar-width:thin]"
+        >
           {groups.length === 0 && <p className="px-1 py-6 text-center text-sm text-muted-foreground">No emoji match</p>}
           {groups.map((group) => (
             <section key={group.name} aria-label={group.name} className="mb-2 last:mb-0">
