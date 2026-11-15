@@ -4,7 +4,7 @@
 
 /* Theme: a five-step cool slate scale.
      #0B0D10  216 18.5% 5.3%     #171C22  212.7 19.3% 11.2%    #2A333D  211.6 18.4% 20.2%
-     #5D6F82  210.8 16.6% 43.7%  #E7EEF5  210 41.2% 93.3%
+     #57687A  210.8 16.6% 41%    #E7EEF5  210 41.2% 93.3%
    Dark mode is the scale as is. Light mode runs it the other way, on white. On :root so
    dialogs, popovers and toasts that Radix portals into <body> get it too. A tool used at
    any hour, so it follows the system setting. */
@@ -20,8 +20,8 @@
   --secondary: 210 41.2% 93.3%;
   --secondary-foreground: 212.7 19.3% 11.2%;
   --muted: 210 41.2% 93.3%;
-  /* #5D6F82: 5.2:1 on white, 4.4:1 on the sidebar. */
-  --muted-foreground: 210.8 16.6% 43.7%;
+  /* #57687A: 5.7:1 on white, 4.9:1 on the sidebar, so muted text passes on both. */
+  --muted-foreground: 210.8 16.6% 41%;
   --accent: 210 41.2% 93.3%;
   --accent-foreground: 212.7 19.3% 11.2%;
   /* #DC2626: 4.8:1 as text on white, and white on it as a button fill. */
@@ -30,7 +30,7 @@
   /* Between #E7EEF5 and #5D6F82, so lines still show against the #E7EEF5 sidebar. */
   --border: 210 28% 87%;
   --input: 210 28% 87%;
-  --ring: 210.8 16.6% 43.7%;
+  --ring: 210.8 16.6% 41%;
   --radius: 0.5rem;
   --sidebar-background: 210 41.2% 93.3%;
   --sidebar-foreground: 211.6 18.4% 20.2%;
@@ -39,7 +39,7 @@
   --sidebar-accent: 210 28% 87%;
   --sidebar-accent-foreground: 216 18.5% 5.3%;
   --sidebar-border: 210 28% 87%;
-  --sidebar-ring: 210.8 16.6% 43.7%;
+  --sidebar-ring: 210.8 16.6% 41%;
   color-scheme: light;
 }
 @media (prefers-color-scheme: dark) {
@@ -56,9 +56,9 @@
     --secondary: 211.6 18.4% 20.2%;
     --secondary-foreground: 210 41.2% 93.3%;
     --muted: 212.7 19.3% 11.2%;
-    /* #5D6F82 itself reads at ~3.8:1 here, too faint for small text, so the grey text is
-       a lighter tint of the same hue (~7:1 on the page, ~4.6:1 on #2A333D). #5D6F82
-       stays on as the focus ring. */
+    /* Slate Pencil reads at ~3.4:1 here, too faint for small text, so the grey text is
+       a lighter tint of the same hue (~7:1 on the page, ~4.6:1 on #2A333D). The focus
+       ring stays a step lighter than in light mode, #5D6F82, to keep 3:1 on #171C22. */
     --muted-foreground: 211 17% 62%;
     /* Hover and selected rows: #2A333D, which shows on both the page and #171C22. */
     --accent: 211.6 18.4% 20.2%;
@@ -190,6 +190,18 @@ body {
 .notes-editor ul[data-type="taskList"] li > div {
   flex: 1;
   min-width: 0;
+}
+@media (pointer: coarse) {
+  /* Finger-sized, without spacing the list out: the tap area reaches into the margin
+     and stays clear of the text and of the next item's box. */
+  .notes-editor ul[data-type="taskList"] li > label {
+    position: relative;
+  }
+  .notes-editor ul[data-type="taskList"] li > label::after {
+    content: "";
+    position: absolute;
+    inset: -0.4rem -0.4rem -0.4rem -0.75rem;
+  }
 }
 .notes-editor ul[data-type="taskList"] li[data-checked="true"] > div {
   color: hsl(var(--muted-foreground));
@@ -442,7 +454,7 @@ body {
   float: left;
   height: 0;
   pointer-events: none;
-  color: hsl(var(--muted-foreground) / 0.6);
+  color: hsl(var(--muted-foreground));
 }
 .notes-title .ProseMirror-selectednode {
   outline: 2px solid hsl(var(--input));

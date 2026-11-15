@@ -16,6 +16,7 @@ import { PageLink } from "@/lib/page-link";
 import { DateMention } from "@/lib/date-mention";
 import { Toggle } from "@/lib/toggle";
 import { Database } from "@/lib/database";
+import { BlockMove } from "@/lib/block-move";
 import {
   Bold,
   Check,
@@ -121,6 +122,7 @@ export default function NoteEditor({
       }),
       SlashCommand,
       DateCommand,
+      BlockMove,
     ],
     content: content ?? "",
     editorProps: {
@@ -297,12 +299,13 @@ function BlockHandle({ editor }: { editor: Editor }) {
         onNodeChange={onNodeChange}
         onElementDragStart={hideOutline}
       >
+        {/* Pointer-only, so kept from assistive tech: from the keyboard, Alt+Shift+Up and
+            Down move the block, and "/" turns it into another kind. */}
         <div
           ref={gripRef}
           className="notes-drag-handle"
-          title="Drag to move, click to turn into"
-          aria-haspopup="listbox"
-          aria-expanded={menu !== null}
+          title="Drag to move (Alt+Shift+↑↓), click to turn into"
+          aria-hidden
           onMouseEnter={showOutline}
           onMouseLeave={hideOutline}
           onClick={() => {

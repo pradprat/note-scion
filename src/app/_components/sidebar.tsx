@@ -178,7 +178,8 @@ export default function NotesSidebar() {
 
   return (
     <DragProvider>
-      <Sidebar inert={folded ? true : undefined}>
+      {/* A landmark, so the header and footer are inside one; the page tree is its own nav. */}
+      <Sidebar role="navigation" aria-label="Workspace" inert={folded ? true : undefined}>
         <SidebarHeader className="h-12 flex-row items-center gap-1 py-0 pl-4 pr-2">
           <Link href={href("/")} className="mr-auto flex items-center gap-2 text-sm font-semibold tracking-tight">
             {demo ? "note-scion" : "Notes"}
@@ -252,6 +253,12 @@ export default function NotesSidebar() {
               </>
             )}
           </SidebarMenu>
+          {/* Under the menu, not in it: a note isn't one of its items. */}
+          {demo && (
+            <p className="px-2 pb-1 pt-1 text-xs leading-relaxed text-muted-foreground">
+              A demo: pages are saved in this browser only, never sent anywhere.
+            </p>
+          )}
         </SidebarFooter>
         {/* Desktop only: drag the edge to widen the tree for long titles. */}
         <SidebarResizeHandle />
@@ -290,7 +297,7 @@ function DemoMenu() {
         {confirming ? (
           // The question gets its own line: beside two buttons it wrapped in the 256px rail.
           <div className="px-2 py-1 text-sm">
-            <p className="mb-1.5 text-sidebar-foreground/70">Erase your changes?</p>
+            <p className="mb-1.5 text-muted-foreground">Erase your changes?</p>
             <div className="flex justify-end gap-1">
               <Button variant="ghost" size="sm" onClick={() => setConfirming(false)} className={cn("h-7 px-2", COARSE_ROW)}>
                 Cancel
@@ -314,9 +321,6 @@ function DemoMenu() {
           </SidebarMenuButton>
         )}
       </SidebarMenuItem>
-      <p className="px-2 pb-1 pt-2 text-xs leading-relaxed text-sidebar-foreground/60">
-        A demo: pages are saved in this browser only, never sent anywhere.
-      </p>
     </>
   );
 }

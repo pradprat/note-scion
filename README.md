@@ -45,7 +45,8 @@ see one arrive.
 
 - **Block editor** built on Tiptap: headings, lists, to-dos, toggles, quotes, code blocks
   and dividers, from the `/` menu or Markdown shortcuts. Drag any block by its handle, or
-  click the handle to turn a line into a heading, list, toggle, quote or code.
+  click the handle to turn a line into a heading, list, toggle, quote or code. From the
+  keyboard, Alt+Shift+↑ / ↓ moves a block; on a phone, `/move` does.
 - **Databases**: a block of rows with typed properties, as a table or a board, inside any
   page. Claude reads and writes it as JSON in a fenced block.
 - **Dates that stay true**: type `@` for Today, Tomorrow, "next friday" or any date. They

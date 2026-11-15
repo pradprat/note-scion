@@ -18,6 +18,11 @@ All notable changes to note-scion are listed here. The format follows
   keeping its text. A list item changes on its own, a toggle's inside follows its line
   out, and Ctrl or ⌘ Z undoes it in one step. Tables, databases, sub-pages and dividers
   are still only selected by the click.
+- Blocks move from the keyboard and on touch screens. Alt+Shift+↑ or ↓ swaps the block
+  holding the cursor with the one above or below it, the same keys that move a page in
+  the sidebar. It moves what the grip would: a list item within its list, a quote or
+  table whole, a toggle from its summary. On a phone, where there's no grip to drag,
+  type `/move` on the block and pick Move up or Move down.
 - The browser tab names the open page: "Notes | Standup Today". It follows the title as
   you type it, and the trash and connected apps read "Notes | Trash" and
   "Notes | Connected apps".
@@ -34,6 +39,13 @@ All notable changes to note-scion are listed here. The format follows
   summary and fold back into it, with the same timing as sub-pages in the sidebar. The
   `/`, `@` and Turn into menus fade in with a slight drift away from their line. With
   reduced motion turned on, toggles only fade in and menus only fade.
+- Dialogs (the quick switcher), popovers and tooltips open on the same curve as the
+  rest of the app and close quicker than they open. With reduced motion turned on they
+  only fade, without the zoom and drift.
+- Secondary grey text in light mode is a shade darker (#57687A instead of #5D6F82), so
+  it reads at 4.9:1 on the sidebar as well as on the page. Text that was the grey at 60%
+  (a database's "Empty", an untitled card or page title, the demo's note in the
+  sidebar) is now the full grey, which passes contrast in both themes.
 
 ### Fixed
 
@@ -48,6 +60,11 @@ All notable changes to note-scion are listed here. The format follows
   Chrome scrolled the grid by repainting it, so all ~350 colour emoji were drawn again
   on every wheel tick. The grid now has the popover's own opaque background, so it is
   drawn once when the picker opens and then scrolls on the compositor.
+- Screen readers find the page title as the page's level-one heading.
+- A database table's "New row" button sits after the table rather than inside it, so a
+  screen reader reads the table as rows only.
+- On touch screens, a to-do's checkbox takes a tap up to about 34 by 29px around it, and
+  the quick switcher's close button 40px, without changing how either looks.
 
 ## [1.1.0] - 2026-11-09
 

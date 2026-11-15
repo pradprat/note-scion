@@ -5,7 +5,7 @@ colors:
   night-ink: "#0B0D10"
   deep-slate: "#171C22"
   graphite: "#2A333D"
-  slate-pencil: "#5D6F82"
+  slate-pencil: "#57687A"
   frost-paper: "#E7EEF5"
   paper-white: "#FFFFFF"
   pale-rule: "#D5DEE7"
@@ -213,10 +213,11 @@ the other way (see the Dark-Mode Inversion Rule below).
   mode it's the page.
 - **Graphite** (#2A333D): sidebar text in light mode. In dark mode it's hover and
   selected rows, borders and inputs, because it shows on both the page and Deep Slate.
-- **Slate Pencil** (#5D6F82): secondary text in light mode (5.2:1 on white, 4.4:1 on the
-  sidebar) and the focus ring in both modes.
+- **Slate Pencil** (#57687A): secondary text in light mode (5.7:1 on white, 4.9:1 on the
+  sidebar) and the focus ring. In dark mode the ring stays a step lighter (#5D6F82), so it
+  keeps 3:1 on Deep Slate.
 - **Lifted Pencil** (#8E9EAF): secondary text in dark mode, where Slate Pencil would fall
-  to about 3.8:1. Same hue, lighter tint.
+  to about 3.4:1. Same hue, lighter tint.
 - **Frost Paper** (#E7EEF5): the sidebar, muted fills, hover rows, code backgrounds and
   ghost-button hover in light mode. In dark mode it's the text.
 - **Paper White** (#FFFFFF): the light-mode page, cards, popovers and inputs.
@@ -352,7 +353,8 @@ Precise and plain: shadcn's button at exact sizes, with no custom shapes.
   "@Today", then "@Yesterday", then in full. It takes the title's ink, with only the
   "@" muted, because there the date is the title. Everywhere else a title shows (sidebar,
   breadcrumb, switcher, sub-page links, trash) the date reads as a word without the
-  "@": "Standup Today". Its placeholder ("Untitled") is muted text at 60% opacity.
+  "@": "Standup Today". Its placeholder ("Untitled") is muted text. The field sits in the
+  page's one level-one heading (`role="heading"`), so heading navigation finds it.
 
 ### Navigation
 - **Sidebar:** Frost Paper (Deep Slate in dark mode). The workspace name sits in a 48px
@@ -408,12 +410,17 @@ notification.
   when above), on the same curve as the folds. Quicker and smaller than the click
   popovers' entrance, so a menu that opens while typing doesn't pull the eye. They close
   at once. With reduced motion they only fade.
+- **Click popovers, tooltips and dialogs:** the shadcn entrance (a fade, a 95% scale and,
+  for popovers and tooltips, a 2px drift from their trigger) on the out-expo curve:
+  popovers open in 200ms and close in 120ms, dialogs in 200ms and 120ms. With reduced
+  motion they only fade.
 - **Quick switcher:** an Overlay dialog with its top edge pinned 15vh down (12vh on
   phones), so the search field stays put as results come and go. A 48px search field,
   then rows of emoji and title, with the page's path after the title in 12px muted
   text. A match found in a page's text adds a second 12px muted line with the words
   around it, the match itself in the ink color at weight 500. Selected rows fill with
-  Frost Paper on a 4px radius. On coarse pointers its text is 16px.
+  Frost Paper on a 4px radius. On coarse pointers its text is 16px, and the close button
+  takes a 40px tap with its icon where it was.
 - **Icon picker:** a 304px popover under the page icon: an "Icon" label with Remove, a
   32px search field, then about 350 emoji in named groups (12px muted group headings)
   on an 8-column grid of 32px ghost buttons, scrolling within 288px over the popover's
@@ -439,7 +446,11 @@ The page is the product, and its details are the system's distinctive work.
   block's first line (each heading level has its own height). It fills with Frost Paper
   and the text color on hover, and the Block halo appears under the block it will move.
   A click opens "Turn into", the same list as the `/` menu with a check on the current
-  kind, hung below the grip; the grip stays put while it is open.
+  kind, hung below the grip; the grip stays put while it is open. It's for the pointer
+  only and hidden from assistive tech: from the keyboard, Alt+Shift+↑ and ↓ move the
+  block holding the cursor (the same block the grip would move, and the same keys as the
+  page tree), and on touch screens `/move` offers Move up and Move down. Those `/` items are
+  found by search only, with the keys as their hint.
 - **`@` date:** a quiet word in muted text with a 70%-opacity `@`, not a pill, so the
   prose around it still reads. Within a day of now it says "@Yesterday", "@Today" or
   "@Tomorrow"; any other day reads in full, "@November 10, 2026".
@@ -457,7 +468,8 @@ The page is the product, and its details are the system's distinctive work.
   Lifted Pencil in dark mode) with a 3px offset, since the underline is all that marks it.
   A plain click puts the cursor in it to edit; Ctrl or ⌘ and a click opens it.
 - **To-dos:** native checkboxes in the foreground color. A checked item turns muted and
-  is struck through.
+  is struck through. On coarse pointers the box takes a tap about 34 by 29px around it,
+  reaching into the margin, without spacing the list out or covering the text.
 - **Quote:** a 3px Night Ink rule on the left with 16px padding.
 - **Toggle:** a 16px chevron in a 24px gutter that turns down while the toggle is open, and
   a summary that reads as text or as Heading 1 to 3. The blocks inside align with the
@@ -471,7 +483,8 @@ The page is the product, and its details are the system's distinctive work.
   quiet Frost Paper chips: a status leads with an outline, half-dot or check instead of a
   color. The board's columns are Frost Paper at half strength with white cards. Row
   actions appear on hover and are always shown on touch screens, where a card's "Move to"
-  is a native menu because drag doesn't work there.
+  is a native menu because drag doesn't work there. An empty cell reads "Empty" in muted
+  text. "New row" sits under the table, outside its rows.
 - **Code:** DM Mono on Frost Paper with a hairline border, 6px radius for blocks and 4px
   for inline code.
 - **Placeholder:** shown only in the empty block holding the cursor, in muted text.

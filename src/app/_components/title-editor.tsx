@@ -187,15 +187,20 @@ const TitleEditor = forwardRef<
     []
   );
 
-  // Until the editor exists (it only runs in the browser), the title as words, in place.
-  if (!editor) {
-    return (
-      <div className={TITLE_CLASS} aria-hidden>
-        {title ? titleText(title, null) : <span className="text-muted-foreground/60">Untitled</span>}
-      </div>
-    );
-  }
-  return <EditorContent editor={editor} />;
+  // The page's one level-one heading, so heading navigation finds it. A real <h1> can't
+  // hold the editor's block, hence the role. Until the editor exists (it only runs in the
+  // browser), the title as words, in place.
+  return (
+    <div role="heading" aria-level={1}>
+      {editor ? (
+        <EditorContent editor={editor} />
+      ) : (
+        <div className={TITLE_CLASS} aria-hidden>
+          {title ? titleText(title, null) : <span className="text-muted-foreground">Untitled</span>}
+        </div>
+      )}
+    </div>
+  );
 });
 
 export default TitleEditor;

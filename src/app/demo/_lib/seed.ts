@@ -135,7 +135,7 @@ Your own copy keeps your pages in your own database, where Claude can read and w
       "✍️",
       "Writing in blocks",
       `
-${touch ? "Every line is a block. On a computer, you can drag one to a new place by the handle on its left." : "Every line is a block. Hover one and drag the handle on its left to move it, or click the handle to turn the line into a heading, a list or a toggle."}
+${touch ? "Every line is a block. To move one, type `/move` on it and pick Move up or Move down. On a computer, you can also drag it by the handle on its left." : "Every line is a block. Hover one and drag the handle on its left to move it, or click the handle to turn the line into a heading, a list or a toggle. From the keyboard, Alt Shift ↑ and ↓ move the block you're in."}
 
 ## Markdown shortcuts
 

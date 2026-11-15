@@ -119,7 +119,7 @@ export function BoardView({ db, apply, openRow }: { db: DatabaseData; apply: App
             aria-label={`Open ${name}`}
             className="block w-full cursor-pointer rounded-md px-2.5 py-2 pr-9 text-left outline-none focus-visible:ring-2 focus-visible:ring-ring"
           >
-            <span className={cn("block text-sm leading-snug", name === "Untitled" && "text-muted-foreground/60")}>
+            <span className={cn("block text-sm leading-snug", name === "Untitled" && "text-muted-foreground")}>
               {name}
             </span>
             {chips.length > 0 && (

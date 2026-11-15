@@ -6,6 +6,8 @@ import type { SuggestionProps } from "@tiptap/suggestion";
 import {
   Check,
   Code2,
+  ArrowDown,
+  ArrowUp,
   Database,
   FileText,
   Heading1,
@@ -161,6 +163,19 @@ export const SLASH_ITEMS: SlashItem[] = [
       keywords: ["toggle", "turn into", "convert", "collapse", ...(level ? [`h${level}`] : [])],
       icon: level ? [Heading1, Heading2, Heading3][level - 1] : ListCollapse,
       run: (editor, range) => editor.chain().focus().deleteRange(range).wrapInToggle(level).run(),
+    })
+  ),
+  // Moving the block, for touch screens, which have no grip to drag. A keyboard has
+  // Alt+Shift+Up and Down, shown on the right.
+  ...(["up", "down"] as const).map(
+    (direction): SlashItem => ({
+      title: direction === "up" ? "Move up" : "Move down",
+      shortcut: direction === "up" ? "Alt ⇧ ↑" : "Alt ⇧ ↓",
+      searchOnly: true,
+      description: direction === "up" ? "Past the one above" : "Past the one below",
+      keywords: ["move", "reorder", "swap", direction],
+      icon: direction === "up" ? ArrowUp : ArrowDown,
+      run: (editor, range) => editor.chain().focus().deleteRange(range).moveBlock(direction).run(),
     })
   ),
 ];
