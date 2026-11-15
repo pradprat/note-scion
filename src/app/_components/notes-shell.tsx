@@ -72,6 +72,28 @@ export default function NotesShell({
   );
 }
 
+/**
+ * iOS raises the on-screen keyboard only for a focus made inside the tap itself, and the
+ * switcher's field mounts a render later. So focus a stand-in field now, during the tap:
+ * the keyboard comes up, the switcher's field takes the focus from it (moving between
+ * text fields keeps the keyboard), and the stand-in removes itself once it's let go.
+ */
+function raiseKeyboard() {
+  if (!window.matchMedia("(pointer: coarse)").matches) return;
+  // Inside the open mobile sidebar, whose focus trap would pull focus back from outside.
+  const host = document.querySelector('[data-sidebar="sidebar"][data-mobile="true"]') ?? document.body;
+  const field = document.createElement("input");
+  field.setAttribute("aria-hidden", "true");
+  field.tabIndex = -1;
+  // 16px, or iOS zooms in on it; out of the way and invisible, but still focusable.
+  field.style.cssText =
+    "position:fixed;left:0;bottom:0;width:1px;height:1px;padding:0;border:0;opacity:0;font-size:16px;pointer-events:none";
+  host.appendChild(field);
+  field.focus({ preventScroll: true });
+  field.addEventListener("blur", () => field.remove(), { once: true });
+  setTimeout(() => field.remove(), 1000);
+}
+
 function ShellBody({
   openSwitcher: open,
   modKey,
@@ -90,6 +112,7 @@ function ShellBody({
 
   // The switcher takes over from the mobile sheet rather than stacking on it.
   const openSwitcher = useCallback(() => {
+    raiseKeyboard();
     setOpenMobile(false);
     open();
   }, [open, setOpenMobile]);

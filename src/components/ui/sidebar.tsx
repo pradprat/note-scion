@@ -270,6 +270,14 @@ const Sidebar = React.forwardRef<
               } as React.CSSProperties
             }
             side={side}
+            // If something else took focus as the sheet closed (the search field, with
+            // the phone keyboard up), leave it there rather than pull it back.
+            onCloseAutoFocus={(event) => {
+              const active = document.activeElement
+              if (active && active !== document.body && !(event.target as Node).contains(active)) {
+                event.preventDefault()
+              }
+            }}
           >
             <SheetHeader className="sr-only">
               <SheetTitle>Sidebar</SheetTitle>

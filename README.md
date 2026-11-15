@@ -62,7 +62,8 @@ see one arrive.
 - **Resizable sidebar**: drag its right edge (208 to 480px) to fit long titles, and
   double-click the edge to reset it. The width is remembered across visits.
 - **Quick switcher**: `Ctrl K` / `⌘ K` searches titles and the text inside pages, or
-  starts a new page.
+  starts a new page. On a phone it's a search bar just above the keyboard, with the
+  results stacked above it.
 - **Trash**: deleted pages wait 30 days, with an undo right after a delete.
 
 **For Claude**

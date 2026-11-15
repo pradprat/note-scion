@@ -22,6 +22,7 @@ const config = {
       transitionDuration: {
         120: "120ms",
         180: "180ms",
+        240: "240ms",
         260: "260ms",
       },
       colors: {

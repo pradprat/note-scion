@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { FileText, Plus } from "lucide-react";
 import {
@@ -11,6 +11,9 @@ import {
   CommandList,
   CommandSeparator,
 } from "@/components/ui/command";
+import { Button } from "@/components/ui/button";
+import { DialogClose } from "@/components/ui/dialog";
+import { useIsMobile } from "@/hooks/use-mobile";
 import type { NoteNode, SearchHit } from "@/lib/types";
 import { titleText } from "@/lib/title-dates";
 import { useBackend } from "./backend";
@@ -32,27 +35,55 @@ export default function QuickSwitcher({
   useEffect(() => {
     if (open) setSelected("");
   }, [open]);
+  // On a phone it's a bar on the bottom edge with the results rising from it.
+  const sheet = useIsMobile();
+
+  // The sheet's list reads upward, so ↑ steps to the next row in the list and ↓ back.
+  const flipArrows = useCallback((event: React.KeyboardEvent<HTMLDivElement>) => {
+    const step = event.key === "ArrowUp" ? 1 : event.key === "ArrowDown" ? -1 : 0;
+    if (!step || event.altKey || event.metaKey || event.nativeEvent.isComposing) return;
+    event.preventDefault();
+    const items = Array.from(
+      event.currentTarget.querySelectorAll<HTMLElement>('[cmdk-item]:not([aria-disabled="true"])')
+    );
+    if (items.length === 0) return;
+    const at = items.findIndex((item) => item.getAttribute("aria-selected") === "true");
+    const next = items[(at + step + items.length) % items.length];
+    setSelected(next.getAttribute("data-value") ?? "");
+    next.scrollIntoView({ block: "nearest" });
+  }, []);
 
   return (
     <CommandDialog
       open={open}
       onOpenChange={onOpenChange}
+      sheet={sheet}
       title="Go to a page"
       description="Search pages by title or text, or type a title to start a new page."
       // Results are ranked here and partly come from the server: cmdk must not re-filter.
-      commandProps={{ shouldFilter: false, loop: true, value: selected, onValueChange: setSelected }}
+      // On touch, a finger sliding over the rows to scroll mustn't move the highlight.
+      commandProps={{
+        shouldFilter: false,
+        loop: true,
+        value: selected,
+        onValueChange: setSelected,
+        disablePointerSelection: sheet,
+        onKeyDown: sheet ? flipArrows : undefined,
+      }}
     >
       {/* The dialog unmounts its content when closed, so every open starts fresh. */}
-      <SwitcherBody onClose={() => onOpenChange(false)} selected={selected} onSelect={setSelected} />
+      <SwitcherBody sheet={sheet} onClose={() => onOpenChange(false)} selected={selected} onSelect={setSelected} />
     </CommandDialog>
   );
 }
 
 function SwitcherBody({
+  sheet,
   onClose,
   selected,
   onSelect,
 }: {
+  sheet: boolean;
   onClose: () => void;
   selected: string;
   onSelect: (value: string) => void;
@@ -178,24 +209,69 @@ function SwitcherBody({
   const title = query.trim();
   const nothingFound = q && !searching && titleHits.length === 0 && bodyHits.length === 0;
 
+  // Dragging the results drops the keyboard, so the sheet settles lower and shows more
+  // of them. A tap on the field brings it back.
+  const touchY = useRef<number | null>(null);
+  const dropKeyboard = {
+    onTouchStart: (event: React.TouchEvent) => {
+      touchY.current = event.touches[0]?.clientY ?? null;
+    },
+    onTouchMove: (event: React.TouchEvent) => {
+      const y = event.touches[0]?.clientY;
+      if (touchY.current === null || y === undefined || Math.abs(y - touchY.current) < 8) return;
+      touchY.current = null;
+      const field = document.activeElement;
+      if (field instanceof HTMLElement && field.hasAttribute("cmdk-input")) field.blur();
+    },
+  };
+
+  // Beside the field: under the results on a desktop, and first in the sheet's
+  // upward-reading list, so just above the field, on a phone.
+  const status = (
+    <>
+      {searching && <p className="px-4 py-2 text-xs text-muted-foreground">Searching page text…</p>}
+      {nothingFound && (
+        <p className={sheet ? "px-4 py-3 text-sm text-muted-foreground" : "px-4 pb-1 pt-3 text-sm text-muted-foreground"}>
+          No page matches “{title}”.
+        </p>
+      )}
+    </>
+  );
+
   return (
     <>
       <CommandInput
         value={query}
         onValueChange={setQuery}
         placeholder="Search pages or type a new title"
+        // The phone keyboard's return key opens the highlighted row.
+        enterKeyHint="go"
         // 16px on touch screens: iOS zooms the page into any smaller field.
         className="[@media(pointer:coarse)]:text-base"
+        end={
+          sheet && (
+            <DialogClose asChild>
+              <Button
+                variant="ghost"
+                // Enter here closes; it mustn't reach cmdk and open the highlighted row.
+                onKeyDown={(event) => event.key === "Enter" && event.stopPropagation()}
+                className="-mr-2 ml-1 h-10 shrink-0 px-2.5 text-base font-medium"
+              >
+                Cancel
+              </Button>
+            </DialogClose>
+          )
+        }
       />
-      <CommandList className="max-h-[min(24rem,60vh)]">
+      <CommandList className={sheet ? "max-h-none" : "max-h-[min(24rem,60vh)]"} {...(sheet ? dropKeyboard : {})}>
+        {sheet && status}
         {titleHits.length > 0 && (
           <CommandGroup heading={q ? "Pages" : "Jump to"}>{titleHits.map((node) => pageItem(node, "pages"))}</CommandGroup>
         )}
         {bodyHits.length > 0 && (
           <CommandGroup heading="Found in page text">{bodyHits.map((node) => pageItem(node, "text"))}</CommandGroup>
         )}
-        {searching && <p className="px-4 py-2 text-xs text-muted-foreground">Searching page text…</p>}
-        {nothingFound && <p className="px-4 pb-1 pt-3 text-sm text-muted-foreground">No page matches “{title}”.</p>}
+        {!sheet && status}
         {(titleHits.length > 0 || bodyHits.length > 0) && <CommandSeparator />}
         <CommandGroup>
           <CommandItem value="create" onSelect={() => void createPage()}>

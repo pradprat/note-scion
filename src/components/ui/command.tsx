@@ -6,6 +6,7 @@ import { Command as CommandPrimitive } from "cmdk"
 import { Search } from "lucide-react"
 
 import { cn } from "@/lib/utils"
+import { useVisualViewport } from "@/hooks/use-visual-viewport"
 import {
   Dialog,
   DialogContent,
@@ -29,11 +30,15 @@ const Command = React.forwardRef<
 ))
 Command.displayName = CommandPrimitive.displayName
 
+// Dimmed page kept above the sheet: room to see where you are and to tap out.
+const SHEET_GAP = 56
+
 const CommandDialog = ({
   children,
   title = "Command palette",
   description = "Search for a command to run...",
   commandProps,
+  sheet = false,
   ...props
 }: DialogProps & {
   /** Read by screen readers only; Radix requires a dialog title. */
@@ -41,17 +46,42 @@ const CommandDialog = ({
   description?: string
   /** Passed to cmdk, e.g. `shouldFilter={false}` when results are filtered by hand. */
   commandProps?: React.ComponentPropsWithoutRef<typeof CommandPrimitive>
+  /**
+   * For phones: a bar on the bottom edge, held above the on-screen keyboard, with the
+   * input at the bottom and the list rising from it, first item nearest the input. The
+   * caller brings its own way to close it and turns the arrow keys round to match.
+   */
+  sheet?: boolean
 }) => {
+  const view = useVisualViewport(sheet && !!props.open)
+  const style: React.CSSProperties | undefined = !sheet
+    ? undefined
+    : view
+      ? {
+          bottom: view.bottom,
+          maxHeight: view.height - SHEET_GAP,
+          // With the keyboard down, clear the home indicator.
+          paddingBottom: view.bottom > 0 ? 0 : "env(safe-area-inset-bottom)",
+        }
+      : { maxHeight: `calc(100dvh - ${SHEET_GAP}px)`, paddingBottom: "env(safe-area-inset-bottom)" }
+
   return (
     <Dialog {...props}>
-      <DialogContent anchor="top" className="overflow-hidden p-0 shadow-lg">
+      <DialogContent anchor={sheet ? "bottom" : "top"} hideClose={sheet} className="overflow-hidden p-0" style={style}>
         <DialogHeader className="sr-only">
           <DialogTitle>{title}</DialogTitle>
           <DialogDescription>{description}</DialogDescription>
         </DialogHeader>
         <Command
           {...commandProps}
-          className="[&_[cmdk-group-heading]]:px-2 [&_[cmdk-group-heading]]:font-medium [&_[cmdk-group-heading]]:text-muted-foreground [&_[cmdk-group]:not([hidden])_~[cmdk-group]]:pt-0 [&_[cmdk-group]]:px-2 [&_[cmdk-input-wrapper]_svg]:h-5 [&_[cmdk-input-wrapper]_svg]:w-5 [&_[cmdk-input]]:h-12 [&_[cmdk-item]]:px-2 [&_[cmdk-item]]:py-3 [&_[cmdk-item]_svg]:h-5 [&_[cmdk-item]_svg]:w-5">
+          className={cn(
+            "[&_[cmdk-group-heading]]:px-2 [&_[cmdk-group-heading]]:font-medium [&_[cmdk-group-heading]]:text-muted-foreground [&_[cmdk-group]:not([hidden])_~[cmdk-group]]:pt-0 [&_[cmdk-group]]:px-2 [&_[cmdk-input-wrapper]_svg]:h-5 [&_[cmdk-input-wrapper]_svg]:w-5 [&_[cmdk-input]]:h-12 [&_[cmdk-item]]:px-2 [&_[cmdk-item]]:py-3 [&_[cmdk-item]_svg]:h-5 [&_[cmdk-item]_svg]:w-5",
+            // Input below the list; the list, its groups and their items all read upward.
+            // A column-reversed scroller starts at its end, so the nearest rows show first.
+            sheet &&
+              "min-h-0 flex-1 flex-col-reverse rounded-none [&_[cmdk-group-items]]:flex [&_[cmdk-group-items]]:flex-col-reverse [&_[cmdk-input-wrapper]]:border-b-0 [&_[cmdk-input-wrapper]]:border-t [&_[cmdk-list-sizer]]:flex [&_[cmdk-list-sizer]]:flex-col-reverse [&_[cmdk-list]]:flex [&_[cmdk-list]]:min-h-0 [&_[cmdk-list]]:flex-col-reverse [&_[cmdk-list]]:overscroll-contain"
+          )}
+        >
           {children}
         </Command>
       </DialogContent>
@@ -61,8 +91,11 @@ const CommandDialog = ({
 
 const CommandInput = React.forwardRef<
   React.ElementRef<typeof CommandPrimitive.Input>,
-  React.ComponentPropsWithoutRef<typeof CommandPrimitive.Input>
->(({ className, ...props }, ref) => (
+  React.ComponentPropsWithoutRef<typeof CommandPrimitive.Input> & {
+    /** Shown after the input, in the same row: a Cancel button, say. */
+    end?: React.ReactNode
+  }
+>(({ className, end, ...props }, ref) => (
   <div className="flex items-center border-b px-3" cmdk-input-wrapper="">
     <Search className="mr-2 h-4 w-4 shrink-0 opacity-50" />
     <CommandPrimitive.Input
@@ -73,6 +106,7 @@ const CommandInput = React.forwardRef<
       )}
       {...props}
     />
+    {end}
   </div>
 ))
 

@@ -421,6 +421,20 @@ notification.
   around it, the match itself in the ink color at weight 500. Selected rows fill with
   Frost Paper on a 4px radius. On coarse pointers its text is 16px, and the close button
   takes a 40px tap with its icon where it was.
+- **Quick switcher on phones (below 768px):** a sheet on the bottom edge instead of the
+  dialog, so it reads as part of the phone rather than a shrunken desktop box. It's
+  full-width on the popover surface, with 8px top corners, a hairline top edge and the
+  Overlay shadow turned upward. Its bottom follows the visual viewport, so it sits
+  just above the on-screen keyboard (or above the home indicator when the keyboard is
+  down), and it grows upward to fit its rows, stopping 56px short of the top so a strip
+  of dimmed page stays visible to tap out on. The field is at the bottom with a plain
+  "Cancel" (16px, weight 500, 40px tall) in place of the ×. Everything reads upward from
+  the field: the best match is the nearest row, then the rest of its group, then
+  "Found in page text", then New page furthest away. "Searching…" and "No page
+  matches" sit directly above the field. ↑ and ↓ follow the list's direction. Tapping
+  Search raises the keyboard in the same tap, and dragging the results puts it away.
+  It rises 16px and fades in over 240ms on the out-expo curve, and closes in 120ms.
+  With reduced motion it only fades.
 - **Icon picker:** a 304px popover under the page icon: an "Icon" label with Remove, a
   32px search field, then about 350 emoji in named groups (12px muted group headings)
   on an 8-column grid of 32px ghost buttons, scrolling within 288px over the popover's

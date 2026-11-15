@@ -29,6 +29,12 @@ All notable changes to note-scion are listed here. The format follows
 
 ### Changed
 
+- Search on a phone is a bar along the bottom edge instead of a box floating partway
+  down the screen. The field sits just above the keyboard with Cancel beside it, and
+  the results stack upward from it, so the best match is nearest your thumb. The keyboard
+  comes up as soon as you tap Search in the sidebar. Scroll the results to put the
+  keyboard away and see more of them, and press the keyboard's Go key to open the
+  highlighted page. Screens 768px and wider keep the dialog as it was.
 - The page icon picker offers about 350 emoji instead of 48, in groups (notes and work,
   ideas and status, tech, home, travel, nature, food, activities, people and symbols),
   with a search field at the top. Typing shows the matches as one grid, best first
