@@ -33,6 +33,8 @@ import type { NoteNode, NotePatch } from "@/lib/types";
 // Every request must carry a bearer token: an OAuth access token or NOTES_MCP_TOKEN.
 
 export const dynamic = "force-dynamic";
+/** A call here is a few database reads. Fail in 30 s, not the platform default of 300 s, if one ever hangs. */
+export const maxDuration = 30;
 
 const MAX_TITLE = 500;
 /** How a title holds a date, as the app shows it (see src/lib/title-dates.ts). */
