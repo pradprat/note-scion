@@ -50,7 +50,7 @@ export function BoardView({ db, apply, openRow }: { db: DatabaseData; apply: App
         <button
           type="button"
           onClick={() => apply((current) => addProperty(current, "status", "Status").db)}
-          className="mt-3 inline-flex h-8 items-center gap-2 rounded-md border px-3 text-foreground transition-colors duration-[120ms] hover:bg-accent [@media(pointer:coarse)]:h-10"
+          className="mt-3 inline-flex h-8 items-center gap-2 rounded-md border px-3 text-foreground transition-colors duration-120 hover:bg-accent [@media(pointer:coarse)]:h-10"
         >
           <Plus aria-hidden size={14} />
           Add a status property
@@ -109,7 +109,7 @@ export function BoardView({ db, apply, openRow }: { db: DatabaseData; apply: App
           }}
           onDragEnd={clear}
           className={cn(
-            "group/card relative rounded-md border bg-background transition-opacity duration-[120ms]",
+            "group/card relative rounded-md border bg-background transition-opacity duration-120",
             lifted === row.id && "opacity-40"
           )}
         >
@@ -132,7 +132,7 @@ export function BoardView({ db, apply, openRow }: { db: DatabaseData; apply: App
           </button>
           <label
             title="Move to"
-            className="absolute right-1 top-1 flex h-7 w-7 cursor-pointer items-center justify-center rounded text-muted-foreground opacity-0 transition-opacity duration-[120ms] focus-within:opacity-100 focus-within:ring-2 focus-within:ring-ring hover:bg-accent hover:text-foreground group-hover/card:opacity-100 [@media(hover:none)]:opacity-100 [@media(pointer:coarse)]:h-10 [@media(pointer:coarse)]:w-10"
+            className="absolute right-1 top-1 flex h-7 w-7 cursor-pointer items-center justify-center rounded text-muted-foreground opacity-0 transition-opacity duration-120 focus-within:opacity-100 focus-within:ring-2 focus-within:ring-ring hover:bg-accent hover:text-foreground group-hover/card:opacity-100 [@media(hover:none)]:opacity-100 [@media(pointer:coarse)]:h-10 [@media(pointer:coarse)]:w-10"
           >
             <ArrowRightLeft aria-hidden size={14} />
             <select
@@ -186,7 +186,7 @@ export function BoardView({ db, apply, openRow }: { db: DatabaseData; apply: App
               if (id) apply((now) => moveRow(now, id, property.name, column.key, landing.before));
             }}
             className={cn(
-              "w-64 shrink-0 rounded-lg bg-muted/50 p-2 transition-colors duration-[120ms] [@media(max-width:480px)]:w-60",
+              "w-64 shrink-0 rounded-lg bg-muted/50 p-2 transition-colors duration-120 [@media(max-width:480px)]:w-60",
               over && "bg-muted"
             )}
           >
@@ -199,7 +199,7 @@ export function BoardView({ db, apply, openRow }: { db: DatabaseData; apply: App
                 aria-label={`Add a card to ${name}`}
                 title="Add a card"
                 onClick={() => addCard(column.key)}
-                className="flex h-7 w-7 items-center justify-center rounded text-muted-foreground transition-colors duration-[120ms] hover:bg-accent hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring [@media(pointer:coarse)]:h-10 [@media(pointer:coarse)]:w-10"
+                className="flex h-7 w-7 items-center justify-center rounded text-muted-foreground transition-colors duration-120 hover:bg-accent hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring [@media(pointer:coarse)]:h-10 [@media(pointer:coarse)]:w-10"
               >
                 <Plus aria-hidden size={14} />
               </button>

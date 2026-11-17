@@ -14,7 +14,7 @@ export const CELL_INPUT =
 
 /** A button that fills a cell and shows its value. */
 export const CELL_BUTTON =
-  "flex h-8 w-full min-w-0 items-center gap-1 rounded px-2 text-left text-sm outline-none transition-colors duration-[120ms] ease-out hover:bg-accent focus-visible:ring-2 focus-visible:ring-ring [@media(pointer:coarse)]:h-10";
+  "flex h-8 w-full min-w-0 items-center gap-1 rounded px-2 text-left text-sm outline-none transition-colors duration-120 ease-out hover:bg-accent focus-visible:ring-2 focus-visible:ring-ring [@media(pointer:coarse)]:h-10";
 
 /** "Today", "Tomorrow" or "Yesterday", else "Nov 12, 2026": short enough for a cell. */
 export function dateLabel(iso: string): string {

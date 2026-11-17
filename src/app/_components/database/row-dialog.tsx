@@ -92,7 +92,7 @@ export function RowDialog({
                   apply((current) => deleteRow(current, row.id));
                   onClose();
                 }}
-                className="inline-flex h-8 items-center gap-2 rounded-md px-2 text-sm text-destructive transition-colors duration-[120ms] hover:bg-accent focus-visible:ring-2 focus-visible:ring-ring [@media(pointer:coarse)]:h-10"
+                className="inline-flex h-8 items-center gap-2 rounded-md px-2 text-sm text-destructive transition-colors duration-120 hover:bg-accent focus-visible:ring-2 focus-visible:ring-ring [@media(pointer:coarse)]:h-10"
               >
                 <Trash2 aria-hidden size={14} />
                 Delete row

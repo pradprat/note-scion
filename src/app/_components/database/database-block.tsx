@@ -75,7 +75,7 @@ function DatabaseView({ node, editor, getPos }: ReactNodeViewProps) {
                 tabIndex={selected ? 0 : -1}
                 onClick={() => apply((current) => setView(current, { active: view.id }))}
                 className={cn(
-                  "-mb-px h-9 border-b-2 px-2 text-sm outline-none transition-colors duration-[120ms] focus-visible:ring-2 focus-visible:ring-ring [@media(pointer:coarse)]:h-11",
+                  "-mb-px h-9 border-b-2 px-2 text-sm outline-none transition-colors duration-120 focus-visible:ring-2 focus-visible:ring-ring [@media(pointer:coarse)]:h-11",
                   selected
                     ? "border-foreground font-medium text-foreground"
                     : "border-transparent text-muted-foreground hover:text-foreground"

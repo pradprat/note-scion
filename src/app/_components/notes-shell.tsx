@@ -1,13 +1,16 @@
 "use client";
 
 import { createContext, useCallback, useContext, useEffect, useState } from "react";
+import dynamic from "next/dynamic";
 import { usePathname } from "next/navigation";
 import { SidebarInset, SidebarProvider, useSidebar } from "@/components/ui/sidebar";
 import { Toaster } from "@/components/ui/sonner";
 import { useNotes } from "./notes-provider";
 import Sidebar from "./sidebar";
-import QuickSwitcher from "./quick-switcher";
 import UndoToast from "./undo-toast";
+
+// The switcher (and the command-palette library under it) is only needed after Mod+K.
+const QuickSwitcher = dynamic(() => import("./quick-switcher"), { ssr: false });
 
 interface ShellContextValue {
   openSwitcher: () => void;
@@ -39,6 +42,9 @@ export default function NotesShell({
   children: React.ReactNode;
 }) {
   const [switcherOpen, setSwitcherOpen] = useState(false);
+  // Not loaded until the first time it opens; after that it stays, so it can close with its animation.
+  const [switcherUsed, setSwitcherUsed] = useState(false);
+  if (switcherOpen && !switcherUsed) setSwitcherUsed(true);
   const [modKey, setModKey] = useState("");
   const showSwitcher = useCallback(() => setSwitcherOpen(true), []);
 
@@ -65,7 +71,7 @@ export default function NotesShell({
       <ShellBody openSwitcher={showSwitcher} modKey={modKey}>
         {children}
       </ShellBody>
-      <QuickSwitcher open={switcherOpen} onOpenChange={setSwitcherOpen} />
+      {switcherUsed && <QuickSwitcher open={switcherOpen} onOpenChange={setSwitcherOpen} />}
       <UndoToast />
       <Toaster position="bottom-center" />
     </SidebarProvider>
