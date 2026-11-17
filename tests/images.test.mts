@@ -136,3 +136,70 @@ describe("purgeOrphanImages", () => {
     expect(db.images.some((row) => row.id === unused)).toBe(false);
   });
 });
+
+describe("MCP image tools", () => {
+  const ENDPOINT = "http://notes.test/api/mcp";
+  const TOKEN = "mcp-test-token-for-images-only-0123456789";
+  process.env.NOTES_MCP_TOKEN = TOKEN;
+  let rpcId = 1;
+  type Part = { type: string; text?: string; data?: string; mimeType?: string };
+  async function tool(name: string, args: Record<string, unknown>) {
+    const { POST: mcp } = await import("@/app/api/mcp/route");
+    const response = await mcp(
+      new Request(ENDPOINT, {
+        method: "POST",
+        headers: { "content-type": "application/json", accept: "application/json, text/event-stream", authorization: `Bearer ${TOKEN}` },
+        body: JSON.stringify({ jsonrpc: "2.0", id: rpcId++, method: "tools/call", params: { name, arguments: args } }),
+      })
+    );
+    const reply = (await response.json()) as { result?: { content: Part[]; isError?: boolean }; error?: { message: string } };
+    if (reply.error) return { parts: [{ type: "text", text: reply.error.message }] as Part[], isError: true };
+    return { parts: reply.result!.content, isError: Boolean(reply.result!.isError) };
+  }
+  const pageText = (parts: Part[]) => parts.map((p) => p.text ?? "").join("\n");
+  const png = Buffer.from(PNG).toString("base64");
+  async function makePage() {
+    const made = await tool("create_page", { title: "Pics", markdown: "Before" });
+    return /([0-9a-f]{8}-[0-9a-f-]{27})/.exec(pageText(made.parts))![1];
+  }
+
+  test("add_image puts a picture on the page, read_page shows its line, read_image returns the pixels", async () => {
+    const id = await makePage();
+    const added = await tool("add_image", { id, data: png, alt: "A chart" });
+    expect(added.isError).toBe(false);
+    const path = /\((\/api\/images\/[0-9a-f-]{36})\)/.exec(pageText(added.parts))![1];
+
+    const read = pageText((await tool("read_page", { id })).parts);
+    expect(read).toContain(`![A chart](${path})`);
+    expect(read).toContain("Before");
+
+    const seen = await tool("read_image", { image: path });
+    expect(seen.isError).toBe(false);
+    expect(seen.parts[0]).toEqual({ type: "image", data: png, mimeType: "image/png" });
+    // The bare id works too, and the owner's browser route is untouched.
+    expect((await tool("read_image", { image: path.split("/").pop() })).isError).toBe(false);
+  });
+
+  test("a picture survives an append and a rewrite that keeps its line", async () => {
+    const id = await makePage();
+    const path = /\((\/api\/images\/[0-9a-f-]{36})\)/.exec(pageText((await tool("add_image", { id, data: png })).parts))![1];
+    await tool("update_page", { id, markdown: "More text", mode: "append" });
+    expect(pageText((await tool("read_page", { id })).parts)).toContain(path);
+  });
+
+  test("add_image refuses SVG, bad base64, a missing page and an oversize picture; nothing is kept", async () => {
+    const id = await makePage();
+    const svg = Buffer.from("<svg xmlns='http://www.w3.org/2000/svg'/>").toString("base64");
+    expect((await tool("add_image", { id, data: svg })).isError).toBe(true);
+    expect((await tool("add_image", { id, data: "***not base64***" })).isError).toBe(true);
+    expect((await tool("add_image", { id: ID, data: png })).isError).toBe(true);
+    const big = Buffer.concat([Buffer.from(PNG), Buffer.alloc(3_000_001)]).toString("base64");
+    expect((await tool("add_image", { id, data: big })).isError).toBe(true);
+    expect(db.images).toHaveLength(0);
+  });
+
+  test("read_image refuses a malformed or unknown id", async () => {
+    expect((await tool("read_image", { image: "nope" })).isError).toBe(true);
+    expect((await tool("read_image", { image: ID })).isError).toBe(true);
+  });
+});

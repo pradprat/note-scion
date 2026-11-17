@@ -7,9 +7,11 @@ import {
   getPage,
   getTree,
   isPageId,
+  loadImage,
   loadPage,
   MoveError,
   movePage,
+  saveImage,
   searchPages,
   trashPage,
   TRASH_DAYS,
@@ -27,6 +29,7 @@ import {
   SCOPE,
   verifyAccessToken,
 } from "@/lib/oauth";
+import { imageIdOf, imageUrl, sniffImageType } from "@/lib/images";
 import type { NoteNode, NotePatch } from "@/lib/types";
 
 // Remote MCP server for the workspace (Streamable HTTP, stateless).
@@ -40,6 +43,8 @@ const MAX_TITLE = 500;
 /** How a title holds a date, as the app shows it (see src/lib/title-dates.ts). */
 const TITLE_DATES = "A date in it is written @YYYY-MM-DD and reads as Today, Yesterday or Tomorrow, or in full, as in a page body: a daily page can be titled @2026-11-12.";
 const MAX_ICON = 16;
+/** The most an image sent over MCP may weigh once decoded (its base64 must fit a 4.5 MB request). */
+const MAX_MCP_IMAGE_BYTES = 3_000_000;
 const MAX_MARKDOWN = 500_000;
 /** Tries an append makes in all when the page keeps changing under it (the first one included). */
 const APPEND_ATTEMPTS = 3;
@@ -111,7 +116,7 @@ const markdownInput = (what: string) =>
     .string()
     .max(MAX_MARKDOWN)
     .describe(
-      `${what} as Markdown. Supported: # to ### headings, paragraphs, **bold**, *italic*, ~~strike~~, \`code\`, [links](url), - bullets, 1. numbered lists, - [ ] / - [x] to-dos (nestable), > quotes, \`\`\` code blocks and --- dividers. A toggle (a line that hides the blocks inside it) is HTML: \`<details open><summary>Title</summary>\`, a blank line, the blocks inside as Markdown, a blank line, then \`</details>\`. Leave out \`open\` for a toggle that starts closed. Starting the summary with \`# \`, \`## \` or \`### \` makes a toggle heading, as in \`<summary>## Title</summary>\`; otherwise it is plain. Toggles nest. A database (rows with typed properties, shown in the app as a table or a board) is a fenced block with the info string \`note-database\` holding JSON, as in the page you read: { "title": "Tasks", "properties": [{ "name": "Name", "type": "title" }, { "name": "Status", "type": "status", "options": [{ "name": "Not started", "group": "todo" }, { "name": "Done", "group": "done" }] }], "rows": [{ "id": "r1", "cells": { "Name": "Write the spec", "Status": "Not started" } }], "views": { "active": "board", "groupBy": "Status" } }. Property types are title (exactly one, first), text, select, status (option groups: todo, doing, done), date (YYYY-MM-DD), checkbox (true) and number. A row's cells map a property name to its value; leave a cell out to leave it empty; a select or status value that is not an option yet becomes one. Row ids are optional on new rows. A picture the owner pasted into the page is a line that is only an image, like ![description](/api/images/<id>); you can't view it or add new ones, so keep those lines exactly as read. Never remove or rewrite a database block unless asked to: change a row, a property or an option by editing that part of the JSON and keeping the rest exactly as read.`
+      `${what} as Markdown. Supported: # to ### headings, paragraphs, **bold**, *italic*, ~~strike~~, \`code\`, [links](url), - bullets, 1. numbered lists, - [ ] / - [x] to-dos (nestable), > quotes, \`\`\` code blocks and --- dividers. A toggle (a line that hides the blocks inside it) is HTML: \`<details open><summary>Title</summary>\`, a blank line, the blocks inside as Markdown, a blank line, then \`</details>\`. Leave out \`open\` for a toggle that starts closed. Starting the summary with \`# \`, \`## \` or \`### \` makes a toggle heading, as in \`<summary>## Title</summary>\`; otherwise it is plain. Toggles nest. A database (rows with typed properties, shown in the app as a table or a board) is a fenced block with the info string \`note-database\` holding JSON, as in the page you read: { "title": "Tasks", "properties": [{ "name": "Name", "type": "title" }, { "name": "Status", "type": "status", "options": [{ "name": "Not started", "group": "todo" }, { "name": "Done", "group": "done" }] }], "rows": [{ "id": "r1", "cells": { "Name": "Write the spec", "Status": "Not started" } }], "views": { "active": "board", "groupBy": "Status" } }. Property types are title (exactly one, first), text, select, status (option groups: todo, doing, done), date (YYYY-MM-DD), checkbox (true) and number. A row's cells map a property name to its value; leave a cell out to leave it empty; a select or status value that is not an option yet becomes one. Row ids are optional on new rows. A picture on the page is a line that is only an image, like ![description](/api/images/<id>); read_image shows it and add_image adds one, and keep those lines exactly as read. Never remove or rewrite a database block unless asked to: change a row, a property or an option by editing that part of the JSON and keeping the rest exactly as read.`
     );
 
 /**
@@ -247,6 +252,66 @@ function buildServer(origin: string, writer: Writer): McpServer {
       }
       return fail(
         `Nothing was added: the page was changed by someone else ${APPEND_ATTEMPTS} times in a row while appending. Read the page again with read_page, then retry.`
+      );
+    }
+  );
+
+  server.registerTool(
+    "read_image",
+    {
+      title: "Read image",
+      description:
+        "Look at a picture on a page. read_page shows pictures as ![description](/api/images/<id>); pass that path or just the id. Returns the image itself.",
+      inputSchema: {
+        image: z.string().max(300).describe("The image's id, or its path /api/images/<id> exactly as read_page shows it"),
+      },
+      annotations: { readOnlyHint: true },
+    },
+    async ({ image }) => {
+      const id = imageIdOf(image.trim().replace(/^https?:\/\/[^/]+/, "")) ?? (isPageId(image.trim()) ? image.trim().toLowerCase() : null);
+      if (!id) return fail("That isn't an image id or an /api/images/<id> path.");
+      const found = await loadImage(id);
+      if (!found) return fail(`No image with id ${id}.`);
+      return { content: [{ type: "image" as const, data: found.bytes.toString("base64"), mimeType: found.mime }] };
+    }
+  );
+
+  server.registerTool(
+    "add_image",
+    {
+      title: "Add image",
+      description: `Add a picture to the end of a page. Pass the picture as base64 (PNG, JPEG, WebP or GIF, up to ${MAX_MCP_IMAGE_BYTES / 1_000_000} MB; not SVG) and the page id. It is kept by the app and shown on the page as its own block; read_page then shows it as ![description](/api/images/<id>). Shrink large pictures first: nothing is resized here.`,
+      inputSchema: {
+        id: pageId,
+        data: z.string().min(1).max(Math.ceil((MAX_MCP_IMAGE_BYTES * 4) / 3) + 8).describe("The picture's bytes, base64-encoded (no data: prefix)"),
+        alt: z.string().max(300).optional().describe("A short description of the picture"),
+      },
+    },
+    async ({ id, data, alt }) => {
+      const base64 = data.replace(/^data:[^,]*,/, "").replace(/\s+/g, "");
+      if (!/^[A-Za-z0-9+/]+={0,2}$/.test(base64)) return fail("The data isn't valid base64.");
+      const bytes = new Uint8Array(Buffer.from(base64, "base64"));
+      if (!bytes.byteLength || bytes.byteLength > MAX_MCP_IMAGE_BYTES) {
+        return fail(`The picture must be 1 byte to ${MAX_MCP_IMAGE_BYTES / 1_000_000} MB. Shrink it and try again.`);
+      }
+      const type = sniffImageType(bytes);
+      if (!type) return fail("Only PNG, JPEG, WebP and GIF pictures can be added.");
+      if (!(await getPage(id))) return fail(`No page with id ${id}.`);
+
+      const src = imageUrl(await saveImage(type, bytes));
+      const block = { type: "noteImage", attrs: { src, alt: (alt ?? "").trim() || "Image" } };
+      // Appends the way update_page does: only onto the version it read, again if the page moved on.
+      for (let attempt = 1; attempt <= APPEND_ATTEMPTS; attempt++) {
+        const page = await loadPage(id);
+        if (!page) return fail(`No page with id ${id}.`);
+        const content = appendContent(page.content, { type: "doc", content: [block] });
+        const result = await updatePage(id, { content }, writer, page.updatedAt);
+        if (result.status === "conflict") continue;
+        if (result.status === "missing") return fail(`No page with id ${id}.`);
+        return text(`Added the picture to "${page.title || "Untitled"}": ![${block.attrs.alt}](${src})`);
+      }
+      return fail(
+        `The picture was kept, but the page was changed by someone else ${APPEND_ATTEMPTS} times in a row, so it isn't on the page. Retry add_image.`
       );
     }
   );

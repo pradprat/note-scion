@@ -5,7 +5,7 @@
  *   bun test
  *
  * It calls the route handler directly, the way Next would, over MCP's JSON-RPC. It proves
- * the JavaScript (authorization, the seven tools, optimistic versioning, the Markdown
+ * the JavaScript (authorization, the nine tools, optimistic versioning, the Markdown
  * conversion). It does not prove the SQL; see the note in fake-db.mts.
  */
 import { randomBytes } from "node:crypto";
@@ -96,11 +96,11 @@ describe("authorization", () => {
     expect(response.status).toBe(401);
   });
 
-  test("the static token is accepted and the seven tools are listed", async () => {
+  test("the static token is accepted and the nine tools are listed", async () => {
     const response = await send({ jsonrpc: "2.0", id: 1, method: "tools/list" });
     expect(response.status).toBe(200);
     const names = ((await response.json()) as { result: { tools: { name: string }[] } }).result.tools.map((t) => t.name).sort();
-    expect(names).toEqual(["create_page", "delete_page", "list_pages", "move_page", "read_page", "search_pages", "update_page"]);
+    expect(names).toEqual(["add_image", "create_page", "delete_page", "list_pages", "move_page", "read_image", "read_page", "search_pages", "update_page"]);
     expect(db.queries).toEqual([]);
   });
 
