@@ -22,6 +22,17 @@ All notable changes to note-scion are listed here. The format follows
   you type it, and the trash and connected apps read "Notes | Trash" and
   "Notes | Connected apps".
 
+- Pictures. Paste an image (a screenshot, or "Copy image" from a browser) or drop an image
+  file on a page and it is added as its own block, with an empty line after it when it ends
+  the page. PNG, JPEG, WebP and GIF; one over 1600px on its longest side is shrunk to that
+  before it is sent, and one that is still over 4 MB is refused. Text on the clipboard
+  with the image (a spreadsheet cell, a Word paragraph) pastes as text instead. Pictures
+  are kept in a new `notes_images` table (the build adds it) and shown only to a signed-in
+  browser. A picture nothing refers to any more is cleared a day after it was added. Over
+  MCP a picture is a line `![description](/api/images/<id>)` that Claude reads and writes
+  back unchanged but can't view or create. The demo keeps pictures in the page itself,
+  shrunk to 1000px and about 300 KB.
+
 ### Changed
 
 - The page icon picker offers about 350 emoji instead of 48, in groups (notes and work,

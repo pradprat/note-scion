@@ -64,3 +64,14 @@ alter table oauth_clients add column if not exists authorized_at timestamptz;
 update oauth_clients c set authorized_at = c.created_at
 where c.authorized_at is null
   and exists (select 1 from oauth_tokens t where t.client_id = c.client_id);
+
+-- Pictures pasted into pages. The bytes are kept as base64 text (the serverless driver
+-- handles text best), served by /api/images/<id> to a signed-in browser only. A picture no
+-- page refers to any more is cleared a day after it was added (see purgeOrphanImages).
+create table if not exists notes_images (
+  id uuid primary key default gen_random_uuid(),
+  mime text not null check (mime in ('image/png', 'image/jpeg', 'image/webp', 'image/gif')),
+  data text not null,
+  byte_size integer not null,
+  created_at timestamptz not null default now()
+);

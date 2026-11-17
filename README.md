@@ -46,6 +46,8 @@ see one arrive.
 - **Block editor** built on Tiptap: headings, lists, to-dos, toggles, quotes, code blocks
   and dividers, from the `/` menu or Markdown shortcuts. Drag any block by its handle, or
   click the handle to turn a line into a heading, list, toggle, quote or code.
+- **Pictures**: paste or drop an image into a page. It is shrunk if large and kept in
+  your database, and shown only to you when signed in.
 - **Databases**: a block of rows with typed properties, as a table or a board, inside any
   page. Claude reads and writes it as JSON in a fenced block.
 - **Dates that stay true**: type `@` for Today, Tomorrow, "next friday" or any date. They
@@ -196,7 +198,7 @@ so every demo route is a static file and visitors never cost a server render.
 Next.js 15 (App Router, server actions), React 19, Tailwind CSS with
 [shadcn/ui](https://ui.shadcn.com), [Tiptap 3](https://tiptap.dev), and the
 [MCP TypeScript SDK](https://github.com/modelcontextprotocol/typescript-sdk). All data is
-one `notes_pages` table plus three OAuth tables ([`scripts/schema.sql`](scripts/schema.sql)).
+one `notes_pages` table, a `notes_images` table for pasted pictures and three OAuth tables ([`scripts/schema.sql`](scripts/schema.sql)).
 Page bodies are stored as Tiptap JSON and converted to and from Markdown for MCP.
 
 ```

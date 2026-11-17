@@ -28,8 +28,18 @@ export interface FakeRow {
   mcp_edited_at: Date | null;
 }
 
+export interface FakeImage {
+  id: string;
+  mime: string;
+  data: string;
+  byte_size: number;
+  /** Set by a test to stand in for "added more than a day ago". */
+  old: boolean;
+}
+
 export interface FakeDb {
   pages: FakeRow[];
+  images: FakeImage[];
   /** Access tokens the fake knows, by token hash. */
   accessTokens: Map<string, { resource: string | null; clientName: string | null }>;
   /** Every statement received, normalised, in order. */
@@ -48,7 +58,14 @@ export interface FakeDb {
 
 type Params = unknown[];
 
+let installed: FakeDb | null = null;
+
+/** Test files share one fake: a second mock.module would replace the first file's. */
 export function installFakeDb(): FakeDb {
+  return (installed ??= createFakeDb());
+}
+
+function createFakeDb(): FakeDb {
   // Never reach a database named in the environment: Bun loads .env.local on its own.
   process.env.DATABASE_URL = FAKE_URL;
   delete process.env.POSTGRES_URL;
@@ -59,6 +76,7 @@ export function installFakeDb(): FakeDb {
 
   const db: FakeDb = {
     pages: [],
+    images: [],
     accessTokens: new Map(),
     queries: [],
     revalidated: [],
@@ -67,6 +85,7 @@ export function installFakeDb(): FakeDb {
     reset() {
       db.beforeStatement = null;
       db.pages.length = 0;
+      db.images.length = 0;
       db.accessTokens.clear();
       db.queries.length = 0;
       db.revalidated.length = 0;
@@ -198,6 +217,34 @@ export function installFakeDb(): FakeDb {
         return db.pages.filter((row) => ids.has(row.id)).map((row) => ((row.deleted_at = stamp), { id: row.id }));
       },
     ],
+    // saveImage
+    [
+      /^insert into notes_images \(mime, data, byte_size\) values \(\$1, \$2, \$3\) returning id$/,
+      ([mime, data, size]) => {
+        const row: FakeImage = { id: crypto.randomUUID(), mime: mime as string, data: data as string, byte_size: size as number, old: false };
+        db.images.push(row);
+        return [{ id: row.id }];
+      },
+    ],
+    // loadImage
+    [
+      /^select mime, data from notes_images where id = \$1$/,
+      ([id]) => db.images.filter((row) => row.id === id).map(({ mime, data }) => ({ mime, data })),
+    ],
+    // purgeOrphanImages: a day old and named in no page's content (trashed pages included)
+    [
+      /^delete from notes_images i where i\.created_at < now\(\) - interval '1 day' and not exists/,
+      () => {
+        const kept = db.images.filter(
+          (row) => !row.old || db.pages.some((page) => JSON.stringify(page.content ?? null).includes(row.id))
+        );
+        db.images.length = 0;
+        db.images.push(...kept);
+        return [];
+      },
+    ],
+    // purgeOldTrash: nothing in the fake is old enough
+    [/^delete from notes_pages where deleted_at < now\(\) - make_interval\(days => \$1\)$/, () => []],
     // oauth.verifyAccessToken: the token hash is the only parameter
     [
       /^select t\.resource, c\.client_name from oauth_tokens t/,

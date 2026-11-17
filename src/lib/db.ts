@@ -1,6 +1,7 @@
 import { neon, type NeonQueryFunction } from "@neondatabase/serverless";
 import type { JSONContent } from "@tiptap/core";
 import { revalidateTag, unstable_cache } from "next/cache";
+import type { ImageType } from "./images";
 import { snippetAround } from "./snippet";
 import type { NoteNode, NotePage, NotePatch, SearchHit, TrashItem } from "./types";
 
@@ -293,6 +294,39 @@ export async function purgeOldTrash(): Promise<void> {
   await sql()`
     delete from notes_pages
     where deleted_at < now() - make_interval(days => ${TRASH_DAYS})`;
+  await purgeOrphanImages();
+}
+
+// --------------------------------------------------------------------- images
+//
+// Not cached: a browser keeps each one for good (the id never changes what it shows).
+
+/** Stores a picture and returns its id. The caller has already checked the type and size. */
+export async function saveImage(mime: ImageType, bytes: Uint8Array): Promise<string> {
+  const data = Buffer.from(bytes).toString("base64");
+  const rows = await sql()`
+    insert into notes_images (mime, data, byte_size) values (${mime}, ${data}, ${bytes.byteLength})
+    returning id`;
+  return rows[0].id as string;
+}
+
+export async function loadImage(id: string): Promise<{ mime: ImageType; bytes: Buffer } | null> {
+  if (!isPageId(id)) return null;
+  const rows = await sql()`select mime, data from notes_images where id = ${id}`;
+  const row = rows[0];
+  return row ? { mime: row.mime as ImageType, bytes: Buffer.from(row.data as string, "base64") } : null;
+}
+
+/**
+ * Removes pictures no page (trashed ones included) refers to, once they are a day old: a
+ * picture is saved before the page that holds it, and a pasted picture can be deleted
+ * again before the page saves.
+ */
+export async function purgeOrphanImages(): Promise<void> {
+  await sql()`
+    delete from notes_images i
+    where i.created_at < now() - interval '1 day'
+      and not exists (select 1 from notes_pages p where p.content::text like '%' || i.id::text || '%')`;
 }
 
 /**
