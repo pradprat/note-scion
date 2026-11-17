@@ -10,7 +10,7 @@ import { openDatePicker } from "../date-picker";
 
 /** A text field that sits in a cell: no box until it has focus. 16px on a phone, so iOS doesn't zoom. */
 export const CELL_INPUT =
-  "h-8 w-full min-w-0 rounded bg-transparent px-2 text-sm outline-none placeholder:text-muted-foreground/60 focus-visible:ring-2 focus-visible:ring-ring [@media(pointer:coarse)]:h-10 [@media(pointer:coarse)]:text-base";
+  "h-8 w-full min-w-0 rounded bg-transparent px-2 text-sm outline-none placeholder:text-muted-foreground focus-visible:ring-2 focus-visible:ring-ring [@media(pointer:coarse)]:h-10 [@media(pointer:coarse)]:text-base";
 
 /** A button that fills a cell and shows its value. */
 export const CELL_BUTTON =

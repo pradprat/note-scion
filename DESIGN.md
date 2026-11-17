@@ -352,7 +352,7 @@ Precise and plain: shadcn's button at exact sizes, with no custom shapes.
   "@Today", then "@Yesterday", then in full. It takes the title's ink, with only the
   "@" muted, because there the date is the title. Everywhere else a title shows (sidebar,
   breadcrumb, switcher, sub-page links, trash) the date reads as a word without the
-  "@": "Standup Today". Its placeholder ("Untitled") is muted text at 60% opacity.
+  "@": "Standup Today". Its placeholder ("Untitled") is muted text at 75% opacity (it is large text, so that still reads at 3:1).
 
 ### Navigation
 - **Sidebar:** Frost Paper (Deep Slate in dark mode). The workspace name sits in a 48px
