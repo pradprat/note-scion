@@ -37,6 +37,8 @@ All notable changes to note-scion are listed here. The format follows
 
 ### Fixed
 
+- A database's long names and text now end in an ellipsis where they don't fit, instead of
+  being cut off in the middle of a letter. Click a cell to read all of it, or open the row.
 - Moving the cursor up a long page (arrow keys, or typing at its end) no longer leaves the
   line you're on hidden under the top bar. The page now scrolls to keep it clear of the
   bar, and off the bottom edge.
