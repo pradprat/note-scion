@@ -51,6 +51,10 @@ All notable changes to note-scion are listed here. The format follows
 - On a touchscreen, to-do checkboxes, the toggle arrow, the date "Clear" button and sub-page
   link rows are now at least 40px to tap (the checkbox is 20px with an invisible area around
   it, so lines don't get taller). They were 16px, 24px, 24px and 29px.
+- The login page has a show/hide button on the password field, and no longer focuses the
+  field on a phone, where that raised the keyboard before you'd seen the page.
+- Placeholder text is easier to read: a table's empty cells at full muted colour, and the
+  "Untitled" page title at 75% instead of 60% opacity.
 - A hung `/api/mcp` call now fails after 30 seconds instead of the platform's 300, so one
   stuck request can't hold a function open for five minutes.
 
