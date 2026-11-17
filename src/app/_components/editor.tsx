@@ -125,6 +125,10 @@ export default function NoteEditor({
     content: content ?? "",
     editorProps: {
       attributes: { class: "notes-editor", "aria-label": "Page content" },
+      // Keep the line being typed clear of the sticky top bar (48px) when the view scrolls
+      // to the cursor; by default it lands at the very top edge, under the bar.
+      scrollMargin: { top: 64, bottom: 32, left: 0, right: 0 },
+      scrollThreshold: { top: 64, bottom: 32, left: 0, right: 0 },
       handleKeyDown: (view, event) => {
         if (!onExitTopRef.current || !leavesTop(view, event)) return false;
         event.preventDefault();
