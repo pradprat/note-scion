@@ -380,6 +380,21 @@ body {
   color: hsl(var(--muted-foreground));
 }
 
+/* Pictures: one per line, as wide as they are up to the page, never wider. The width and
+   height attributes reserve the room before the file arrives. */
+.notes-editor img {
+  display: block;
+  max-width: 100%;
+  height: auto;
+  margin: 0.75em 0;
+  border-radius: 6px;
+  cursor: default;
+}
+.notes-editor img.ProseMirror-selectednode {
+  outline: 2px solid hsl(var(--ring));
+  outline-offset: 2px;
+}
+
 /* Sub-page block: the page's icon and title, one line tall like the text around it. */
 .notes-editor .notes-page-link-row {
   display: flex;

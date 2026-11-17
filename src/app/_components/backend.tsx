@@ -4,6 +4,7 @@ import { createContext, useContext, useMemo } from "react";
 import { useRouter } from "next/navigation";
 import type { UpdateResult } from "@/lib/db";
 import type { NoteNode, NotePage, NotePatch, SearchHit } from "@/lib/types";
+import { prepareImage, uploadToServer, type PreparedImage } from "./image-upload";
 import {
   createPageAction,
   deleteForeverAction,
@@ -40,6 +41,11 @@ export interface NotesBackend {
   movePage: (id: string, parentId: string | null, position: number) => Promise<MoveResult>;
   /** Pages whose title or text contains the query, with a snippet of a text match. */
   searchPages: (query: string) => Promise<SearchHit[]>;
+  /**
+   * Keeps a picture and returns what a page stores to show it again: its URL in the app,
+   * a data URL in the demo (which keeps pages in the browser and so keeps pictures small).
+   */
+  addImage: (file: File) => Promise<PreparedImage & { src: string }>;
   /** Demo only: puts the sample workspace back. */
   reset?: () => Promise<void>;
 }
@@ -73,6 +79,10 @@ export function ServerBackendProvider({ children }: { children: React.ReactNode 
       emptyTrash: emptyTrashAction,
       movePage: movePageAction,
       searchPages: searchPagesAction,
+      addImage: async (file) => {
+        const image = await prepareImage(file);
+        return { ...image, src: await uploadToServer(image.blob) };
+      },
     }),
     [router]
   );

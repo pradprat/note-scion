@@ -9,6 +9,7 @@ import { Placeholder } from "@tiptap/extensions";
 import { DragHandle } from "@tiptap/extension-drag-handle-react";
 import type { NestedOptions } from "@tiptap/extension-drag-handle";
 import { Selection, TextSelection } from "@tiptap/pm/state";
+import { toast } from "sonner";
 import { CellSelection } from "@tiptap/pm/tables";
 import type { EditorView } from "@tiptap/pm/view";
 import { noteExtensions } from "@/lib/schema";
@@ -39,6 +40,8 @@ import { DateChip, DateCommand, dateKey } from "./date-mention";
 import { ToggleBehavior, ToggleBlock } from "./toggle-view";
 import { DatabaseBlock } from "./database/database-block";
 import { TurnIntoMenu } from "./turn-into-menu";
+import { useBackend } from "./backend";
+import { isImageFile } from "./image-upload";
 import { blockKind, type BlockKind } from "@/lib/turn-into";
 
 /**
@@ -63,6 +66,33 @@ function leavesTop(view: EditorView, event: KeyboardEvent): boolean {
     view.dispatch(state.tr.delete($from.before(), $from.after()));
   }
   return true;
+}
+
+/** The picture files in a paste or a drop. */
+function imageFiles(files: FileList | null | undefined): File[] {
+  return files ? Array.from(files).filter(isImageFile) : [];
+}
+
+/**
+ * Puts a picture where the cursor is: in place of an empty line, else after the block the
+ * cursor is in, with an empty line after it if it ends the page, so there is somewhere to
+ * keep typing.
+ */
+function insertImage(view: EditorView, image: { src: string; width: number; height: number }) {
+  const type = view.state.schema.nodes.noteImage;
+  if (!type) return;
+  const node = type.create({ src: image.src, alt: "Pasted image", width: image.width, height: image.height });
+  const { selection } = view.state;
+  const { $from } = selection;
+  const emptyLine = selection.empty && $from.parent.isTextblock && $from.parent.content.size === 0 && $from.depth === 1;
+  const at = emptyLine ? $from.before() : selection.empty && $from.depth >= 1 ? $from.after(1) : selection.to;
+  let tr = view.state.tr;
+  if (emptyLine) tr = tr.replaceWith($from.before(), $from.after(), node);
+  else tr = tr.insert(at, node);
+  const end = at + node.nodeSize;
+  if (end >= tr.doc.content.size) tr = tr.insert(end, view.state.schema.nodes.paragraph.create());
+  tr = tr.setSelection(Selection.near(tr.doc.resolve(Math.min(end, tr.doc.content.size)), 1));
+  view.dispatch(tr.scrollIntoView());
 }
 
 export default function NoteEditor({
@@ -91,6 +121,22 @@ export default function NoteEditor({
   onCreateChildRef.current = onCreateChild;
   const onOpenPageRef = useRef(onOpenPage);
   onOpenPageRef.current = onOpenPage;
+  const { addImage } = useBackend();
+  const addImageRef = useRef(addImage);
+  addImageRef.current = addImage;
+
+  /** Keeps pasted or dropped pictures one after another and puts each in the page. */
+  const addImages = useCallback(async (view: EditorView, files: File[]) => {
+    for (const file of files) {
+      const note = toast.loading("Adding image…");
+      try {
+        insertImage(view, await addImageRef.current(file));
+        toast.dismiss(note);
+      } catch (error) {
+        toast.error(error instanceof Error ? error.message : "The image couldn't be added.", { id: note });
+      }
+    }
+  }, []);
 
   const editor = useEditor({
     // Required with server rendering: the editor only exists on the client.
@@ -133,6 +179,25 @@ export default function NoteEditor({
         if (!onExitTopRef.current || !leavesTop(view, event)) return false;
         event.preventDefault();
         onExitTopRef.current();
+        return true;
+      },
+      // A picture on the clipboard (a screenshot, "Copy image") is kept and put in the page.
+      // When text comes with it (a spreadsheet cell, a Word paragraph), the text wins.
+      handlePaste: (view, event) => {
+        const files = imageFiles(event.clipboardData?.files);
+        if (!files.length || event.clipboardData?.getData("text/plain")) return false;
+        event.preventDefault();
+        void addImages(view, files);
+        return true;
+      },
+      // The same for a picture file dropped on the page; moving blocks around isn't a file drop.
+      handleDrop: (view, event) => {
+        const files = imageFiles(event.dataTransfer?.files);
+        if (!files.length) return false;
+        event.preventDefault();
+        const at = view.posAtCoords({ left: event.clientX, top: event.clientY });
+        if (at) view.dispatch(view.state.tr.setSelection(Selection.near(view.state.doc.resolve(at.pos))));
+        void addImages(view, files);
         return true;
       },
       // A plain click places the cursor in a link to edit it; Mod+click follows it.

@@ -3,6 +3,7 @@ import type { UpdateResult } from "@/lib/db";
 import { snippetAround } from "@/lib/snippet";
 import type { NoteNode, NotePage, NotePatch, SearchHit, TrashItem } from "@/lib/types";
 import type { MoveResult } from "../../actions";
+import { prepareImage, toDataUrl } from "../../_components/image-upload";
 import type { NotesBackend } from "../../_components/backend";
 
 /**
@@ -307,6 +308,8 @@ export async function simulateClaudeEdit(id: string): Promise<void> {
 class DemoError extends Error {}
 
 const MAX_TITLE = 500;
+const DEMO_IMAGE_BYTES = 300_000;
+const DEMO_IMAGE_EDGE = 1000;
 
 export function createDemoBackend(): NotesBackend {
   return {
@@ -418,6 +421,12 @@ export function createDemoBackend(): NotesBackend {
       // version would stop an open copy of the page from saving.
       commit({ ...current(), pages: pages.map((p) => (p.id === id ? { ...p, parentId, position } : p)) });
       return { ok: true };
+    },
+
+    async addImage(file) {
+      // Pages live in localStorage (about 5 MB for everything), so demo pictures stay small.
+      const image = await prepareImage(file, DEMO_IMAGE_BYTES, DEMO_IMAGE_EDGE);
+      return { ...image, src: await toDataUrl(image.blob) };
     },
 
     async searchPages(query): Promise<SearchHit[]> {
