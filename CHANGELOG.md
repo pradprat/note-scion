@@ -48,6 +48,8 @@ All notable changes to note-scion are listed here. The format follows
   Chrome scrolled the grid by repainting it, so all ~350 colour emoji were drawn again
   on every wheel tick. The grid now has the popover's own opaque background, so it is
   drawn once when the picker opens and then scrolls on the compositor.
+- A hung `/api/mcp` call now fails after 30 seconds instead of the platform's 300, so one
+  stuck request can't hold a function open for five minutes.
 
 ## [1.1.0] - 2026-11-09
 
