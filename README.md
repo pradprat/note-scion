@@ -68,8 +68,8 @@ see one arrive.
 
 **For Claude**
 
-- **MCP server** with seven tools: list, search, read, create, update, move and delete
-  pages. Page bodies go in and out as Markdown.
+- **MCP server** with nine tools: list, search, read, create, update, move and delete
+  pages, and read or add a picture. Page bodies go in and out as Markdown.
 - **You can see who edited a page last**: after Claude changes a page, its save status
   reads "Claude edited 4m ago" (or "Claude Code", or whichever app it was) until you
   edit it again.
@@ -161,6 +161,8 @@ weekly sync page"*.
 | `update_page` | Change a title, icon or body (replace or append) |
 | `move_page` | Nest a page under another, or move it to the top level |
 | `delete_page` | Send a page to the trash (restorable for 30 days) |
+| `read_image` | A picture on a page, as an image (from the path `read_page` shows) |
+| `add_image` | Add a picture (base64, up to 3 MB) to the end of a page |
 
 ## Development
 

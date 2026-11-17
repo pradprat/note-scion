@@ -30,7 +30,10 @@ All notable changes to note-scion are listed here. The format follows
   are kept in a new `notes_images` table (the build adds it) and shown only to a signed-in
   browser. A picture nothing refers to any more is cleared a day after it was added. Over
   MCP a picture is a line `![description](/api/images/<id>)` that Claude reads and writes
-  back unchanged but can't view or create. The demo keeps pictures in the page itself,
+  back unchanged. Two new MCP tools, `read_image` (returns the picture itself) and
+  `add_image` (base64 data and a page id; the picture is added to the end of the page),
+  let Claude see and add pictures; `add_image` takes PNG, JPEG, WebP and GIF up to 3 MB and
+  doesn't resize. The demo keeps pictures in the page itself,
   shrunk to 1000px and about 300 KB.
 
 ### Changed
