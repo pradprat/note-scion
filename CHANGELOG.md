@@ -37,6 +37,9 @@ All notable changes to note-scion are listed here. The format follows
 
 ### Fixed
 
+- Moving the cursor up a long page (arrow keys, or typing at its end) no longer leaves the
+  line you're on hidden under the top bar. The page now scrolls to keep it clear of the
+  bar, and off the bottom edge.
 - Clicking into a page that was written in Markdown (by Claude over MCP, or the demo's
   sample pages) no longer counts as an edit. The save status said "Editing" and the
   page was saved again unchanged, which could also turn a later edit from Claude into a
