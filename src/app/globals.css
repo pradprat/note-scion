@@ -191,6 +191,26 @@ body {
   flex: 1;
   min-width: 0;
 }
+@media (pointer: coarse) {
+  /* A finger needs about 40px. The box grows a little and an invisible area around it
+     does the rest, so the line doesn't get taller. */
+  .notes-editor ul[data-type="taskList"] li {
+    gap: 0.75em;
+  }
+  .notes-editor ul[data-type="taskList"] li > label {
+    position: relative;
+    margin-top: 0.25em;
+  }
+  .notes-editor ul[data-type="taskList"] li > label input {
+    width: 1.25rem;
+    height: 1.25rem;
+  }
+  .notes-editor ul[data-type="taskList"] li > label::after {
+    content: "";
+    position: absolute;
+    inset: -0.75rem -0.5rem -0.75rem -0.75rem;
+  }
+}
 .notes-editor ul[data-type="taskList"] li[data-checked="true"] > div {
   color: hsl(var(--muted-foreground));
   text-decoration: line-through;
@@ -295,7 +315,7 @@ body {
   .notes-toggle-arrow::after {
     content: "";
     position: absolute;
-    inset: -0.6rem -0.3rem;
+    inset: -0.6rem -0.6rem;
   }
 }
 @media (prefers-reduced-motion: reduce) {
@@ -374,6 +394,11 @@ body {
 }
 .notes-editor a.notes-page-link-row:hover {
   background: hsl(var(--muted));
+}
+@media (pointer: coarse) {
+  .notes-editor .notes-page-link-row {
+    min-height: 2.5rem;
+  }
 }
 .notes-editor .notes-page-link-icon {
   display: flex;

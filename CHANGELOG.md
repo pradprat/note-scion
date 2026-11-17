@@ -48,6 +48,9 @@ All notable changes to note-scion are listed here. The format follows
   Chrome scrolled the grid by repainting it, so all ~350 colour emoji were drawn again
   on every wheel tick. The grid now has the popover's own opaque background, so it is
   drawn once when the picker opens and then scrolls on the compositor.
+- On a touchscreen, to-do checkboxes, the toggle arrow, the date "Clear" button and sub-page
+  link rows are now at least 40px to tap (the checkbox is 20px with an invisible area around
+  it, so lines don't get taller). They were 16px, 24px, 24px and 29px.
 - A hung `/api/mcp` call now fails after 30 seconds instead of the platform's 300, so one
   stuck request can't hold a function open for five minutes.
 
