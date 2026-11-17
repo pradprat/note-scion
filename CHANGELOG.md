@@ -55,6 +55,11 @@ All notable changes to note-scion are listed here. The format follows
   field on a phone, where that raised the keyboard before you'd seen the page.
 - Placeholder text is easier to read: a table's empty cells at full muted colour, and the
   "Untitled" page title at 75% instead of 60% opacity.
+- A page loads about 48 kB less JavaScript (420 to 372 kB first load on a page, 425 to 377
+  on the demo). The block grip's library pulled in Yjs, which note-scion doesn't use, and
+  the Mod+K switcher and its command-palette library now load the first time you open it.
+- The database views' hover transitions run at their intended 120ms; Tailwind had been
+  dropping `duration-[120ms]` as ambiguous.
 - A hung `/api/mcp` call now fails after 30 seconds instead of the platform's 300, so one
   stuck request can't hold a function open for five minutes.
 

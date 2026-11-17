@@ -164,7 +164,7 @@ function DatePicker({
                       onFocus={() => !sameDay(date, focused) && setFocused(date)}
                       className={cn(
                         CELL,
-                        "rounded-md text-sm tabular-nums outline-none transition-colors duration-[120ms] ease-out",
+                        "rounded-md text-sm tabular-nums outline-none transition-colors duration-120 ease-out",
                         "hover:bg-accent hover:text-accent-foreground focus-visible:ring-2 focus-visible:ring-ring",
                         !inMonth && "text-muted-foreground",
                         isToday && !isSelected && "font-medium ring-1 ring-inset ring-border",

@@ -1,3 +1,5 @@
+const path = require("node:path");
+
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   outputFileTracingRoot: __dirname,
@@ -10,6 +12,16 @@ const nextConfig = {
     // Lets <Link unstable_dynamicOnHover> (the sidebar) fetch a whole page on hover
     // instead of only its loading.tsx. Without this flag the prop is ignored.
     dynamicOnHover: true,
+  },
+  webpack(config) {
+    // The drag handle imports Yjs for collaboration, which this app doesn't have. Point
+    // those imports at tiny stand-ins so Yjs doesn't ship with the editor.
+    config.resolve.alias = {
+      ...config.resolve.alias,
+      "@tiptap/y-tiptap$": path.join(__dirname, "src/lib/stubs/y-tiptap.ts"),
+      "@tiptap/extension-collaboration$": path.join(__dirname, "src/lib/stubs/tiptap-collaboration.ts"),
+    };
+    return config;
   },
   async redirects() {
     return [

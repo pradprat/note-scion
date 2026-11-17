@@ -24,7 +24,7 @@ const ACTIONS = 2.5;
 
 /** A button at the end of a row or header: 28px, quiet until the row is under the pointer. */
 const ROW_BUTTON =
-  "flex h-7 w-7 items-center justify-center rounded text-muted-foreground transition-opacity duration-[120ms] hover:bg-accent hover:text-foreground focus-visible:opacity-100 focus-visible:ring-2 focus-visible:ring-ring [@media(pointer:coarse)]:h-10 [@media(pointer:coarse)]:w-10";
+  "flex h-7 w-7 items-center justify-center rounded text-muted-foreground transition-opacity duration-120 hover:bg-accent hover:text-foreground focus-visible:opacity-100 focus-visible:ring-2 focus-visible:ring-ring [@media(pointer:coarse)]:h-10 [@media(pointer:coarse)]:w-10";
 const REVEALED = "opacity-0 group-hover/row:opacity-100 [@media(hover:none)]:opacity-100";
 
 /**
@@ -64,7 +64,7 @@ export function TableView({ db, apply, openRow }: { db: DatabaseData; apply: App
                 <PropertyMenu property={property} apply={apply} onRenamed={keys.renamed}>
                   <button
                     type="button"
-                    className="flex h-8 w-full min-w-0 items-center gap-1.5 rounded px-2 text-left text-xs font-medium text-muted-foreground transition-colors duration-[120ms] hover:bg-accent hover:text-accent-foreground focus-visible:ring-2 focus-visible:ring-ring [@media(pointer:coarse)]:h-10"
+                    className="flex h-8 w-full min-w-0 items-center gap-1.5 rounded px-2 text-left text-xs font-medium text-muted-foreground transition-colors duration-120 hover:bg-accent hover:text-accent-foreground focus-visible:ring-2 focus-visible:ring-ring [@media(pointer:coarse)]:h-10"
                     aria-label={`${property.name}, ${property.type} property. Edit`}
                   >
                     <Icon aria-hidden size={14} className="shrink-0" />
@@ -90,7 +90,7 @@ export function TableView({ db, apply, openRow }: { db: DatabaseData; apply: App
               key={row.id}
               role="row"
               data-row={row.id}
-              className="group/row grid border-b transition-colors duration-[120ms] hover:bg-muted/40"
+              className="group/row grid border-b transition-colors duration-120 hover:bg-muted/40"
               style={{ gridTemplateColumns: template }}
             >
               {db.properties.map((property, index) => (
@@ -134,7 +134,7 @@ export function TableView({ db, apply, openRow }: { db: DatabaseData; apply: App
         <button
           type="button"
           onClick={newRow}
-          className="mt-1 flex h-8 w-full items-center gap-2 rounded px-2 text-sm text-muted-foreground transition-colors duration-[120ms] hover:bg-accent hover:text-accent-foreground focus-visible:ring-2 focus-visible:ring-ring [@media(pointer:coarse)]:h-10"
+          className="mt-1 flex h-8 w-full items-center gap-2 rounded px-2 text-sm text-muted-foreground transition-colors duration-120 hover:bg-accent hover:text-accent-foreground focus-visible:ring-2 focus-visible:ring-ring [@media(pointer:coarse)]:h-10"
         >
           <Plus aria-hidden size={14} />
           New row
