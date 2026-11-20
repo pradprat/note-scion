@@ -51,6 +51,9 @@ All notable changes to note-scion are listed here. The format follows
 
 ### Fixed
 
+- Pictures hold their room while they load (a soft placeholder at their saved size), say
+  "This image couldn't be loaded" when the file is gone, and take a caption: click a
+  picture and type under it. The caption is its description, so Claude reads it too.
 - A board wider than the page fades out at its right edge while more columns lie beyond
   it, and the fade goes when you reach the last one.
 - The demo's footer note and the Ctrl K hint in the sidebar are a little darker and larger.
