@@ -37,6 +37,21 @@ export function BoardView({ db, apply, openRow }: { db: DatabaseData; apply: App
   const [drop, setDrop] = useState<Drop | null>(null);
   const property = groupProperty(db);
 
+  // Whether columns lie past the right edge: they fade out there, so it reads as scrollable.
+  const [moreRight, setMoreRight] = useState(false);
+  const measure = () => {
+    const el = root.current;
+    if (el) setMoreRight(el.scrollLeft + el.clientWidth < el.scrollWidth - 4);
+  };
+  useEffect(() => {
+    measure();
+    const el = root.current;
+    if (!el || typeof ResizeObserver === "undefined") return;
+    const observer = new ResizeObserver(measure);
+    observer.observe(el);
+    return () => observer.disconnect();
+  });
+
   useEffect(() => {
     if (!refocus.current) return;
     root.current?.querySelector<HTMLElement>(`[data-card="${refocus.current}"] select`)?.focus();
@@ -160,7 +175,7 @@ export function BoardView({ db, apply, openRow }: { db: DatabaseData; apply: App
   };
 
   return (
-    <div ref={root} className="flex items-start gap-3 overflow-x-auto pb-2">
+    <div ref={root} data-more-right={moreRight || undefined} onScroll={measure} className="notes-board flex items-start gap-3 overflow-x-auto pb-2">
       {columns.map((column) => {
         const name = column.key ?? `No ${property.name}`;
         const over = drop?.column === column.key;

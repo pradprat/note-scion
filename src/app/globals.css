@@ -689,3 +689,9 @@ body {
     transition-property: opacity;
   }
 }
+
+/* A board wider than the page fades out on the right while columns remain there. */
+.notes-board[data-more-right] {
+  -webkit-mask-image: linear-gradient(to right, #000 calc(100% - 2.5rem), transparent);
+  mask-image: linear-gradient(to right, #000 calc(100% - 2.5rem), transparent);
+}
