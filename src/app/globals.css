@@ -380,19 +380,76 @@ body {
   color: hsl(var(--muted-foreground));
 }
 
-/* Pictures: one per line, as wide as they are up to the page, never wider. The width and
-   height attributes reserve the room before the file arrives. */
-.notes-editor img {
+/* Pictures: one per line, as wide as they are up to the page, never wider. The saved
+   width and height hold the room before the file arrives. */
+.notes-editor .notes-image {
+  margin: 0.75em 0;
+}
+.notes-editor .notes-image-frame {
+  position: relative;
+  max-width: 100%;
+  border-radius: 6px;
+  overflow: hidden;
+}
+.notes-editor .notes-image-frame img {
   display: block;
   max-width: 100%;
   height: auto;
-  margin: 0.75em 0;
-  border-radius: 6px;
   cursor: default;
 }
-.notes-editor img.ProseMirror-selectednode {
+.notes-editor .notes-image-frame[data-state="loading"] {
+  background: hsl(var(--muted));
+  animation: notes-image-pulse 1.4s ease-in-out infinite;
+}
+.notes-editor .notes-image-frame[data-state="loading"] img {
+  opacity: 0;
+}
+.notes-editor .notes-image-frame[data-state="failed"] {
+  border: 1px dashed hsl(var(--input));
+}
+.notes-editor .notes-image-failed {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  min-height: 6rem;
+  padding: 1rem;
+  color: hsl(var(--muted-foreground));
+  font-size: 0.875rem;
+}
+.notes-editor .notes-image[data-selected] .notes-image-frame {
   outline: 2px solid hsl(var(--ring));
   outline-offset: 2px;
+}
+.notes-editor .notes-image-caption {
+  display: block;
+  width: 100%;
+  margin-top: 0.4rem;
+  padding: 0.1rem 0;
+  border: 0;
+  outline: none;
+  background: transparent;
+  color: hsl(var(--muted-foreground));
+  font-size: 0.875rem;
+  line-height: 1.4;
+  text-align: left;
+}
+.notes-editor .notes-image-caption::placeholder {
+  color: hsl(var(--muted-foreground) / 0.75);
+}
+.notes-editor .notes-image-caption:focus-visible {
+  border-radius: 3px;
+  box-shadow: 0 0 0 2px hsl(var(--ring));
+}
+@keyframes notes-image-pulse {
+  50% {
+    opacity: 0.6;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .notes-editor .notes-image-frame[data-state="loading"] {
+    animation: none;
+  }
 }
 
 /* Sub-page block: the page's icon and title, one line tall like the text around it. */

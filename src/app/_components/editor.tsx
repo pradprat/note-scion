@@ -17,6 +17,7 @@ import { PageLink } from "@/lib/page-link";
 import { DateMention } from "@/lib/date-mention";
 import { Toggle } from "@/lib/toggle";
 import { Database } from "@/lib/database";
+import { NoteImage } from "@/lib/image";
 import {
   Bold,
   Check,
@@ -39,6 +40,7 @@ import { PageBlock } from "./page-link-view";
 import { DateChip, DateCommand, dateKey } from "./date-mention";
 import { ToggleBehavior, ToggleBlock } from "./toggle-view";
 import { DatabaseBlock } from "./database/database-block";
+import { ImageBlock } from "./image-view";
 import { TurnIntoMenu } from "./turn-into-menu";
 import { useBackend } from "./backend";
 import { isImageFile } from "./image-upload";
@@ -145,10 +147,11 @@ export default function NoteEditor({
       // The shared sub-page block, date, toggle and database, with editor-only views (and "/page") on top.
       ...noteExtensions.filter(
         (extension) =>
-          extension !== PageLink && extension !== DateMention && extension !== Toggle && extension !== Database
+          extension !== PageLink && extension !== DateMention && extension !== Toggle && extension !== Database && extension !== NoteImage
       ),
       DateChip,
       DatabaseBlock,
+      ImageBlock,
       ToggleBlock,
       ToggleBehavior,
       PageBlock.configure({
