@@ -51,6 +51,9 @@ All notable changes to note-scion are listed here. The format follows
 
 ### Fixed
 
+- The login page names the app and says what it is, with its form sitting a little above centre.
+- On a narrow screen the breadcrumb keeps room for the open page's name and gives the
+  ancestor page less, instead of squeezing both.
 - A database's long names and text now end in an ellipsis where they don't fit, instead of
   being cut off in the middle of a letter. Click a cell to read all of it, or open the row.
 - Moving the cursor up a long page (arrow keys, or typing at its end) no longer leaves the
