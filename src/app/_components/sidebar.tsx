@@ -208,7 +208,7 @@ export default function NotesSidebar() {
                 <Search />
                 <span className="flex-1">Search</span>
                 {modKey && (
-                  <kbd className="pointer-events-none rounded border bg-background px-1.5 font-mono text-[0.625rem] font-medium leading-4 text-muted-foreground [@media(hover:none)]:hidden">
+                  <kbd className="pointer-events-none rounded border bg-background px-1.5 font-mono text-[0.6875rem] font-medium leading-4 text-muted-foreground [@media(hover:none)]:hidden">
                     {modKey} K
                   </kbd>
                 )}
@@ -314,7 +314,7 @@ function DemoMenu() {
           </SidebarMenuButton>
         )}
       </SidebarMenuItem>
-      <p className="px-2 pb-1 pt-2 text-xs leading-relaxed text-sidebar-foreground/60">
+      <p className="px-2 pb-1 pt-2 text-xs leading-relaxed text-sidebar-foreground/80">
         A demo: pages are saved in this browser only, never sent anywhere.
       </p>
     </>

@@ -51,6 +51,9 @@ All notable changes to note-scion are listed here. The format follows
 
 ### Fixed
 
+- A board wider than the page fades out at its right edge while more columns lie beyond
+  it, and the fade goes when you reach the last one.
+- The demo's footer note and the Ctrl K hint in the sidebar are a little darker and larger.
 - The login page names the app and says what it is, with its form sitting a little above centre.
 - On a narrow screen the breadcrumb keeps room for the open page's name and gives the
   ancestor page less, instead of squeezing both.
